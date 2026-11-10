@@ -23,5 +23,9 @@ python3 app.py            # then open http://127.0.0.1:8770
 - label something "implemented" that is simulated or planned
 - weaken a test to make a run pass
 
+## Skills
+Task-specific procedures live in `skills/<name>/SKILL.md`. Read one when its description matches the task:
+`review-change` (before merging) and `add-scripted-request` (growing the test set).
+
 ## When you are unsure
 - stop and ask, with the two possible readings written out
