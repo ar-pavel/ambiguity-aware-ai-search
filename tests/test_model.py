@@ -28,6 +28,26 @@ class FakeClient:
         return NS(stop_reason=self.stop, content=[NS(type="text", text=json.dumps(self.reply))])
 
 
+class TestEnvFile(unittest.TestCase):
+    def test_env_file_is_read_without_overriding_the_shell(self):
+        import tempfile
+        with tempfile.NamedTemporaryFile("w", suffix=".env", delete=False) as f:
+            f.write("# comment\nA2_TEST_NEW=from-file\nA2_TEST_SET=from-file\nA2_TEST_EMPTY=\n")
+        os.environ["A2_TEST_SET"] = "from-shell"
+        try:
+            model.load_env(f.name)
+            self.assertEqual(os.environ["A2_TEST_NEW"], "from-file")
+            self.assertEqual(os.environ["A2_TEST_SET"], "from-shell")
+            self.assertNotIn("A2_TEST_EMPTY", os.environ)
+        finally:
+            for k in ("A2_TEST_NEW", "A2_TEST_SET"):
+                os.environ.pop(k, None)
+            os.remove(f.name)
+
+    def test_missing_env_file_is_fine(self):
+        model.load_env("/nonexistent/.env")
+
+
 class TestJudge(unittest.TestCase):
     def test_request_uses_structured_output_and_fallback(self):
         client = FakeClient(SENIOR)

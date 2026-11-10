@@ -9,7 +9,7 @@ Search is structured filtering over synthetic data; there is no vector store and
 ## Build and test
 python3 run_tests.py
 python3 app.py            # then open http://127.0.0.1:8770
-A2_MODEL=claude python3 app.py   # live mode; needs `pip install anthropic` and ANTHROPIC_API_KEY in your shell
+cp .env.example .env      # live mode: set A2_MODEL=claude and your key; needs `pip install anthropic`
 
 ## Conventions
 - one interpretation object drives the chips, the question, the "Read as" line and the search

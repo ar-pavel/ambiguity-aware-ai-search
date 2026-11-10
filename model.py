@@ -2,8 +2,8 @@
 
 To use it (otherwise the rule-based stand-in in interpret.py runs):
     pip install anthropic             # optional; only live mode needs it
-    export ANTHROPIC_API_KEY=...      # in your shell, never in a file
-    export A2_MODEL=claude
+    cp .env.example .env              # then set A2_MODEL=claude and your ANTHROPIC_API_KEY
+Settings already in the shell environment take priority over .env. .env is ignored by git.
 
 The model only *judges*: which skills, place, seniority and availability the request names, which of
 those are unclear, and whether one reading is clearly meant. Structured outputs force the reply into
@@ -13,6 +13,7 @@ SCHEMA. interpret.from_model() then checks the reply and builds the options in c
 import json
 import os
 
+HERE = os.path.dirname(os.path.abspath(__file__))
 MODEL = "claude-opus-5-5"
 EFFORT = "low"  # a short extraction task: low effort keeps it fast and cheap
 
@@ -60,6 +61,23 @@ SCHEMA = {
                            "dominant": {"type": "boolean"}, "evidence": {"type": "string"}}}},
     },
 }
+
+
+def load_env(path=os.path.join(HERE, ".env")):
+    """Read KEY=VALUE lines from a local .env file into the environment (without overriding)."""
+    if not os.path.isfile(path):
+        return
+    with open(path, encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if line and not line.startswith("#") and "=" in line:
+                key, value = line.split("=", 1)
+                value = value.strip().strip('"').strip("'")
+                if value:
+                    os.environ.setdefault(key.strip(), value)
+
+
+load_env()
 
 
 def live():
