@@ -81,6 +81,23 @@ def question(reading, slot):
             "evidence": amb["evidence"]}
 
 
+def _interpreter_label(source):
+    """Say plainly which interpreter read the request, using the agreed status words."""
+    if source == "rules":
+        return "rule-based stand-in (simulated)"
+    if source.startswith("rules"):  # live mode was on but the model could not be used
+        return "rule-based stand-in (simulated): the live model was unavailable or its reply was unusable"
+    return source
+
+
+def _theta(value):
+    """The overlap threshold from the request, kept between 0 and 1 (default if not a number)."""
+    try:
+        return min(1.0, max(0.0, float(value)))
+    except (TypeError, ValueError):
+        return strategy.THETA
+
+
 def handle(payload):
     """Interpret the request, choose a mode, run the search and describe what ran."""
     text = (payload.get("text") or "").strip()
@@ -88,7 +105,7 @@ def handle(payload):
         return {"error": "Type a request, for example: senior Java developers in London"}
     reading = interpret.interpret(text)
     edited = _apply_edits(reading, payload.get("choices") or {}, payload.get("op"))
-    decision = strategy.decide(reading, theta=float(payload.get("theta", strategy.THETA)),
+    decision = strategy.decide(reading, theta=_theta(payload.get("theta", strategy.THETA)),
                                force=payload.get("mode") if payload.get("mode") != "auto" else None)
     if edited:  # the recruiter has taken control: keep the chips in view and say what happened
         decision = dict(decision, mode="show", reason="Updated with your changes. Tap a chip to change it again.")
@@ -105,7 +122,9 @@ def handle(payload):
         "count": len(results),
         "searched": search.SEARCHED,
         "not_searched": search.NOT_SEARCHED,
-        "interpreter": reading.get("source", "rules"),
+        "interpreter": _interpreter_label(reading.get("source", "rules")),
+        "dropped": reading.get("dropped", []),
+        "theta": decision["theta"],
     }
 
 

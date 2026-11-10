@@ -18,6 +18,22 @@
       <button type="submit">Search</button>
     </form>
 
+    <!-- Settings for comparing the strategies (and for evaluation): the rule's choice can be overridden. -->
+    <div class="controls">
+      <label>Strategy
+        <select id="mode">
+          <option value="auto">Auto: the rule decides</option>
+          <option value="act">Always act</option>
+          <option value="show">Always show</option>
+          <option value="ask">Always ask</option>
+        </select>
+      </label>
+      <label>Ask when the lists share less than
+        <input id="theta" type="range" min="0" max="1" step="0.05" value="0.5" aria-describedby="theta-value">
+        <output id="theta-value" for="theta">50%</output>
+      </label>
+    </div>
+
     <!-- One fixed layout for every mode; only the contents of each slot change. -->
     <section id="mode-line" aria-live="polite" hidden></section>
     <section id="interpretation" hidden></section>

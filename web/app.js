@@ -4,12 +4,14 @@ const NOTICE = { immediate: "now", "2w": "2 weeks", "1m": "1 month", "3m": "3 mo
 
 // What the recruiter has asked for so far. Edits are re-applied by the server to a fresh reading.
 const state = { text: "", mode: "auto", choices: {}, op: null, lastCount: null, answered: null };
+const chosenMode = () => $("mode").value;          // the strategy picked in the settings bar
+const theta = () => Number($("theta").value);       // the rule's overlap threshold
 
 async function runSearch() {
   const res = await fetch("/api/search", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ text: state.text, mode: state.mode, choices: state.choices, op: state.op }),
+    body: JSON.stringify({ text: state.text, mode: state.mode, choices: state.choices, op: state.op, theta: theta() }),
   });
   render(await res.json());
 }
@@ -83,7 +85,7 @@ function renderInterpretation(data) {
     const row = el("div", { class: "chips", role: "group", "aria-label": "How I read your request" });
     data.chips.forEach((c) => row.append(chipFor(c)));
     const reset = el("button", { type: "button", class: "link" }, "Reset to my words");
-    reset.addEventListener("click", () => { state.choices = {}; state.op = null; state.answered = null; state.mode = "auto"; runSearch(); });
+    reset.addEventListener("click", () => { state.choices = {}; state.op = null; state.answered = null; state.mode = chosenMode(); runSearch(); });
     slot.append(row, reset);
   } else {
     slot.append(el("p", { class: "read-as" }, "Read as: " + data.read_as));
@@ -107,7 +109,8 @@ function renderResults(data) {
     }
     body.append(row);
   }
-  $("scope").textContent = data.searched + " " + data.not_searched;
+  const ignored = data.dropped.length ? " Ignored: " + data.dropped.join("; ") + "." : "";
+  $("scope").textContent = data.searched + " " + data.not_searched + " Interpreter: " + data.interpreter + "." + ignored;
   show("count"); show("results", data.count > 0); show("scope");
 }
 
@@ -130,6 +133,17 @@ function render(data) {
 
 $("ask-form").addEventListener("submit", (e) => {
   e.preventDefault();
-  Object.assign(state, { text: $("request").value, mode: "auto", choices: {}, op: null, lastCount: null, answered: null });
+  Object.assign(state, { text: $("request").value, mode: chosenMode(), choices: {}, op: null, lastCount: null, answered: null });
   runSearch();
 });
+
+// Changing a setting re-runs the current request from scratch, so each strategy can be compared.
+function rerunWithSettings() {
+  $("theta-value").textContent = Math.round(theta() * 100) + "%";
+  if (!state.text) return;
+  Object.assign(state, { mode: chosenMode(), choices: {}, op: null, lastCount: null, answered: null });
+  runSearch();
+}
+$("mode").addEventListener("change", rerunWithSettings);
+$("theta").addEventListener("change", rerunWithSettings);
+$("theta").addEventListener("input", () => { $("theta-value").textContent = Math.round(theta() * 100) + "%"; });
