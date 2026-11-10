@@ -12,6 +12,7 @@ import sys
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 import interpret
+import log
 import search
 import strategy
 
@@ -164,7 +165,9 @@ class Handler(BaseHTTPRequestHandler):
         try:
             length = int(self.headers.get("Content-Length", 0))
             payload = json.loads(self.rfile.read(length) or b"{}")
-            self._send(200, handle(payload))
+            result = handle(payload)
+            log.write(payload, result)
+            self._send(200, result)
         except (ValueError, KeyError) as e:
             self._send(400, {"error": "bad request: %s" % e})
 
