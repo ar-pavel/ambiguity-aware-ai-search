@@ -19,3 +19,15 @@ th { font-weight: 600; color: var(--muted); }
 .scope { margin-top: .75rem; font-size: .875rem; color: var(--muted); }
 #error { color: #b42318; }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+
+/* Chips: every assumption is visible and, where it was a choice, editable. */
+.chips { display: flex; flex-wrap: wrap; gap: .4rem; align-items: center; margin-bottom: .5rem; }
+.chip { display: inline-flex; align-items: center; gap: .3rem; padding: .25rem .6rem; border: 1px solid var(--line);
+        border-radius: 999px; background: #fff; font: inherit; font-size: .9rem; color: var(--ink); }
+button.chip { cursor: pointer; }
+.chip.op { font-weight: 600; border-color: var(--show); color: var(--show); }
+.chip select { border: 0; background: transparent; font: inherit; color: inherit; cursor: pointer; }
+.chip.guessed { border-style: dashed; border-color: var(--ask); }
+.tag { font-size: .8rem; color: var(--ask); }
+button.link { padding: 0; border: 0; background: none; color: var(--show); text-decoration: underline; cursor: pointer; }
+.chip:focus-within, button.chip:focus-visible, button.link:focus-visible { outline: 3px solid #f0b429; outline-offset: 2px; }

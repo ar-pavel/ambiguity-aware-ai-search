@@ -2,49 +2,86 @@
 const $ = (id) => document.getElementById(id);
 const NOTICE = { immediate: "now", "2w": "2 weeks", "1m": "1 month", "3m": "3 months" };
 
-async function runSearch(body) {
+// What the recruiter has asked for so far. Edits are re-applied by the server to a fresh reading.
+const state = { text: "", mode: "auto", choices: {}, op: null, lastCount: null };
+
+async function runSearch() {
   const res = await fetch("/api/search", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
+    body: JSON.stringify({ text: state.text, mode: state.mode, choices: state.choices, op: state.op }),
   });
-  return res.json();
+  render(await res.json());
 }
 
 function show(id, on = true) { $(id).hidden = !on; }
 
+function el(tag, attrs = {}, text = "") {
+  const node = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs)) node.setAttribute(k, v);
+  if (text) node.textContent = text;
+  return node;
+}
+
 function renderModeLine(data) {
   $("mode-line").innerHTML = "";
-  const badge = document.createElement("strong");
-  badge.className = "mode mode-" + data.mode;
-  badge.textContent = data.mode.toUpperCase();
-  const why = document.createElement("span");
-  why.textContent = " · " + data.reason;
-  $("mode-line").append(badge, why);
+  $("mode-line").append(el("strong", { class: "mode mode-" + data.mode }, data.mode.toUpperCase()),
+                        el("span", {}, " · " + data.reason));
   show("mode-line");
+}
+
+// A chip for each assumption. Open choices are dropdowns; the AND/OR operator is one-click.
+function chipFor(chip) {
+  if (chip.kind === "skill") return el("span", { class: "chip" }, chip.text);
+  if (chip.kind === "op") {
+    const b = el("button", { type: "button", class: "chip op" + (chip.guessed ? " guessed" : ""),
+                             title: chip.evidence, "aria-label": "Skills joined by " + chip.value + ". Click to switch." },
+                 chip.value + " ⇄" + (chip.guessed ? " (guessed)" : ""));
+    b.addEventListener("click", () => { state.op = chip.value === "AND" ? "OR" : "AND"; state.mode = "show"; runSearch(); });
+    return b;
+  }
+  if (!chip.options) return el("span", { class: "chip" }, chip.text);
+  const wrap = el("label", { class: "chip choice" + (chip.guessed ? " guessed" : ""), title: chip.evidence });
+  const select = el("select", { "aria-label": "Change: " + chip.text });
+  chip.options.forEach((label, i) => {
+    const opt = el("option", { value: i }, label);
+    if (i === chip.chosen) opt.selected = true;
+    select.append(opt);
+  });
+  select.addEventListener("change", () => { state.choices[chip.slot] = Number(select.value); state.mode = "show"; runSearch(); });
+  wrap.append(select);
+  if (chip.guessed) wrap.append(el("span", { class: "tag" }, "(guessed)"));
+  return wrap;
 }
 
 function renderInterpretation(data) {
   const slot = $("interpretation");
   slot.innerHTML = "";
-  const line = document.createElement("p");
-  line.className = "read-as";
-  line.textContent = "Read as: " + data.read_as;
-  slot.append(line);
+  if (data.mode === "show") {
+    const row = el("div", { class: "chips", role: "group", "aria-label": "How I read your request" });
+    data.chips.forEach((c) => row.append(chipFor(c)));
+    const reset = el("button", { type: "button", class: "link" }, "Reset to my words");
+    reset.addEventListener("click", () => { state.choices = {}; state.op = null; state.mode = "auto"; runSearch(); });
+    slot.append(row, reset);
+  } else {
+    slot.append(el("p", { class: "read-as" }, "Read as: " + data.read_as));
+    const toShow = el("button", { type: "button", class: "link" }, "Show filters");
+    toShow.addEventListener("click", () => { state.mode = "show"; runSearch(); });
+    slot.append(toShow);
+  }
   show("interpretation");
 }
 
 function renderResults(data) {
-  $("count").textContent = data.count + (data.count === 1 ? " candidate" : " candidates");
+  const was = state.lastCount !== null && state.lastCount !== data.count ? " (was " + state.lastCount + ")" : "";
+  $("count").textContent = data.count + (data.count === 1 ? " candidate" : " candidates") + was;
+  state.lastCount = data.count;
   const body = $("results").querySelector("tbody");
   body.innerHTML = "";
   for (const c of data.results) {
-    const row = document.createElement("tr");
-    for (const v of [c.name, c.current_title, c.skills.join(", "), c.years_experience,
-                     c.city, c.work_mode, NOTICE[c.notice]]) {
-      const cell = document.createElement("td");
-      cell.textContent = v;
-      row.append(cell);
+    const row = el("tr");
+    for (const v of [c.name, c.current_title, c.skills.join(", "), c.years_experience, c.city, c.work_mode, NOTICE[c.notice]]) {
+      row.append(el("td", {}, String(v)));
     }
     body.append(row);
   }
@@ -64,7 +101,8 @@ function render(data) {
   renderResults(data);
 }
 
-$("ask-form").addEventListener("submit", async (e) => {
+$("ask-form").addEventListener("submit", (e) => {
   e.preventDefault();
-  render(await runSearch({ text: $("request").value }));
+  Object.assign(state, { text: $("request").value, mode: "auto", choices: {}, op: null, lastCount: null });
+  runSearch();
 });
