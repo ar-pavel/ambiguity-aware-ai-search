@@ -1,4 +1,4 @@
-"""Tests for the live interpreter, using a fake client: no key, no network, no cost."""
+"""Tests for the live interpreter, using a fake HTTPS call: no key, no network, no cost."""
 import json
 import os
 import sys
@@ -15,17 +15,16 @@ SENIOR = {"skills": ["Java"], "skills_op": "AND", "location": {"value": "London"
                                              "evidence": "you wrote 'senior'"}]}
 
 
-class FakeClient:
-    """Stands in for anthropic.Anthropic(): returns one canned reply, or raises."""
+class FakePost:
+    """Stands in for the HTTPS call: records the request body and returns a canned reply, or raises."""
     def __init__(self, reply=None, stop="end_turn", error=None):
         self.reply, self.stop, self.error, self.sent = reply, stop, error, None
-        self.beta = NS(messages=NS(create=self._create))
 
-    def _create(self, **kwargs):
+    def __call__(self, body):
         if self.error:
             raise self.error
-        self.sent = kwargs
-        return NS(stop_reason=self.stop, content=[NS(type="text", text=json.dumps(self.reply))])
+        self.sent = body
+        return {"stop_reason": self.stop, "content": [{"type": "text", "text": json.dumps(self.reply)}]}
 
 
 class TestEnvFile(unittest.TestCase):
@@ -50,15 +49,16 @@ class TestEnvFile(unittest.TestCase):
 
 class TestJudge(unittest.TestCase):
     def test_request_uses_structured_output_and_fallback(self):
-        client = FakeClient(SENIOR)
-        self.assertEqual(model.judge("senior Java developers in London", client), SENIOR)
-        self.assertEqual(client.sent["model"], model.MODEL)
-        self.assertEqual(client.sent["output_config"]["format"]["type"], "json_schema")
-        self.assertEqual(client.sent["fallbacks"], "default")
+        post = FakePost(SENIOR)
+        self.assertEqual(model.judge("senior Java developers in London", post), SENIOR)
+        self.assertEqual(post.sent["model"], model.MODEL)
+        self.assertEqual(post.sent["output_config"]["format"]["type"], "json_schema")
+        self.assertEqual(post.sent["fallbacks"], "default")
 
     def test_refusal_or_error_gives_none(self):
-        self.assertIsNone(model.judge("x", FakeClient(SENIOR, stop="refusal")))
-        self.assertIsNone(model.judge("x", FakeClient(error=RuntimeError("network down"))))
+        self.assertIsNone(model.judge("x", FakePost(SENIOR, stop="refusal")))
+        self.assertIsNone(model.judge("x", FakePost(error=OSError("network down"))))
+        self.assertIsNone(model.judge("x", FakePost(error=KeyError("ANTHROPIC_API_KEY"))))
 
 
 class TestFromModel(unittest.TestCase):

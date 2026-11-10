@@ -1,7 +1,6 @@
 """Optional live interpreter: Claude reads the request and judges what is unclear.
 
 To use it (otherwise the rule-based stand-in in interpret.py runs):
-    pip install anthropic             # optional; only live mode needs it
     cp .env.example .env              # then set A2_MODEL=claude and your ANTHROPIC_API_KEY
 Settings already in the shell environment take priority over .env. .env is ignored by git.
 
@@ -12,8 +11,13 @@ SCHEMA. interpret.from_model() then checks the reply and builds the options in c
 """
 import json
 import os
+import urllib.error
+import urllib.request
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+API_URL = "https://api.anthropic.com/v1/messages"
+API_VERSION = "2026-10-21"
+FALLBACK_BETA = "server-side-fallback-2026-07-01"  # lets the API retry a declined request on another model
 MODEL = "claude-opus-5-5"
 EFFORT = "low"  # a short extraction task: low effort keeps it fast and cheap
 
@@ -85,24 +89,33 @@ def live():
     return os.environ.get("A2_MODEL") == "claude"
 
 
-def judge(text, client=None):
+def _post(body, timeout=60):
+    """Send one Messages API request over HTTPS (standard library only) and return the JSON reply."""
+    request = urllib.request.Request(API_URL, data=json.dumps(body).encode("utf-8"), headers={
+        "content-type": "application/json",
+        "x-api-key": os.environ["ANTHROPIC_API_KEY"],
+        "anthropic-version": API_VERSION,
+        "anthropic-beta": FALLBACK_BETA,
+    })
+    with urllib.request.urlopen(request, timeout=timeout) as response:
+        return json.loads(response.read().decode("utf-8"))
+
+
+def judge(text, post=_post):
     """Return the model's judgement as a dict, or None if anything goes wrong."""
+    body = {
+        "model": MODEL,
+        "max_tokens": 4000,
+        "fallbacks": "default",
+        "system": SYSTEM,
+        "output_config": {"effort": EFFORT, "format": {"type": "json_schema", "schema": SCHEMA}},
+        "messages": [{"role": "user", "content": text}],
+    }
     try:
-        if client is None:
-            import anthropic
-            client = anthropic.Anthropic()
-        response = client.beta.messages.create(
-            model=MODEL,
-            max_tokens=4000,
-            betas=["server-side-fallback-2026-07-01"],
-            fallbacks="default",  # if Claude declines, the API retries on its recommended fallback
-            system=SYSTEM,
-            output_config={"effort": EFFORT, "format": {"type": "json_schema", "schema": SCHEMA}},
-            messages=[{"role": "user", "content": text}],
-        )
-        if response.stop_reason in ("refusal", "max_tokens"):
+        reply = post(body)
+        if reply.get("stop_reason") in ("refusal", "max_tokens"):
             return None
-        reply = next(b.text for b in response.content if b.type == "text")
-        return json.loads(reply)
-    except Exception:  # no package, no key, network, API or JSON problems: fall back to the rules
-        return None
+        text_block = next(b["text"] for b in reply["content"] if b.get("type") == "text")
+        return json.loads(text_block)
+    except (KeyError, StopIteration, ValueError, OSError, urllib.error.URLError):
+        return None  # no key, network or API error, or an unusable reply: fall back to the rules
