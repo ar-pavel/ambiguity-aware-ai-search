@@ -1,0 +1,574 @@
+[
+ {
+  "id": 1,
+  "name": "Amara Okafor",
+  "current_title": "Senior Software Engineer",
+  "skills": [
+   "Java",
+   "Python",
+   "AWS"
+  ],
+  "years_experience": 9,
+  "city": "London",
+  "country": "UK",
+  "work_mode": "hybrid",
+  "notice": "1m"
+ },
+ {
+  "id": 2,
+  "name": "Ben Hartley",
+  "current_title": "Software Engineer",
+  "skills": [
+   "Java",
+   "Python"
+  ],
+  "years_experience": 7,
+  "city": "London",
+  "country": "UK",
+  "work_mode": "onsite",
+  "notice": "2w"
+ },
+ {
+  "id": 3,
+  "name": "Chloe Park",
+  "current_title": "Backend Developer",
+  "skills": [
+   "Java",
+   "Python",
+   "Kubernetes"
+  ],
+  "years_experience": 3,
+  "city": "London",
+  "country": "UK",
+  "work_mode": "remote",
+  "notice": "immediate"
+ },
+ {
+  "id": 4,
+  "name": "Dev Malhotra",
+  "current_title": "Senior Backend Developer",
+  "skills": [
+   "Java",
+   "Python"
+  ],
+  "years_experience": 4,
+  "city": "Reading",
+  "country": "UK",
+  "work_mode": "hybrid",
+  "notice": "1m"
+ },
+ {
+  "id": 5,
+  "name": "Elena Rossi",
+  "current_title": "Data Engineer",
+  "skills": [
+   "Python",
+   "Java",
+   "SQL"
+  ],
+  "years_experience": 6,
+  "city": "Manchester",
+  "country": "UK",
+  "work_mode": "remote",
+  "notice": "3m"
+ },
+ {
+  "id": 6,
+  "name": "Felix Grant",
+  "current_title": "Senior Java Developer",
+  "skills": [
+   "Java",
+   "Spring"
+  ],
+  "years_experience": 3,
+  "city": "London",
+  "country": "UK",
+  "work_mode": "onsite",
+  "notice": "2w"
+ },
+ {
+  "id": 7,
+  "name": "Grace Liu",
+  "current_title": "Java Developer",
+  "skills": [
+   "Java",
+   "Spring",
+   "SQL"
+  ],
+  "years_experience": 8,
+  "city": "London",
+  "country": "UK",
+  "work_mode": "hybrid",
+  "notice": "1m"
+ },
+ {
+  "id": 8,
+  "name": "Hamza Ali",
+  "current_title": "Java Developer",
+  "skills": [
+   "Java",
+   "Kotlin"
+  ],
+  "years_experience": 2,
+  "city": "Croydon",
+  "country": "UK",
+  "work_mode": "onsite",
+  "notice": "immediate"
+ },
+ {
+  "id": 9,
+  "name": "Isla Murray",
+  "current_title": "Lead Java Engineer",
+  "skills": [
+   "Java",
+   "Spring",
+   "AWS"
+  ],
+  "years_experience": 11,
+  "city": "London",
+  "country": "UK",
+  "work_mode": "hybrid",
+  "notice": "3m"
+ },
+ {
+  "id": 10,
+  "name": "Jonas Weber",
+  "current_title": "Software Engineer",
+  "skills": [
+   "Java"
+  ],
+  "years_experience": 5,
+  "city": "Leeds",
+  "country": "UK",
+  "work_mode": "remote",
+  "notice": "2w"
+ },
+ {
+  "id": 11,
+  "name": "Kemi Adeyemi",
+  "current_title": "Senior Software Engineer",
+  "skills": [
+   "Java",
+   "Go"
+  ],
+  "years_experience": 10,
+  "city": "Watford",
+  "country": "UK",
+  "work_mode": "hybrid",
+  "notice": "1m"
+ },
+ {
+  "id": 12,
+  "name": "Liam O'Brien",
+  "current_title": "Java Developer",
+  "skills": [
+   "Java",
+   "SQL"
+  ],
+  "years_experience": 6,
+  "city": "Dublin",
+  "country": "Ireland",
+  "work_mode": "onsite",
+  "notice": "2w"
+ },
+ {
+  "id": 13,
+  "name": "Maya Singh",
+  "current_title": "Python Developer",
+  "skills": [
+   "Python",
+   "Django"
+  ],
+  "years_experience": 4,
+  "city": "London",
+  "country": "UK",
+  "work_mode": "remote",
+  "notice": "immediate"
+ },
+ {
+  "id": 14,
+  "name": "Noah Brooks",
+  "current_title": "Senior Python Developer",
+  "skills": [
+   "Python",
+   "AWS"
+  ],
+  "years_experience": 5,
+  "city": "London",
+  "country": "UK",
+  "work_mode": "hybrid",
+  "notice": "2w"
+ },
+ {
+  "id": 15,
+  "name": "Olivia Chen",
+  "current_title": "Machine Learning Engineer",
+  "skills": [
+   "Python",
+   "PyTorch"
+  ],
+  "years_experience": 7,
+  "city": "London",
+  "country": "UK",
+  "work_mode": "hybrid",
+  "notice": "1m"
+ },
+ {
+  "id": 16,
+  "name": "Priya Nair",
+  "current_title": "Data Scientist",
+  "skills": [
+   "Python",
+   "SQL"
+  ],
+  "years_experience": 9,
+  "city": "Slough",
+  "country": "UK",
+  "work_mode": "onsite",
+  "notice": "3m"
+ },
+ {
+  "id": 17,
+  "name": "Quentin Laurent",
+  "current_title": "Senior Data Engineer",
+  "skills": [
+   "Python",
+   "AWS",
+   "SQL"
+  ],
+  "years_experience": 12,
+  "city": "Birmingham",
+  "country": "UK",
+  "work_mode": "remote",
+  "notice": "1m"
+ },
+ {
+  "id": 18,
+  "name": "Rosa Martinez",
+  "current_title": "Python Developer",
+  "skills": [
+   "Python",
+   "Flask"
+  ],
+  "years_experience": 2,
+  "city": "Manchester",
+  "country": "UK",
+  "work_mode": "remote",
+  "notice": "immediate"
+ },
+ {
+  "id": 19,
+  "name": "Sam Taylor",
+  "current_title": "Software Engineer",
+  "skills": [
+   "Python",
+   "AWS"
+  ],
+  "years_experience": 8,
+  "city": "London",
+  "country": "UK",
+  "work_mode": "onsite",
+  "notice": "2w"
+ },
+ {
+  "id": 20,
+  "name": "Tara Quinn",
+  "current_title": "Senior DevOps Engineer",
+  "skills": [
+   "AWS",
+   "Kubernetes",
+   "Terraform"
+  ],
+  "years_experience": 6,
+  "city": "London",
+  "country": "UK",
+  "work_mode": "hybrid",
+  "notice": "1m"
+ },
+ {
+  "id": 21,
+  "name": "Umar Farooq",
+  "current_title": "DevOps Engineer",
+  "skills": [
+   "AWS",
+   "Kubernetes",
+   "Python"
+  ],
+  "years_experience": 9,
+  "city": "Reading",
+  "country": "UK",
+  "work_mode": "remote",
+  "notice": "2w"
+ },
+ {
+  "id": 22,
+  "name": "Vera Novak",
+  "current_title": "Cloud Engineer",
+  "skills": [
+   "AWS",
+   "Terraform"
+  ],
+  "years_experience": 3,
+  "city": "Leeds",
+  "country": "UK",
+  "work_mode": "remote",
+  "notice": "immediate"
+ },
+ {
+  "id": 23,
+  "name": "Will Carter",
+  "current_title": "Platform Engineer",
+  "skills": [
+   "Kubernetes",
+   "Go"
+  ],
+  "years_experience": 7,
+  "city": "London",
+  "country": "UK",
+  "work_mode": "hybrid",
+  "notice": "3m"
+ },
+ {
+  "id": 24,
+  "name": "Xin Yang",
+  "current_title": "Senior Cloud Architect",
+  "skills": [
+   "AWS",
+   "Python",
+   "Kubernetes"
+  ],
+  "years_experience": 14,
+  "city": "London",
+  "country": "UK",
+  "work_mode": "onsite",
+  "notice": "3m"
+ },
+ {
+  "id": 25,
+  "name": "Yusuf Demir",
+  "current_title": "Frontend Developer",
+  "skills": [
+   "JavaScript",
+   "React"
+  ],
+  "years_experience": 4,
+  "city": "London",
+  "country": "UK",
+  "work_mode": "remote",
+  "notice": "immediate"
+ },
+ {
+  "id": 26,
+  "name": "Zoe Bennett",
+  "current_title": "Senior Frontend Developer",
+  "skills": [
+   "JavaScript",
+   "React",
+   "TypeScript"
+  ],
+  "years_experience": 8,
+  "city": "London",
+  "country": "UK",
+  "work_mode": "hybrid",
+  "notice": "2w"
+ },
+ {
+  "id": 27,
+  "name": "Aiden Moore",
+  "current_title": "Full Stack Developer",
+  "skills": [
+   "JavaScript",
+   "React",
+   "Python"
+  ],
+  "years_experience": 5,
+  "city": "Croydon",
+  "country": "UK",
+  "work_mode": "hybrid",
+  "notice": "1m"
+ },
+ {
+  "id": 28,
+  "name": "Bella Ricci",
+  "current_title": "React Developer",
+  "skills": [
+   "JavaScript",
+   "React"
+  ],
+  "years_experience": 2,
+  "city": "Birmingham",
+  "country": "UK",
+  "work_mode": "remote",
+  "notice": "2w"
+ },
+ {
+  "id": 29,
+  "name": "Carlos Mendes",
+  "current_title": "Senior Full Stack Engineer",
+  "skills": [
+   "JavaScript",
+   "Node.js",
+   "AWS"
+  ],
+  "years_experience": 3,
+  "city": "London",
+  "country": "UK",
+  "work_mode": "remote",
+  "notice": "immediate"
+ },
+ {
+  "id": 30,
+  "name": "Dana Kowalski",
+  "current_title": "Frontend Engineer",
+  "skills": [
+   "JavaScript",
+   "Vue"
+  ],
+  "years_experience": 7,
+  "city": "Watford",
+  "country": "UK",
+  "work_mode": "onsite",
+  "notice": "1m"
+ },
+ {
+  "id": 31,
+  "name": "Ethan Price",
+  "current_title": "Go Developer",
+  "skills": [
+   "Go",
+   "Kubernetes"
+  ],
+  "years_experience": 6,
+  "city": "London",
+  "country": "UK",
+  "work_mode": "remote",
+  "notice": "2w"
+ },
+ {
+  "id": 32,
+  "name": "Fatima Rahman",
+  "current_title": "Senior Go Engineer",
+  "skills": [
+   "Go",
+   "AWS"
+  ],
+  "years_experience": 9,
+  "city": "Manchester",
+  "country": "UK",
+  "work_mode": "hybrid",
+  "notice": "1m"
+ },
+ {
+  "id": 33,
+  "name": "George Hill",
+  "current_title": "Backend Engineer",
+  "skills": [
+   "Go",
+   "Python"
+  ],
+  "years_experience": 4,
+  "city": "London",
+  "country": "UK",
+  "work_mode": "hybrid",
+  "notice": "immediate"
+ },
+ {
+  "id": 34,
+  "name": "Hannah Lewis",
+  "current_title": "SAP MM Consultant",
+  "skills": [
+   "SAP MM",
+   "SAP"
+  ],
+  "years_experience": 8,
+  "city": "London",
+  "country": "UK",
+  "work_mode": "onsite",
+  "notice": "1m"
+ },
+ {
+  "id": 35,
+  "name": "Ivan Petrov",
+  "current_title": "SAP Consultant",
+  "skills": [
+   "SAP",
+   "SAP SD"
+  ],
+  "years_experience": 10,
+  "city": "Birmingham",
+  "country": "UK",
+  "work_mode": "onsite",
+  "notice": "3m"
+ },
+ {
+  "id": 36,
+  "name": "Julia Novak",
+  "current_title": "Procurement Analyst",
+  "skills": [
+   "SAP",
+   "MM"
+  ],
+  "years_experience": 5,
+  "city": "Reading",
+  "country": "UK",
+  "work_mode": "hybrid",
+  "notice": "2w"
+ },
+ {
+  "id": 37,
+  "name": "Kai Johnson",
+  "current_title": "Lead Engineer",
+  "skills": [
+   "Java",
+   "AWS"
+  ],
+  "years_experience": 4,
+  "city": "London",
+  "country": "UK",
+  "work_mode": "hybrid",
+  "notice": "2w"
+ },
+ {
+  "id": 38,
+  "name": "Lena Fischer",
+  "current_title": "Software Engineer",
+  "skills": [
+   "Java",
+   "Python",
+   "Go"
+  ],
+  "years_experience": 13,
+  "city": "London",
+  "country": "UK",
+  "work_mode": "onsite",
+  "notice": "1m"
+ },
+ {
+  "id": 39,
+  "name": "Marcus Reid",
+  "current_title": "Senior Software Engineer",
+  "skills": [
+   "Python"
+  ],
+  "years_experience": 3,
+  "city": "London",
+  "country": "UK",
+  "work_mode": "remote",
+  "notice": "immediate"
+ },
+ {
+  "id": 40,
+  "name": "Nadia Haddad",
+  "current_title": "Engineering Manager",
+  "skills": [
+   "Java",
+   "Python",
+   "AWS"
+  ],
+  "years_experience": 15,
+  "city": "London",
+  "country": "UK",
+  "work_mode": "hybrid",
+  "notice": "3m"
+ }
+]

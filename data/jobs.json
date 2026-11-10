@@ -1,0 +1,389 @@
+[
+ {
+  "id": 1,
+  "title": "Senior Frontend Developer",
+  "company": "Saltmarsh Energy",
+  "skills": [
+   "TypeScript",
+   "Vue"
+  ],
+  "city": "Leeds",
+  "min_years": 8,
+  "work_mode": "onsite",
+  "status": "open"
+ },
+ {
+  "id": 2,
+  "title": "Frontend Developer",
+  "company": "Moorgate Payments",
+  "skills": [
+   "React",
+   "Vue"
+  ],
+  "city": "London",
+  "min_years": 1,
+  "work_mode": "onsite",
+  "status": "open"
+ },
+ {
+  "id": 3,
+  "title": "Full Stack Engineer",
+  "company": "Tidewater Games",
+  "skills": [
+   "Node.js",
+   "React"
+  ],
+  "city": "Watford",
+  "min_years": 2,
+  "work_mode": "remote",
+  "status": "open"
+ },
+ {
+  "id": 4,
+  "title": "Senior Backend Engineer",
+  "company": "Bluefin Analytics",
+  "skills": [
+   "Java",
+   "Go"
+  ],
+  "city": "London",
+  "min_years": 5,
+  "work_mode": "remote",
+  "status": "open"
+ },
+ {
+  "id": 5,
+  "title": "Senior Full Stack Engineer",
+  "company": "Quillmark Media",
+  "skills": [
+   "Python",
+   "Node.js"
+  ],
+  "city": "London",
+  "min_years": 8,
+  "work_mode": "onsite",
+  "status": "open"
+ },
+ {
+  "id": 6,
+  "title": "Senior Java Developer",
+  "company": "Harbor & Pine",
+  "skills": [
+   "Kotlin"
+  ],
+  "city": "Manchester",
+  "min_years": 6,
+  "work_mode": "hybrid",
+  "status": "open"
+ },
+ {
+  "id": 7,
+  "title": "Senior Frontend Developer",
+  "company": "Saltmarsh Energy",
+  "skills": [
+   "React",
+   "TypeScript",
+   "JavaScript"
+  ],
+  "city": "Leeds",
+  "min_years": 5,
+  "work_mode": "hybrid",
+  "status": "closed"
+ },
+ {
+  "id": 8,
+  "title": "Java Developer",
+  "company": "Granite Cloud",
+  "skills": [
+   "AWS",
+   "Kotlin",
+   "Java"
+  ],
+  "city": "Slough",
+  "min_years": 2,
+  "work_mode": "remote",
+  "status": "open"
+ },
+ {
+  "id": 9,
+  "title": "Full Stack Engineer",
+  "company": "Ironbridge Bank",
+  "skills": [
+   "Node.js",
+   "Python",
+   "JavaScript"
+  ],
+  "city": "London",
+  "min_years": 2,
+  "work_mode": "remote",
+  "status": "open"
+ },
+ {
+  "id": 10,
+  "title": "Data Engineer",
+  "company": "Saltmarsh Energy",
+  "skills": [
+   "Java"
+  ],
+  "city": "Leeds",
+  "min_years": 2,
+  "work_mode": "hybrid",
+  "status": "open"
+ },
+ {
+  "id": 11,
+  "title": "Senior SAP Consultant",
+  "company": "Bluefin Analytics",
+  "skills": [
+   "SAP SD"
+  ],
+  "city": "London",
+  "min_years": 5,
+  "work_mode": "hybrid",
+  "status": "open"
+ },
+ {
+  "id": 12,
+  "title": "DevOps Engineer",
+  "company": "Kestrel Logistics",
+  "skills": [
+   "Python",
+   "Go"
+  ],
+  "city": "Reading",
+  "min_years": 1,
+  "work_mode": "hybrid",
+  "status": "open"
+ },
+ {
+  "id": 13,
+  "title": "Senior Frontend Developer",
+  "company": "Saltmarsh Energy",
+  "skills": [
+   "React",
+   "JavaScript"
+  ],
+  "city": "Leeds",
+  "min_years": 6,
+  "work_mode": "hybrid",
+  "status": "open"
+ },
+ {
+  "id": 14,
+  "title": "Senior SAP Consultant",
+  "company": "Oakline Insurance",
+  "skills": [
+   "SAP SD"
+  ],
+  "city": "Croydon",
+  "min_years": 6,
+  "work_mode": "onsite",
+  "status": "open"
+ },
+ {
+  "id": 15,
+  "title": "Senior Machine Learning Engineer",
+  "company": "Bluefin Analytics",
+  "skills": [
+   "SQL",
+   "PyTorch",
+   "Python"
+  ],
+  "city": "London",
+  "min_years": 5,
+  "work_mode": "onsite",
+  "status": "open"
+ },
+ {
+  "id": 16,
+  "title": "Full Stack Engineer",
+  "company": "Wrenfield Software",
+  "skills": [
+   "JavaScript",
+   "React",
+   "Python"
+  ],
+  "city": "Dublin",
+  "min_years": 2,
+  "work_mode": "onsite",
+  "status": "open"
+ },
+ {
+  "id": 17,
+  "title": "Python Developer",
+  "company": "Kestrel Logistics",
+  "skills": [
+   "Django"
+  ],
+  "city": "Reading",
+  "min_years": 3,
+  "work_mode": "remote",
+  "status": "open"
+ },
+ {
+  "id": 18,
+  "title": "Senior DevOps Engineer",
+  "company": "Fernhill Retail",
+  "skills": [
+   "Python"
+  ],
+  "city": "Birmingham",
+  "min_years": 8,
+  "work_mode": "hybrid",
+  "status": "closed"
+ },
+ {
+  "id": 19,
+  "title": "Java Developer",
+  "company": "Saltmarsh Energy",
+  "skills": [
+   "Spring"
+  ],
+  "city": "Leeds",
+  "min_years": 1,
+  "work_mode": "onsite",
+  "status": "open"
+ },
+ {
+  "id": 20,
+  "title": "Java Developer",
+  "company": "Northwind Labs",
+  "skills": [
+   "SQL"
+  ],
+  "city": "London",
+  "min_years": 1,
+  "work_mode": "remote",
+  "status": "open"
+ },
+ {
+  "id": 21,
+  "title": "Machine Learning Engineer",
+  "company": "Quillmark Media",
+  "skills": [
+   "Python"
+  ],
+  "city": "London",
+  "min_years": 3,
+  "work_mode": "onsite",
+  "status": "open"
+ },
+ {
+  "id": 22,
+  "title": "Senior DevOps Engineer",
+  "company": "Moorgate Payments",
+  "skills": [
+   "Python",
+   "Kubernetes"
+  ],
+  "city": "London",
+  "min_years": 6,
+  "work_mode": "hybrid",
+  "status": "open"
+ },
+ {
+  "id": 23,
+  "title": "Machine Learning Engineer",
+  "company": "Moorgate Payments",
+  "skills": [
+   "SQL",
+   "PyTorch"
+  ],
+  "city": "London",
+  "min_years": 2,
+  "work_mode": "onsite",
+  "status": "open"
+ },
+ {
+  "id": 24,
+  "title": "Senior Backend Engineer",
+  "company": "Copperleaf Systems",
+  "skills": [
+   "Python",
+   "SQL",
+   "Kubernetes"
+  ],
+  "city": "Leeds",
+  "min_years": 5,
+  "work_mode": "onsite",
+  "status": "closed"
+ },
+ {
+  "id": 25,
+  "title": "Frontend Developer",
+  "company": "Wrenfield Software",
+  "skills": [
+   "JavaScript",
+   "TypeScript",
+   "Vue"
+  ],
+  "city": "Dublin",
+  "min_years": 2,
+  "work_mode": "hybrid",
+  "status": "open"
+ },
+ {
+  "id": 26,
+  "title": "SAP Consultant",
+  "company": "Saltmarsh Energy",
+  "skills": [
+   "SAP SD"
+  ],
+  "city": "Leeds",
+  "min_years": 2,
+  "work_mode": "hybrid",
+  "status": "closed"
+ },
+ {
+  "id": 27,
+  "title": "Senior SAP Consultant",
+  "company": "Bluefin Analytics",
+  "skills": [
+   "SAP SD",
+   "SAP MM"
+  ],
+  "city": "London",
+  "min_years": 5,
+  "work_mode": "onsite",
+  "status": "closed"
+ },
+ {
+  "id": 28,
+  "title": "SAP Consultant",
+  "company": "Kestrel Logistics",
+  "skills": [
+   "SAP SD",
+   "SAP"
+  ],
+  "city": "Reading",
+  "min_years": 3,
+  "work_mode": "hybrid",
+  "status": "closed"
+ },
+ {
+  "id": 29,
+  "title": "Senior Frontend Developer",
+  "company": "Wrenfield Software",
+  "skills": [
+   "Vue",
+   "TypeScript",
+   "JavaScript"
+  ],
+  "city": "Dublin",
+  "min_years": 8,
+  "work_mode": "remote",
+  "status": "open"
+ },
+ {
+  "id": 30,
+  "title": "Senior Machine Learning Engineer",
+  "company": "Wrenfield Software",
+  "skills": [
+   "SQL"
+  ],
+  "city": "Dublin",
+  "min_years": 8,
+  "work_mode": "hybrid",
+  "status": "open"
+ }
+]
