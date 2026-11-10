@@ -23,6 +23,38 @@ CITIES = sorted({c["city"] for c in search.load()}, key=len, reverse=True)
 COUNTRIES = {"uk": "UK", "united kingdom": "UK", "ireland": "Ireland"}
 SKILL_TERMS = sorted(search.SYNONYMS, key=len, reverse=True)  # longest first, so "sap mm" beats "sap"
 DEFAULT_YEARS = 5  # what "senior" means in years when it is read as experience
+SLOTS = ("skills_op", "seniority", "location", "availability")
+
+
+def make_ambiguity(slot, reading, dominant, evidence):
+    """Build one ambiguity (options, labels, chosen) from the reading's current value for a slot.
+    Both interpreter routes use this, so the chips and the question look the same either way."""
+    if slot == "skills_op":
+        options = [{"skills_op": "AND"}, {"skills_op": "OR"}]
+        labels = ["all of these skills (AND)", "any of these skills (OR)"]
+        chosen = 0 if reading["skills_op"] == "AND" else 1
+    elif slot == "seniority":
+        sen = reading["seniority"]
+        w = sen.get("contains") or "Senior"
+        years = sen.get("min") or DEFAULT_YEARS
+        options = [{"seniority": {"kind": "years", "min": years}},
+                   {"seniority": {"kind": "title", "contains": w}},
+                   {"seniority": {"kind": "either", "min": years, "contains": w}}]
+        labels = ["%d+ years' experience" % years, "'%s' in their job title" % w, "either"]
+        chosen = {"years": 0, "title": 1, "either": 2}[sen["kind"]]
+    elif slot == "location":
+        city = reading["location"]["value"]
+        options = [{"location": {"value": city, "scope": "nearby"}},
+                   {"location": {"value": city, "scope": "city"}}]
+        labels = ["%s and nearby towns" % city, "%s only" % city]
+        chosen = 0 if reading["location"]["scope"] == "nearby" else 1
+    else:
+        options = [{"availability": {"max_notice": "immediate"}},
+                   {"availability": {"max_notice": "2w"}}]
+        labels = ["can start immediately", "notice of 2 weeks or less"]
+        chosen = 0 if reading["availability"]["max_notice"] == "immediate" else 1
+    return {"slot": slot, "options": options, "labels": labels, "chosen": chosen,
+            "dominant": bool(dominant), "evidence": evidence}
 
 
 def _find_skills(text):
@@ -53,15 +85,10 @@ def _operator(text, spans):
     if re.search(r"\bAND\b", between):
         return "AND", None
     word = re.search(r"\b(and|with|or)\b|&", between, re.IGNORECASE)
-    options = [{"skills_op": "AND"}, {"skills_op": "OR"}]
-    labels = ["all of these skills (AND)", "any of these skills (OR)"]
     if word:
         op = "OR" if word.group(0).lower() == "or" else "AND"
-        return op, {"slot": "skills_op", "options": options, "labels": labels,
-                    "chosen": 0 if op == "AND" else 1, "dominant": True,
-                    "evidence": "you wrote '%s'" % word.group(0)}
-    return "AND", {"slot": "skills_op", "options": options, "labels": labels,
-                   "chosen": 0, "dominant": False, "evidence": "no 'and' or 'or' between the skills"}
+        return op, (True, "you wrote '%s'" % word.group(0))
+    return "AND", (False, "no 'and' or 'or' between the skills")
 
 
 def _seniority(text):
@@ -76,14 +103,8 @@ def _seniority(text):
     word = re.search(r"\b(senior|lead)\b", low)
     if not word:
         return None, None
-    w = word.group(1).capitalize()
-    options = [{"seniority": {"kind": "years", "min": DEFAULT_YEARS}},
-               {"seniority": {"kind": "title", "contains": w}},
-               {"seniority": {"kind": "either", "min": DEFAULT_YEARS, "contains": w}}]
-    labels = ["%d+ years' experience" % DEFAULT_YEARS, "'%s' in their job title" % w, "either"]
-    return options[0]["seniority"], {"slot": "seniority", "options": options, "labels": labels,
-                                     "chosen": 0, "dominant": False,
-                                     "evidence": "you wrote '%s'" % word.group(1)}
+    return ({"kind": "years", "min": DEFAULT_YEARS, "contains": word.group(1).capitalize()},
+            (False, "you wrote '%s'" % word.group(1)))
 
 
 def _location(text):
@@ -94,12 +115,7 @@ def _location(text):
     for city in CITIES:
         near = re.search(r"\b(near|around|within[^,]*?of|commutable to)\s+" + city.lower() + r"\b", low)
         if near:
-            options = [{"location": {"value": city, "scope": "nearby"}},
-                       {"location": {"value": city, "scope": "city"}}]
-            labels = ["%s and nearby towns" % city, "%s only" % city]
-            return options[0]["location"], {"slot": "location", "options": options, "labels": labels,
-                                             "chosen": 0, "dominant": False,
-                                             "evidence": "you wrote '%s'" % near.group(1)}
+            return {"value": city, "scope": "nearby"}, (False, "you wrote '%s'" % near.group(1))
         if re.search(r"\b" + city.lower() + r"\b", low):
             return {"value": city, "scope": "city"}, None
     return None, None
@@ -113,12 +129,7 @@ def _availability(text):
     word = re.search(r"\b(available now|immediately|available|now|asap)\b", low)
     if not word:
         return None, None
-    options = [{"availability": {"max_notice": "immediate"}},
-               {"availability": {"max_notice": "2w"}}]
-    labels = ["can start immediately", "notice of 2 weeks or less"]
-    return options[0]["availability"], {"slot": "availability", "options": options, "labels": labels,
-                                        "chosen": 0, "dominant": False,
-                                        "evidence": "you wrote '%s'" % word.group(1)}
+    return {"max_notice": "immediate"}, (False, "you wrote '%s'" % word.group(1))
 
 
 def _work_mode(text):
@@ -149,7 +160,9 @@ def interpret_rules(text):
     availability, av_amb = _availability(text)
     reading = {"skills": [s[2] for s in spans], "skills_op": op, "location": location,
                "seniority": seniority, "availability": availability, "work_mode": _work_mode(text)}
-    reading["ambiguities"] = [a for a in (op_amb, sen_amb, loc_amb, av_amb) if a] + _phrase_ambiguities(spans)
+    judged = zip(SLOTS, (op_amb, sen_amb, loc_amb, av_amb))
+    reading["ambiguities"] = [make_ambiguity(slot, reading, *j) for slot, j in judged if j]
+    reading["ambiguities"] += _phrase_ambiguities(spans)
     reading["source"] = "rules"
     return reading
 
