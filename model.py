@@ -1,15 +1,18 @@
-"""Optional live interpreter: Claude reads the request and judges what is unclear.
+"""Optional live interpreter: a language model reads the request and judges what is unclear.
 
 To use it (otherwise the rule-based stand-in in interpret.py runs):
-    cp .env.example .env              # then set A2_MODEL=claude and your ANTHROPIC_API_KEY
+    cp .env.example .env    # then set A2_MODEL=claude + ANTHROPIC_API_KEY, or A2_MODEL=openai + OPENAI_API_KEY
 Settings already in the shell environment take priority over .env. .env is ignored by git.
-Privacy: live mode sends the typed request (only that text) to Anthropic's API. Candidate data never leaves
-this machine; the search runs locally.
+Privacy: live mode sends the typed request (only that text) to the chosen provider's API. Candidate data
+never leaves this machine; the search runs locally.
+
+Each provider has a small adapter (request body, HTTPS call, reading the reply). The system prompt,
+the schema and everything after the reply are shared, so both providers are checked the same way.
 
 The model only *judges*: which skills, place, seniority and availability the request names, which of
 those are unclear, and whether one reading is clearly meant. Structured outputs force the reply into
 SCHEMA. interpret.from_model() then checks the reply and builds the options in code. Any problem
-(package missing, no key, network, refusal, bad reply) returns None, and the rules are used instead.
+(no key, network, refusal, truncated or bad reply) returns None, and the rules are used instead.
 """
 import json
 import os
@@ -17,11 +20,17 @@ import urllib.error
 import urllib.request
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+
+# Claude (Anthropic Messages API)
 API_URL = "https://api.anthropic.com/v1/messages"
 API_VERSION = "2026-10-21"
 FALLBACK_BETA = "server-side-fallback-2026-07-01"  # lets the API retry a declined request on another model
 MODEL = "claude-opus-5-5"
 EFFORT = "low"  # a short extraction task: low effort keeps it fast and cheap
+
+# OpenAI (Chat Completions API). The model name depends on what your account offers.
+OPENAI_URL = "https://api.openai.com/v1/chat/completions"
+OPENAI_DEFAULT_MODEL = "gpt-5-mini"
 
 SYSTEM = """You read a recruiter's candidate-search request and report what it asks for.
 Only use words the recruiter actually wrote. Never change their 'and' into OR.
@@ -86,38 +95,78 @@ def load_env(path=os.path.join(HERE, ".env")):
 load_env()
 
 
+def provider():
+    """'claude', 'openai', or None (rule-based stand-in)."""
+    choice = os.environ.get("A2_MODEL", "").strip().lower()
+    return choice if choice in ("claude", "openai") else None
+
+
 def live():
-    """Live mode is on only when asked for. Missing package or key is handled at call time."""
-    return os.environ.get("A2_MODEL") == "claude"
+    return provider() is not None
 
 
-def _post(body, timeout=60):
-    """Send one Messages API request over HTTPS (standard library only) and return the JSON reply."""
-    request = urllib.request.Request(API_URL, data=json.dumps(body).encode("utf-8"), headers={
-        "content-type": "application/json",
-        "x-api-key": os.environ["ANTHROPIC_API_KEY"],
-        "anthropic-version": API_VERSION,
-        "anthropic-beta": FALLBACK_BETA,
-    })
+def label():
+    """Which model produced a live reading, for the page."""
+    if provider() == "openai":
+        return "OpenAI (%s)" % openai_model()
+    return "Claude (%s)" % MODEL
+
+
+def openai_model():
+    return os.environ.get("A2_OPENAI_MODEL", "").strip() or OPENAI_DEFAULT_MODEL
+
+
+def _https_json(url, body, headers, timeout=60):
+    """POST JSON over HTTPS (standard library only) and return the JSON reply."""
+    request = urllib.request.Request(url, data=json.dumps(body).encode("utf-8"),
+                                     headers=dict(headers, **{"content-type": "application/json"}))
     with urllib.request.urlopen(request, timeout=timeout) as response:
         return json.loads(response.read().decode("utf-8"))
 
 
-def judge(text, post=_post):
-    """Return the model's judgement as a dict, or None if anything goes wrong."""
-    body = {
+def _post(body):
+    """Claude: send one Messages API request."""
+    return _https_json(API_URL, body, {"x-api-key": os.environ["ANTHROPIC_API_KEY"],
+                                       "anthropic-version": API_VERSION, "anthropic-beta": FALLBACK_BETA})
+
+
+def _post_openai(body):
+    """OpenAI: send one Chat Completions request."""
+    return _https_json(OPENAI_URL, body, {"authorization": "Bearer " + os.environ["OPENAI_API_KEY"]})
+
+
+def judge(text, post=None):
+    """Ask the chosen provider to judge the request. Returns a dict, or None if anything goes wrong."""
+    try:
+        if provider() == "openai":
+            return _judge_openai(text, post or _post_openai)
+        return _judge_claude(text, post or _post)
+    except (KeyError, IndexError, StopIteration, TypeError, ValueError, OSError, urllib.error.URLError):
+        return None  # no key, network or API error, or an unusable reply: fall back to the rules
+
+
+def _judge_claude(text, post):
+    reply = post({
         "model": MODEL,
         "max_tokens": 4000,
         "fallbacks": "default",
         "system": SYSTEM,
         "output_config": {"effort": EFFORT, "format": {"type": "json_schema", "schema": SCHEMA}},
         "messages": [{"role": "user", "content": text}],
-    }
-    try:
-        reply = post(body)
-        if reply.get("stop_reason") in ("refusal", "max_tokens"):
-            return None
-        text_block = next(b["text"] for b in reply["content"] if b.get("type") == "text")
-        return json.loads(text_block)
-    except (KeyError, StopIteration, ValueError, OSError, urllib.error.URLError):
-        return None  # no key, network or API error, or an unusable reply: fall back to the rules
+    })
+    if reply.get("stop_reason") in ("refusal", "max_tokens"):
+        return None
+    return json.loads(next(b["text"] for b in reply["content"] if b.get("type") == "text"))
+
+
+def _judge_openai(text, post):
+    reply = post({
+        "model": openai_model(),
+        "messages": [{"role": "system", "content": SYSTEM}, {"role": "user", "content": text}],
+        "response_format": {"type": "json_schema",
+                            "json_schema": {"name": "reading", "strict": True, "schema": SCHEMA}},
+    })
+    choice = reply["choices"][0]
+    if choice.get("finish_reason") == "length" or choice["message"].get("refusal"):
+        return None
+    return json.loads(choice["message"]["content"])

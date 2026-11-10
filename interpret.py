@@ -257,7 +257,7 @@ def interpret(text):
         except (KeyError, TypeError, ValueError, AttributeError):
             reading = None  # a reply that doesn't match the schema is treated like no reply
         if reading is not None:
-            reading["source"] = "Claude (%s)" % model.MODEL
+            reading["source"] = model.label()
             return reading
         fallback = interpret_rules(text)
         fallback["source"] = "rules (the live model was unavailable or its reply was unusable)"
