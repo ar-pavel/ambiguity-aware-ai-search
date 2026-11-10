@@ -110,6 +110,42 @@ def question(reading, slot):
             "evidence": amb["evidence"]}
 
 
+def _pct(x, theta):
+    """A share as a percentage; one decimal when rounding would hide which side of θ it is on."""
+    whole = round(x * 100)
+    if whole == round(theta * 100) and x != theta:
+        return "%.1f%%" % (x * 100)
+    return "%d%%" % whole
+
+
+def why(reading, decision, edited, forced):
+    """The rule's own comparison, row by row, for the collapsible "Why?" section (Amershi G11).
+    Every number comes from strategy.decide(), so the explanation cannot drift from the decision."""
+    theta = decision["theta"]
+    rows = []
+    for c in decision["comparisons"]:
+        if c["dominant"]:
+            verdict = "no need to ask: %s" % c["evidence"]
+        elif c["overlap"] >= theta:
+            verdict = "at least θ (%d%%): show, don't ask" % round(theta * 100)
+        else:
+            verdict = "below θ (%d%%): ask" % round(theta * 100)
+        rows.append({"part": strategy.slot_words(reading, c["slot"]).replace("phrase:", ""),
+                     "readings": [{"label": c["chosen_label"], "count": c["chosen"], "used": True},
+                                  {"label": c["other_label"], "count": c["other"], "used": False}],
+                     "overlap": round(c["overlap"], 2), "share": _pct(c["overlap"], theta), "dominant": c["dominant"], "verdict": verdict})
+    if not rows:
+        summary = "Nothing in the request was unclear, so there was nothing to compare: act."
+    else:
+        summary = "The rule compares the lists each unclear part could give. It asks only when a part has no clear reading and its lists share less than θ = %d%%." % round(theta * 100)
+    notes = []
+    if forced:
+        notes.append("The strategy setting chose %s; the rule alone would have chosen %s." % (decision["mode"], decision["rule_mode"]))
+    if edited:
+        notes.append("You changed the reading, so the chips stay in view. The rows describe the reading as it is now.")
+    return {"summary": summary, "rows": rows, "theta": theta, "rule_mode": decision["rule_mode"], "notes": notes}
+
+
 def _interpreter_label(source):
     """Say plainly which interpreter read the request, using the agreed status words."""
     if source == "rules":
@@ -142,6 +178,7 @@ def _run(payload):
     reading = interpret.for_target(reading)  # the target may have just been switched
     decision = strategy.decide(reading, theta=_theta(payload.get("theta", strategy.THETA)),
                                force=payload.get("mode") if payload.get("mode") != "auto" else None)
+    explained = why(reading, decision, edited, forced=decision["mode"] != decision["rule_mode"])
     if edited:  # the recruiter has taken control: keep the chips in view and say what happened
         decision = dict(decision, mode="show", reason="Updated with your changes. Tap a chip to change it again.")
     results = search.search(reading)
@@ -163,6 +200,7 @@ def _run(payload):
         "interpreter": _interpreter_label(reading.get("source", "rules")),
         "dropped": reading.get("dropped", []),
         "theta": decision["theta"],
+        "why": explained,
     }, results
 
 

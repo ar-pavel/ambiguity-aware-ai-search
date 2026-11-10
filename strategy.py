@@ -24,7 +24,7 @@ SLOT_WORDS = {"skills_op": "AND vs OR", "seniority": "'senior'", "location": "th
               "availability": "'available'", "target": "people vs jobs"}
 
 
-def _slot_words(reading, slot):
+def slot_words(reading, slot):
     """How to name a slot in a reason; seniority quotes the word written ('senior' or 'lead')."""
     if slot == "seniority" and (reading.get("seniority") or {}).get("contains"):
         return "'%s'" % reading["seniority"]["contains"].lower()
@@ -51,7 +51,7 @@ def _compare(reading, amb, candidates):
     a = _run(interpret.apply_option(reading, amb["options"][chosen]), candidates)
     b = _run(interpret.apply_option(reading, amb["options"][other]), candidates)
     return {"slot": amb["slot"], "chosen": len(a), "other": len(b),
-            "other_label": amb["labels"][other], "overlap": search.overlap(a, b),
+            "chosen_label": amb["labels"][chosen], "other_label": amb["labels"][other], "overlap": search.overlap(a, b),
             "dominant": amb["dominant"], "evidence": amb["evidence"]}
 
 
@@ -66,7 +66,7 @@ def decide(reading, theta=THETA, force=None, candidates=None):
     elif askable:
         c = askable[0]
         mode = "ask"
-        reason = "Asking because %s gives two different lists (%s)." % (_slot_words(reading, c["slot"]), _lists(c))
+        reason = "Asking because %s gives two different lists (%s)." % (slot_words(reading, c["slot"]), _lists(c))
     else:
         mode = "show"
         low = [c for c in comps if c["overlap"] < theta]
@@ -80,6 +80,7 @@ def decide(reading, theta=THETA, force=None, candidates=None):
 
     ask_slot = askable[0]["slot"] if askable else (
         min(comps, key=lambda c: c["overlap"])["slot"] if comps else None)
+    rule_mode = mode  # what the rule chose, before any setting overrides it
     if force and force != mode:
         if force == "ask" and not comps:
             reason = "Nothing was unclear, so there is nothing to ask. Searched straight away."
@@ -88,7 +89,7 @@ def decide(reading, theta=THETA, force=None, candidates=None):
             reason = "Mode set by hand to %s. (The rule would have chosen %s.)" % (force, mode)
         mode = force
     return {"mode": mode, "reason": reason, "ask_slot": ask_slot if mode == "ask" else None,
-            "theta": theta, "comparisons": comps}
+            "theta": theta, "comparisons": comps, "rule_mode": rule_mode}
 
 
 if __name__ == "__main__":
