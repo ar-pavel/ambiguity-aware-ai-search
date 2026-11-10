@@ -7,7 +7,7 @@ visible rule chooses to **act**, **show** the reading as editable chips, or **as
 Search is structured filtering over synthetic data; there is no vector store and no embeddings.
 
 ## Build and test
-python3 run_tests.py
+python3 run_tests.py      # CI runs this on Python 3.8 and 3.13 for every push and pull request
 python3 app.py            # then open http://127.0.0.1:8770
 cp .env.example .env      # live mode: set A2_MODEL=claude or openai, and that provider's key
 

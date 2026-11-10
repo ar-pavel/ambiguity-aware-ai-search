@@ -1,0 +1,32 @@
+# Runs the tests on the oldest Python the README promises (3.8) and a current one.
+# Standard library only: nothing to install, no keys, no network. The live model is not called.
+name: tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.8", "3.13"]
+    # The official Python image, so the old version is always available.
+    container: python:${{ matrix.python }}-slim
+    env:
+      A2_MODEL: ""    # always the rule-based stand-in
+      A2_LOG: "off"   # no event log in CI
+    steps:
+      - uses: actions/checkout@v4
+      - name: Tests
+        run: python3 run_tests.py
+      - name: Self-tests
+        run: |
+          python3 search.py --selftest
+          python3 interpret.py --selftest
