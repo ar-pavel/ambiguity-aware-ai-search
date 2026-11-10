@@ -121,6 +121,22 @@ class TestControls(unittest.TestCase):
         self.assertEqual(app.handle({"text": "Java developers"})["interpreter"],
                          "rule-based stand-in (simulated)")
 
+    def test_fallback_keeps_the_simulated_label(self):
+        os.environ["A2_MODEL"] = "claude"
+        saved, model.judge = model.judge, (lambda t: None)
+        try:
+            label = app.handle({"text": "Java developers"})["interpreter"]
+            self.assertTrue(label.startswith("rule-based stand-in (simulated)"))
+            self.assertIn("live model was unavailable", label)
+        finally:
+            model.judge = saved
+            os.environ.pop("A2_MODEL", None)
+
+    def test_threshold_is_kept_in_range(self):
+        self.assertEqual(app.handle({"text": "senior Java developers", "theta": 5})["theta"], 1.0)
+        self.assertEqual(app.handle({"text": "senior Java developers", "theta": -1})["theta"], 0.0)
+        self.assertEqual(app.handle({"text": "senior Java developers", "theta": "abc"})["theta"], 0.5)
+
     def test_dropped_items_are_reported(self):
         self.assertEqual(app.handle({"text": "Java developers"})["dropped"], [])
 
