@@ -3,7 +3,7 @@ const $ = (id) => document.getElementById(id);
 const NOTICE = { immediate: "now", "2w": "2 weeks", "1m": "1 month", "3m": "3 months" };
 
 // What the recruiter has asked for so far. Edits are re-applied by the server to a fresh reading.
-const state = { text: "", mode: "auto", choices: {}, op: null, lastCount: null };
+const state = { text: "", mode: "auto", choices: {}, op: null, lastCount: null, answered: null };
 
 async function runSearch() {
   const res = await fetch("/api/search", {
@@ -41,7 +41,8 @@ function chipFor(chip) {
     return b;
   }
   if (!chip.options) return el("span", { class: "chip" }, chip.text);
-  const wrap = el("label", { class: "chip choice" + (chip.guessed ? " guessed" : ""), title: chip.evidence });
+  const answered = chip.slot === state.answered ? " answered" : "";
+  const wrap = el("label", { class: "chip choice" + (chip.guessed ? " guessed" : "") + answered, title: chip.evidence });
   const select = el("select", { "aria-label": "Change: " + chip.text });
   chip.options.forEach((label, i) => {
     const opt = el("option", { value: i }, label);
@@ -54,14 +55,35 @@ function chipFor(chip) {
   return wrap;
 }
 
+// Ask mode: one question, each option showing how many candidates it would give.
+function renderQuestion(q) {
+  const card = el("div", { class: "question", role: "group", "aria-labelledby": "question-text" });
+  card.append(el("p", { id: "question-text", class: "question-text" }, q.text));
+  const options = el("div", { class: "options" });
+  q.options.forEach((opt, i) => {
+    const b = el("button", { type: "button", class: "option" }, opt.label + " (" + opt.count + ")");
+    b.addEventListener("click", () => {
+      state.choices[q.slot] = i; state.mode = "show"; state.answered = q.slot; runSearch();
+    });
+    options.append(b);
+  });
+  const anyway = el("button", { type: "button", class: "link" },
+                    "Search anyway with my best guess (" + q.options[q.default].label + ")");
+  anyway.addEventListener("click", () => { state.mode = "show"; runSearch(); });
+  card.append(options, anyway);
+  return card;
+}
+
 function renderInterpretation(data) {
   const slot = $("interpretation");
   slot.innerHTML = "";
-  if (data.mode === "show") {
+  if (data.mode === "ask" && data.question) {
+    slot.append(renderQuestion(data.question));
+  } else if (data.mode === "show") {
     const row = el("div", { class: "chips", role: "group", "aria-label": "How I read your request" });
     data.chips.forEach((c) => row.append(chipFor(c)));
     const reset = el("button", { type: "button", class: "link" }, "Reset to my words");
-    reset.addEventListener("click", () => { state.choices = {}; state.op = null; state.mode = "auto"; runSearch(); });
+    reset.addEventListener("click", () => { state.choices = {}; state.op = null; state.answered = null; state.mode = "auto"; runSearch(); });
     slot.append(row, reset);
   } else {
     slot.append(el("p", { class: "read-as" }, "Read as: " + data.read_as));
@@ -98,11 +120,16 @@ function render(data) {
   }
   renderModeLine(data);
   renderInterpretation(data);
-  renderResults(data);
+  if (data.mode === "ask") {  // ask before searching: no results until the question is answered
+    ["count", "results", "scope"].forEach((id) => show(id, false));
+    state.lastCount = null;
+  } else {
+    renderResults(data);
+  }
 }
 
 $("ask-form").addEventListener("submit", (e) => {
   e.preventDefault();
-  Object.assign(state, { text: $("request").value, mode: "auto", choices: {}, op: null, lastCount: null });
+  Object.assign(state, { text: $("request").value, mode: "auto", choices: {}, op: null, lastCount: null, answered: null });
   runSearch();
 });
