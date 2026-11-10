@@ -135,6 +135,20 @@ class TestModelReply(unittest.TestCase):
         expected = dict(read("Java developers at Bluefin")["ambiguities"][0], evidence="you wrote 'at Bluefin'")
         self.assertEqual(r["ambiguities"][0], expected)  # dict() rather than |, which needs Python 3.9
 
+    def test_unexpected_target_falls_back_to_the_rules(self):
+        for target in ("people", "companies", "../secrets"):
+            with self.subTest(target=target):
+                self.assertIsNone(interpret.from_model("Java jobs", dict(self.BASE, target=target)))
+
+    def test_unexpected_status_is_dropped_and_said_so(self):
+        r = interpret.from_model("Java jobs", dict(self.BASE, target="jobs", status="pending"))
+        self.assertIsNone(r["status"])
+        self.assertIn("status 'pending' (jobs are only open or closed)", r["dropped"])
+
+    def test_only_the_known_data_files_can_be_loaded(self):
+        with self.assertRaises(ValueError):
+            search.load("../.env")
+
     def test_status_does_not_filter_candidates(self):
         r = interpret.from_model("open Java developers", dict(self.BASE, status="open"))
         self.assertEqual(search.search(r), search.search(dict(r, status=None)))

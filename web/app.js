@@ -2,7 +2,7 @@
 const $ = (id) => document.getElementById(id);
 
 // What the recruiter has asked for so far. Edits are re-applied by the server to a fresh reading.
-const state = { text: "", mode: "auto", choices: {}, op: null, lastCount: null, answered: null };
+const state = { text: "", mode: "auto", choices: {}, op: null, lastCount: null, lastNoun: null, answered: null };
 const chosenMode = () => $("mode").value;          // the strategy picked in the settings bar
 const theta = () => Number($("theta").value);       // the rule's overlap threshold
 
@@ -96,9 +96,12 @@ function renderInterpretation(data) {
 }
 
 function renderResults(data) {
-  const was = state.lastCount !== null && state.lastCount !== data.count ? " (was " + state.lastCount + ")" : "";
+  // "(was N)" only compares like with like: not 5 candidates with 1 job.
+  const was = state.lastCount !== null && state.lastNoun === data.noun && state.lastCount !== data.count
+    ? " (was " + state.lastCount + ")" : "";
   $("count").textContent = data.count + " " + data.noun + (data.count === 1 ? "" : "s") + was;
   state.lastCount = data.count;
+  state.lastNoun = data.noun;
   // The server sends headers and rows as plain text, for candidates or jobs alike.
   const head = $("results").querySelector("thead");
   const body = $("results").querySelector("tbody");

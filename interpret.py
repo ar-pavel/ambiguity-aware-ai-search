@@ -293,8 +293,14 @@ def from_model(text, judged):
             known = None
         company = known
     target = judged["target"]
+    if target not in search.TARGETS:
+        return None  # an unexpected target is an unusable reply: the rules are used instead
+    status = judged.get("status")
+    if status not in (None, "open", "closed"):
+        dropped.append("status '%s' (jobs are only open or closed)" % status)
+        status = None
     reading = {"target": target, "company": company,
-               "status": judged.get("status"),
+               "status": status,
                "skills": skills, "skills_op": judged["skills_op"], "location": location,
                "seniority": judged["seniority"], "work_mode": judged["work_mode"],
                "availability": {"max_notice": judged["availability"]} if judged["availability"] else None}

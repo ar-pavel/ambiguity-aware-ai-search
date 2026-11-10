@@ -16,6 +16,7 @@ import sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.join(HERE, "data")
 TARGETS = ("candidates", "jobs")
+DATA_FILES = TARGETS + ("companies",)
 
 # Common shorthand mapped to the skill names used in the data.
 SYNONYMS = {
@@ -38,6 +39,8 @@ _CACHE = {}
 
 def load(name="candidates"):
     """Records from data/<name>.json: 'candidates', 'jobs' or 'companies'. Read once, then reused."""
+    if name not in DATA_FILES:  # never open a file named by anything else (e.g. a model reply)
+        raise ValueError("unknown data set: %r" % (name,))
     if name not in _CACHE:
         with open(os.path.join(DATA_DIR, name + ".json"), encoding="utf-8") as f:
             _CACHE[name] = json.load(f)

@@ -27,6 +27,7 @@ def entry(payload, result):
         "interpreter": result.get("interpreter"),
         "strategy_setting": payload.get("mode", "auto"),
         "theta": result.get("theta"),
+        "target": result.get("target"),
         "mode": result.get("mode"),
         "reason": result.get("reason"),
         "ambiguities": [a["slot"] for a in (result.get("reading") or {}).get("ambiguities", [])],
