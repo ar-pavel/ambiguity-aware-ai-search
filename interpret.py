@@ -6,8 +6,9 @@
 Two routes, same output shape:
   * rules (default, SIMULATED): a small rule-based stand-in for the language model. It follows the
     detection rules in the design spec, so it works with no key and no network.
-  * live (IMPLEMENTED, needs your own key): model.py asks a language model for the same JSON shape.
-    The reply is validated; if it is unusable the rules route is used and the page says so.
+  * live (IMPLEMENTED, needs your own key): model.py asks Claude to judge the request with
+    structured outputs; from_model() checks the reply and builds the same shape. If anything fails,
+    the rules route is used and the page says so.
 
 The reading is the single object the page uses for the chips, the question, the "Read as" line and
 the search. Each ambiguity lists its options as small patches to the reading, the option chosen by
@@ -179,16 +180,54 @@ def apply_option(reading, option):
     return out
 
 
+def from_model(text, judged):
+    """Check the model's judgement and build a reading from it. Returns None if it can't be trusted.
+
+    The model judges; code checks. A skill the user never wrote is dropped (the model may not add
+    requirements), and every option is built by make_ambiguity(), exactly as for the rules route."""
+    low = text.lower()
+    skills, dropped = [], []
+    for s in judged.get("skills", []):
+        name = search.canonical(s)
+        if s.lower() in low or name.lower() in low:
+            if name not in skills:
+                skills.append(name)
+        else:
+            dropped.append(s)
+    reading = {"skills": skills, "skills_op": judged["skills_op"], "location": judged["location"],
+               "seniority": judged["seniority"], "work_mode": judged["work_mode"],
+               "availability": {"max_notice": judged["availability"]} if judged["availability"] else None}
+    if reading["seniority"]:
+        sen = {k: v for k, v in reading["seniority"].items() if v is not None}
+        if sen["kind"] == "years" and "min" not in sen:
+            return None
+        if sen["kind"] == "title" and not sen.get("contains"):
+            return None
+        reading["seniority"] = sen
+    ambiguities, seen = [], set()
+    for a in judged.get("ambiguities", []):
+        slot = a["slot"]
+        present = reading.get(slot) if slot != "skills_op" else len(skills) > 1
+        if present and slot not in seen:
+            seen.add(slot)
+            ambiguities.append(make_ambiguity(slot, reading, a["dominant"], a["evidence"]))
+    phrases = [(0, 0, s) for s in skills]
+    reading["ambiguities"] = ambiguities + _phrase_ambiguities(phrases)
+    reading["dropped"] = dropped
+    return reading
+
+
 def interpret(text):
     """Use the live model when configured, otherwise the rules. Always returns a valid reading."""
     import model
     if model.live():
-        reading = model.interpret(text)
+        judged = model.judge(text)
+        reading = from_model(text, judged) if judged else None
         if reading is not None:
-            reading["source"] = "live"
+            reading["source"] = "Claude (%s)" % model.MODEL
             return reading
         fallback = interpret_rules(text)
-        fallback["source"] = "rules (live model reply was unusable)"
+        fallback["source"] = "rules (the live model was unavailable or its reply was unusable)"
         return fallback
     return interpret_rules(text)
 
