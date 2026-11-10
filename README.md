@@ -6,7 +6,7 @@ assistant notices what is unclear and decides whether to **act** (just search), 
 editable chips, or **ask** one clarifying question, and it always says why. Built as an MSc project at
 the University of Birmingham.
 
-*README prose: about 780 words (code, commands and tables not counted).*
+*README prose: about 850 words (code, commands and tables not counted).*
 
 ## Project status
 
@@ -21,6 +21,8 @@ the University of Birmingham.
 | Interpreter, live: Claude or OpenAI with structured outputs, checked by code | implemented, untested live |
 | Event log for evaluation (`logs/events.jsonl`) | implemented |
 | Free-text "Other…" on chips and questions; learning when to ask from corrections; semantic skill matching | planned |
+
+![System and workflow diagram](docs/system.png)
 
 **How it works:** the interpreter turns the request into one structured *reading* plus the parts that
 are unclear. For each unclear part, the rule compares the shortlists the readings would give:
@@ -100,6 +102,7 @@ links its pull request, where the reasons and checks are written up.
 9. **Ask mode** ([#19](https://github.com/ar-pavel/ambiguity-aware-ai-search/pull/19)). Review found the question could quote the model's own wording. Questions are now built from the reading only.
 10. **Controls** ([#20](https://github.com/ar-pavel/ambiguity-aware-ai-search/pull/20)): strategy switch, threshold slider and an interpreter label. Review kept the "simulated" label when a live model fails.
 11. **Event log** ([#21](https://github.com/ar-pavel/ambiguity-aware-ai-search/pull/21)) for evaluating the strategies.
+12. **Diagram and storyboards** ([#23](https://github.com/ar-pavel/ambiguity-aware-ai-search/pull/23)). The first diagram was hard to follow: the request reached the live model by no visible path. I redrew it around an explicit "live model set?" decision. The storyboard screenshots were cropped and enlarged until the text could be read.
 
 ## AI assistance
 
@@ -110,4 +113,5 @@ Developed utilising Claude Code. Details will be added before submission.
 - `AGENTS.md`: working rules for coding agents (and people). `skills/`: two task procedures.
 - `.env.example`: settings for live mode and logging.
 - `logs/events.jsonl`: created locally when the app runs; ignored by git.
-- `docs/`: system diagram and storyboards (to be added).
+- `docs/system.png` (source `docs/system.dot`): system and workflow diagram, with each part marked implemented, simulated or planned.
+- `docs/storyboards/`: three five-frame storyboards (act, show, ask) built from real screenshots. `make_storyboards.py` regenerates the pages.
