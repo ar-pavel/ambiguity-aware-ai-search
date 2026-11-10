@@ -154,6 +154,22 @@ class TestChecks(unittest.TestCase):
         self.assertIsNone(r["location"])
         self.assertIn("location 'Paris' (not in the data)", r["dropped"])
 
+    def test_evidence_is_kept_only_if_its_quote_is_in_the_request(self):
+        judged = dict(SENIOR, ambiguities=[{"slot": "seniority", "dominant": False,
+                                            "evidence": "you wrote 'senior'"}])
+        r = interpret.from_model("senior Java developers", judged)
+        self.assertEqual(r["ambiguities"][0]["evidence"], "you wrote 'senior'")
+        judged["ambiguities"][0]["evidence"] = "you wrote 'very experienced'"
+        r = interpret.from_model("senior Java developers", judged)
+        self.assertEqual(r["ambiguities"][0]["evidence"], "from your request")
+
+    def test_nearby_is_only_offered_where_nearby_towns_are_known(self):
+        judged = dict(self.BASE, skills=["Python"], location={"value": "Reading", "scope": "nearby"},
+                      ambiguities=[{"slot": "location", "dominant": False, "evidence": "you wrote 'near'"}])
+        r = interpret.from_model("Python devs near Reading", judged)
+        self.assertEqual(r["location"], {"value": "Reading", "scope": "city"})
+        self.assertEqual(r["ambiguities"], [])
+
     def test_malformed_reply_falls_back_instead_of_crashing(self):
         os.environ["A2_MODEL"] = "claude"
         saved, model.judge = model.judge, (lambda text: {"skills": ["Java"]})

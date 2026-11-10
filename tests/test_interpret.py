@@ -52,6 +52,10 @@ class TestOtherSlots(unittest.TestCase):
         self.assertNotIn("location", slots("Python devs in London"))
         self.assertIn("location", slots("Python devs near London"))
 
+    def test_near_a_city_without_known_nearby_towns_is_just_that_city(self):
+        self.assertNotIn("location", slots("Python devs near Reading"))
+        self.assertEqual(read("Python devs near Reading")["location"], {"value": "Reading", "scope": "city"})
+
     def test_country(self):
         self.assertEqual(read("Go engineers in UK")["location"], {"value": "UK", "scope": "country"})
 

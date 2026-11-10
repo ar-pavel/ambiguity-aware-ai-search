@@ -115,7 +115,7 @@ def _location(text):
             return {"value": country, "scope": "country"}, None
     for city in CITIES:
         near = re.search(r"\b(near|around|within[^,]*?of|commutable to)\s+" + city.lower() + r"\b", low)
-        if near:
+        if near and city in search.NEARBY:  # only offer "nearby" where nearby towns are known
             return {"value": city, "scope": "nearby"}, (False, "you wrote '%s'" % near.group(1))
         if re.search(r"\b" + city.lower() + r"\b", low):
             return {"value": city, "scope": "city"}, None
@@ -185,6 +185,14 @@ def _written(term, text):
     return re.search(r"(?<![\w.])" + re.escape(term) + r"(?![\w.])", text, re.IGNORECASE) is not None
 
 
+def _checked_evidence(evidence, text):
+    """Keep the model's evidence only if the words it quotes are really in the request."""
+    quoted = re.findall(r"'([^']+)'", evidence or "")
+    if quoted and all(q.lower() in text.lower() for q in quoted):
+        return "you wrote " + ", ".join("'%s'" % q for q in quoted)
+    return "from your request"
+
+
 def _known_place(value):
     """Map a place the model named to one the data knows ('London, UK' -> 'London'), or None."""
     for part in [value] + [p.strip() for p in value.split(",")]:
@@ -222,7 +230,7 @@ def from_model(text, judged):
             if place in COUNTRIES.values():
                 scope = "country"
             else:  # a city: keep "nearby" if the model said so, otherwise the city itself
-                scope = "nearby" if location["scope"] == "nearby" else "city"
+                scope = "nearby" if location["scope"] == "nearby" and place in search.NEARBY else "city"
             location = {"value": place, "scope": scope}
     reading = {"skills": skills, "skills_op": judged["skills_op"], "location": location,
                "seniority": judged["seniority"], "work_mode": judged["work_mode"],
@@ -238,9 +246,11 @@ def from_model(text, judged):
     for a in judged.get("ambiguities", []):
         slot = a["slot"]
         present = reading.get(slot) if slot != "skills_op" else len(skills) > 1
+        if slot == "location" and present and reading["location"]["value"] not in search.NEARBY:
+            present = False  # no nearby towns are known for this city, so there is nothing to choose
         if present and slot not in seen:
             seen.add(slot)
-            ambiguities.append(make_ambiguity(slot, reading, a["dominant"], a["evidence"]))
+            ambiguities.append(make_ambiguity(slot, reading, a["dominant"], _checked_evidence(a["evidence"], text)))
     phrases = [(0, 0, s) for s in skills]
     reading["ambiguities"] = ambiguities + _phrase_ambiguities(phrases)
     reading["dropped"] = dropped

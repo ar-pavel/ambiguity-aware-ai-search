@@ -4,6 +4,7 @@ import unittest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import app  # noqa: E402
+import model  # noqa: E402
 import search  # noqa: E402
 
 
@@ -61,6 +62,49 @@ class TestShowMode(unittest.TestCase):
     def test_bad_choice_is_ignored(self):
         r = app.handle({"text": "senior Java developers", "choices": {"seniority": 99}})
         self.assertNotIn("error", r)
+
+
+class TestAskMode(unittest.TestCase):
+    def test_ask_returns_one_question_with_real_counts(self):
+        r = app.handle({"text": "senior Java developers"})
+        self.assertEqual(r["mode"], "ask")
+        q = r["question"]
+        self.assertEqual(q["slot"], "seniority")
+        self.assertIn("'senior'", q["text"])
+        for opt, amb_opt in zip(q["options"], [a for a in r["reading"]["ambiguities"]
+                                               if a["slot"] == "seniority"][0]["options"]):
+            reading = app.interpret.apply_option(r["reading"], amb_opt)
+            self.assertEqual(opt["count"], len(search.search(reading)))
+
+    def test_no_question_outside_ask_mode(self):
+        self.assertIsNone(app.handle({"text": "Java developers in London"})["question"])
+        self.assertIsNone(app.handle({"text": "Java with Python in London"})["question"])
+
+    def test_answering_gives_show_mode_with_that_choice(self):
+        r = app.handle({"text": "senior Java developers", "choices": {"seniority": 1}, "mode": "show"})
+        self.assertEqual(r["mode"], "show")
+        self.assertIn("'Senior' in title", r["read_as"])
+        self.assertIsNone(r["question"])
+
+    def test_question_text_never_uses_model_wording(self):
+        os.environ["A2_MODEL"] = "claude"
+        saved = model.judge
+        model.judge = lambda t: {
+            "skills": ["Java"], "skills_op": "AND", "location": None, "availability": None,
+            "work_mode": None, "seniority": {"kind": "years", "min": 5, "contains": "Senior"},
+            "ambiguities": [{"slot": "seniority", "dominant": False,
+                             "evidence": "The recruiter said senior without a number"}]}
+        try:
+            r = app.handle({"text": "senior Java developers"})
+            self.assertEqual(r["question"]["text"], "What do you mean by 'senior'?")
+        finally:
+            model.judge = saved
+            os.environ.pop("A2_MODEL", None)
+
+    def test_only_one_question_even_with_several_unclear_parts(self):
+        r = app.handle({"text": "senior Java Python devs available now"})
+        self.assertEqual(r["mode"], "ask")
+        self.assertIsInstance(r["question"], dict)
 
 
 class TestDescribe(unittest.TestCase):

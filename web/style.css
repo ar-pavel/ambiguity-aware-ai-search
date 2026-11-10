@@ -31,3 +31,12 @@ button.chip { cursor: pointer; }
 .tag { font-size: .8rem; color: var(--ask); }
 button.link { padding: 0; border: 0; background: none; color: var(--show); text-decoration: underline; cursor: pointer; }
 .chip:focus-within, button.chip:focus-visible, button.link:focus-visible { outline: 3px solid #f0b429; outline-offset: 2px; }
+
+/* Ask mode: one question before searching, each option with its result count. */
+.question { padding: .75rem; border: 1px solid var(--ask); border-radius: 8px; margin-bottom: .5rem; }
+.question-text { margin: 0 0 .5rem; font-weight: 600; }
+.options { display: flex; flex-wrap: wrap; gap: .5rem; margin-bottom: .5rem; }
+button.option { background: #fff; color: var(--ink); border: 1px solid var(--ask); }
+button.option:hover { background: #fdf3ec; }
+button.option:focus-visible { outline: 3px solid #f0b429; outline-offset: 2px; }
+.chip.answered { border-color: var(--ask); box-shadow: 0 0 0 2px #f6dccb; }

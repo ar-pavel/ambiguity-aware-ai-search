@@ -61,6 +61,26 @@ def chips(reading):
     return out
 
 
+QUESTIONS = {
+    "skills_op": "Should candidates have all of these skills, or any one of them?",
+    "seniority": "What do you mean by %s?",
+    "location": "Where should candidates be?",
+    "availability": "How soon do they need to start?",
+}
+
+
+def question(reading, slot):
+    """One clarifying question for one slot, each option with the number of candidates it would give."""
+    amb = next(a for a in reading["ambiguities"] if a["slot"] == slot)
+    text = QUESTIONS.get(slot, "Which did you mean?")
+    if "%s" in text:  # built from the reading, never from model text
+        text %= "'%s'" % reading["seniority"].get("contains", "Senior").lower()
+    options = [{"label": label, "count": len(search.search(interpret.apply_option(reading, opt)))}
+               for label, opt in zip(amb["labels"], amb["options"])]
+    return {"slot": slot, "text": text, "options": options, "default": amb["chosen"],
+            "evidence": amb["evidence"]}
+
+
 def handle(payload):
     """Interpret the request, choose a mode, run the search and describe what ran."""
     text = (payload.get("text") or "").strip()
@@ -80,6 +100,7 @@ def handle(payload):
         "reason": decision["reason"],
         "read_as": search.describe(reading),
         "chips": chips(reading),
+        "question": question(reading, decision["ask_slot"]) if decision["mode"] == "ask" else None,
         "results": [{k: c[k] for k in FIELDS} for c in results],
         "count": len(results),
         "searched": search.SEARCHED,
