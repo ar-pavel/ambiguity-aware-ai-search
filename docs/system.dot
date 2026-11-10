@@ -1,0 +1,59 @@
+// System and workflow diagram. Render: dot -Tpng -Gdpi=150 docs/system.dot -o docs/system.png
+digraph system {
+  rankdir=LR; nodesep=0.3; ranksep=0.45; newrank=true;
+  node [shape=box, style="rounded,filled", fillcolor="#ffffff", color="#1f2933", fontname="Helvetica", fontsize=11];
+  edge [fontname="Helvetica", fontsize=9, color="#52606d"];
+
+  recruiter [label="Recruiter", shape=ellipse, fillcolor="#f5f7fa"];
+
+  subgraph cluster_page {
+    label="Browser · web/"; fontname="Helvetica-Bold"; fontsize=11; color="#9aa5b1"; style=rounded;
+    request [label="Request\n+ strategy, θ"];
+    view [label="Mode + reason\nRead as · chips · question\nresults · scope line"];
+  }
+
+  subgraph cluster_server {
+    label="Server · app.py handle()"; fontname="Helvetica-Bold"; fontsize=11; color="#9aa5b1"; style=rounded;
+    route [label="live model\nset?", shape=diamond, fontsize=10];
+
+    subgraph cluster_interp {
+      label="Interpreter (the AI step)"; labelloc=b; fontname="Helvetica"; fontsize=10; color="#c4ccd4"; style="rounded,dashed";
+      llm [label="Claude or OpenAI\nmodel.py · HTTPS\nJSON schema\n[implemented,\nuntested live]", fillcolor="#eef4fb", color="#2d6ca2"];
+      checks [label="Checks\nwhole-word skills\nknown places"];
+      rules [label="Rule-based\nstand-in\ninterpret.py\n[simulated]", style="rounded,filled,dashed", fillcolor="#fdf3ec", color="#a0522d"];
+    }
+
+    reading [label="Reading\n+ ambiguities", shape=note, fillcolor="#f5f7fa"];
+    rule [label="Strategy rule\nstrategy.py\noverlap vs θ"];
+    search [label="Search\nsearch.py"];
+  }
+
+  data [label="40 synthetic\ncandidates", shape=cylinder, fillcolor="#f5f7fa"];
+  log [label="Event log\nlogs/", shape=cylinder, fillcolor="#f5f7fa"];
+
+  recruiter -> request [label="types"];
+  request -> route [label="text"];
+  route -> llm [label="yes"];
+  route -> rules [label="no (default)"];
+  llm -> checks [label="judgement"];
+  checks -> reading [label="ok"];
+  checks -> rules [label="fails", style=dashed];
+  rules -> reading;
+  reading -> rule;
+  rule -> search [label="shortlist per\nreading"];
+  search -> data [dir=both];
+  search -> view [label="results,\ncounts"];
+  rule -> view [label="act / show / ask\n+ reason"];
+  rule -> log [label="one line\nper turn", style=dotted];
+  view -> request [label="edit a chip / answer\n→ runs again", style=dashed, constraint=false];
+
+  // Status key and planned work, as a caption (no extra boxes in the flow)
+  labelloc=b; labeljust=l; fontname="Helvetica"; fontsize=10;
+  label=<<table border="0" cellborder="0" cellspacing="6">
+    <tr><td align="left"><b>Status</b></td>
+        <td border="1" style="rounded" color="#1f2933">implemented</td>
+        <td border="1" style="rounded" color="#a0522d" bgcolor="#fdf3ec">simulated</td>
+        <td border="1" style="rounded" color="#9aa5b1"><font color="#7b8794">planned</font></td>
+        <td align="left"><font color="#7b8794">Planned, not built: free-text 'Other…' · learning when to ask from corrections · semantic skill matching</font></td></tr>
+  </table>>;
+}
