@@ -1,0 +1,21 @@
+/* Plain and readable; clarity of the interaction matters, not polish. */
+:root { --ink: #1f2933; --muted: #616e7c; --line: #d9e2ec; --act: #2f6f4e; --show: #2d6ca2; --ask: #a0522d; }
+body { margin: 0; font: 16px/1.5 system-ui, sans-serif; color: var(--ink); background: #fff; }
+main { max-width: 960px; margin: 2rem auto; padding: 0 1rem; }
+h1 { margin: 0 0 .25rem; font-size: 1.5rem; }
+.hint { margin: 0 0 1rem; color: var(--muted); }
+form { display: flex; gap: .5rem; margin-bottom: 1rem; }
+input { flex: 1; padding: .6rem .75rem; font: inherit; border: 1px solid var(--line); border-radius: 6px; }
+button { padding: .6rem 1rem; font: inherit; border: 1px solid var(--ink); border-radius: 6px; background: var(--ink); color: #fff; cursor: pointer; }
+button:focus-visible, input:focus-visible { outline: 3px solid #f0b429; outline-offset: 2px; }
+#mode-line { padding: .5rem .75rem; border-left: 4px solid var(--line); background: #f5f7fa; margin-bottom: .75rem; }
+.mode { letter-spacing: .05em; }
+.mode-act { color: var(--act); } .mode-show { color: var(--show); } .mode-ask { color: var(--ask); }
+.read-as { margin: 0 0 .75rem; font-weight: 600; }
+#count { margin: .5rem 0; color: var(--muted); }
+table { width: 100%; border-collapse: collapse; font-size: .95rem; }
+th, td { text-align: left; padding: .4rem .5rem; border-bottom: 1px solid var(--line); }
+th { font-weight: 600; color: var(--muted); }
+.scope { margin-top: .75rem; font-size: .875rem; color: var(--muted); }
+#error { color: #b42318; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
