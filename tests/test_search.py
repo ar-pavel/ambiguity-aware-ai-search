@@ -61,6 +61,11 @@ class TestOtherFilters(unittest.TestCase):
         soon = names({"availability": {"max_notice": "2w"}})
         self.assertTrue(now < soon)
 
+    def test_work_mode(self):
+        remote = names({"work_mode": "remote"})
+        self.assertTrue(remote)
+        self.assertTrue(all(c["work_mode"] == "remote" for c in CANDS if c["name"] in remote))
+
     def test_overlap(self):
         a = search.search({"skills": ["Java", "Python"], "skills_op": "AND"}, CANDS)
         b = search.search({"skills": ["Java", "Python"], "skills_op": "OR"}, CANDS)

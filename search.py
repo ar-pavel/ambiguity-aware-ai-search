@@ -70,6 +70,10 @@ def _seniority_match(cand, sen):
     return by_years or by_title  # "either"
 
 
+def _work_mode_match(cand, mode):
+    return not mode or cand["work_mode"] == mode
+
+
 def _availability_match(cand, avail):
     if not avail:
         return True
@@ -83,7 +87,8 @@ def search(reading, candidates=None):
             if _skills_match(c, reading.get("skills", []), reading.get("skills_op", "AND"))
             and _location_match(c, reading.get("location"))
             and _seniority_match(c, reading.get("seniority"))
-            and _availability_match(c, reading.get("availability"))]
+            and _availability_match(c, reading.get("availability"))
+            and _work_mode_match(c, reading.get("work_mode"))]
 
 
 def overlap(a, b):
