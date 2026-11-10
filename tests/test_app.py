@@ -107,6 +107,24 @@ class TestAskMode(unittest.TestCase):
         self.assertIsInstance(r["question"], dict)
 
 
+class TestControls(unittest.TestCase):
+    def test_every_strategy_can_be_forced_for_comparison(self):
+        for mode in ("act", "show", "ask"):
+            self.assertEqual(app.handle({"text": "senior Java developers", "mode": mode})["mode"], mode)
+
+    def test_threshold_is_used_and_reported(self):
+        r = app.handle({"text": "senior Java developers", "theta": 0.1})
+        self.assertEqual(r["theta"], 0.1)
+        self.assertEqual(r["mode"], "show")  # the lists share 17%, which is above 10%
+
+    def test_interpreter_is_labelled_with_its_status(self):
+        self.assertEqual(app.handle({"text": "Java developers"})["interpreter"],
+                         "rule-based stand-in (simulated)")
+
+    def test_dropped_items_are_reported(self):
+        self.assertEqual(app.handle({"text": "Java developers"})["dropped"], [])
+
+
 class TestDescribe(unittest.TestCase):
     def test_every_filter_appears(self):
         line = search.describe({"skills": ["Java", "Python"], "skills_op": "OR",

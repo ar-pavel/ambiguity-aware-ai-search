@@ -81,6 +81,13 @@ def question(reading, slot):
             "evidence": amb["evidence"]}
 
 
+def _interpreter_label(source):
+    """Say plainly which interpreter read the request, using the agreed status words."""
+    if source == "rules":
+        return "rule-based stand-in (simulated)"
+    return source
+
+
 def handle(payload):
     """Interpret the request, choose a mode, run the search and describe what ran."""
     text = (payload.get("text") or "").strip()
@@ -105,7 +112,9 @@ def handle(payload):
         "count": len(results),
         "searched": search.SEARCHED,
         "not_searched": search.NOT_SEARCHED,
-        "interpreter": reading.get("source", "rules"),
+        "interpreter": _interpreter_label(reading.get("source", "rules")),
+        "dropped": reading.get("dropped", []),
+        "theta": decision["theta"],
     }
 
 
