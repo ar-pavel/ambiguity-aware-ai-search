@@ -9,7 +9,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import interpret  # noqa: E402
 import model  # noqa: E402
 
-SENIOR = {"skills": ["Java"], "skills_op": "AND", "location": {"value": "London", "scope": "city"},
+SENIOR = {"target": "candidates", "company": None, "status": None, "skills": ["Java"], "skills_op": "AND", "location": {"value": "London", "scope": "city"},
           "seniority": {"kind": "years", "min": 5, "contains": "Senior"}, "availability": None,
           "work_mode": None, "ambiguities": [{"slot": "seniority", "dominant": False,
                                              "evidence": "you wrote 'senior'"}]}
@@ -132,7 +132,7 @@ class TestFromModel(unittest.TestCase):
 
 class TestChecks(unittest.TestCase):
     """The model judges; code checks. Each test is a way a model reply could mislead the page."""
-    BASE = {"skills_op": "AND", "location": None, "seniority": None, "availability": None,
+    BASE = {"target": "candidates", "company": None, "status": None, "skills_op": "AND", "location": None, "seniority": None, "availability": None,
             "work_mode": None, "ambiguities": []}
 
     def test_skill_must_be_a_whole_word(self):

@@ -23,8 +23,11 @@ import search
 CITIES = sorted({c["city"] for c in search.load()}, key=len, reverse=True)
 COUNTRIES = {"uk": "UK", "united kingdom": "UK", "ireland": "Ireland"}
 SKILL_TERMS = sorted(search.SYNONYMS, key=len, reverse=True)  # longest first, so "sap mm" beats "sap"
+COMPANIES = [c["name"] for c in search.load("companies")]
 DEFAULT_YEARS = 5  # what "senior" means in years when it is read as experience
-SLOTS = ("skills_op", "seniority", "location", "availability")
+SLOTS = ("skills_op", "seniority", "location", "availability", "target")
+JOB_WORDS = r"\b(jobs?|roles?|vacanc(?:y|ies)|openings?|postings?)\b"  # not 'position': "a senior position"
+PEOPLE_WORDS = r"\b(candidates?|people|person|someone|anyone|profiles?)\b"
 
 
 def make_ambiguity(slot, reading, dominant, evidence):
@@ -49,6 +52,11 @@ def make_ambiguity(slot, reading, dominant, evidence):
                    {"location": {"value": city, "scope": "city"}}]
         labels = ["%s and nearby towns" % city, "%s only" % city]
         chosen = 0 if reading["location"]["scope"] == "nearby" else 1
+    elif slot == "target":
+        at = " at " + reading["company"] if reading.get("company") else ""
+        options = [{"target": "candidates"}, {"target": "jobs"}]
+        labels = ["people who work%s" % at if at else "candidates", "jobs" + at]
+        chosen = 0 if reading["target"] == "candidates" else 1
     else:
         options = [{"availability": {"max_notice": "immediate"}},
                    {"availability": {"max_notice": "2w"}}]
@@ -138,6 +146,48 @@ def _work_mode(text):
     return m and m.group(1).lower().replace("on-site", "onsite")
 
 
+def _company(text):
+    """The company named, by full name or its first word ('at Northwind'), as (name, words) or (None, None)."""
+    for name in COMPANIES:
+        for term in (name, name.split()[0]):
+            m = re.search(r"\b" + re.escape(term) + r"\b", text, re.IGNORECASE)
+            if m:
+                return name, m.group(0)
+    return None, None
+
+
+def _target(text, company_words):
+    """(target, ambiguity_or_None). People are searched by default; job words switch to jobs.
+    Both kinds of word ("candidates for the Python role") mean people, shown as a chip so it can be
+    switched. A company with neither kind of word is unclear: people who work there, or its jobs?"""
+    job = re.search(JOB_WORDS, text, re.IGNORECASE)
+    people = re.search(PEOPLE_WORDS, text, re.IGNORECASE)
+    if job and people:
+        return "candidates", (True, "you wrote '%s' and '%s'" % (people.group(0), job.group(0)))
+    if job:
+        return "jobs", None
+    if people or not company_words:
+        return "candidates", None
+    return "candidates", (False, "you wrote '%s' but not whether you want people or jobs" % company_words)
+
+
+def _status(text):
+    """'open' or 'closed', kept whatever the target, so it still applies if the target is switched to
+    jobs. It only filters jobs (candidates have no status)."""
+    m = re.search(r"\b(open|closed)\b", text, re.IGNORECASE)
+    return m.group(1).lower() if m else None
+
+
+def for_target(reading):
+    """Jobs have no notice period: drop availability and say so, rather than silently ignore it.
+    Run on every reading once its target is final, including after the recruiter switches it."""
+    if reading["target"] == "jobs" and reading.get("availability"):
+        reading["availability"] = None
+        reading["dropped"] = reading.get("dropped", []) + ["availability (jobs have no notice period)"]
+        reading["ambiguities"] = [a for a in reading["ambiguities"] if a["slot"] != "availability"]
+    return reading
+
+
 def _phrase_ambiguities(spans):
     """A multi-word skill such as 'SAP MM' is kept as one phrase; show that choice as a chip."""
     out = []
@@ -159,13 +209,16 @@ def interpret_rules(text):
     seniority, sen_amb = _seniority(text)
     location, loc_amb = _location(text)
     availability, av_amb = _availability(text)
-    reading = {"skills": [s[2] for s in spans], "skills_op": op, "location": location,
-               "seniority": seniority, "availability": availability, "work_mode": _work_mode(text)}
-    judged = zip(SLOTS, (op_amb, sen_amb, loc_amb, av_amb))
+    company, company_words = _company(text)
+    target, target_amb = _target(text, company_words)
+    reading = {"target": target, "skills": [s[2] for s in spans], "skills_op": op, "location": location,
+               "seniority": seniority, "availability": availability, "work_mode": _work_mode(text),
+               "company": company, "status": _status(text)}
+    judged = zip(SLOTS, (op_amb, sen_amb, loc_amb, av_amb, target_amb))
     reading["ambiguities"] = [make_ambiguity(slot, reading, *j) for slot, j in judged if j]
     reading["ambiguities"] += _phrase_ambiguities(spans)
     reading["source"] = "rules"
-    return reading
+    return for_target(reading)
 
 
 def apply_option(reading, option):
@@ -232,7 +285,23 @@ def from_model(text, judged):
             else:  # a city: keep "nearby" if the model said so, otherwise the city itself
                 scope = "nearby" if location["scope"] == "nearby" and place in search.NEARBY else "city"
             location = {"value": place, "scope": scope}
-    reading = {"skills": skills, "skills_op": judged["skills_op"], "location": location,
+    company = judged.get("company")
+    if company:
+        known = next((n for n in COMPANIES if n.lower() == company.lower()), None)
+        if known is None or not (_written(known, text) or _written(known.split()[0], text)):
+            dropped.append("company '%s' (not in your request or not in the data)" % company)
+            known = None
+        company = known
+    target = judged["target"]
+    if target not in search.TARGETS:
+        return None  # an unexpected target is an unusable reply: the rules are used instead
+    status = judged.get("status")
+    if status not in (None, "open", "closed"):
+        dropped.append("status '%s' (jobs are only open or closed)" % status)
+        status = None
+    reading = {"target": target, "company": company,
+               "status": status,
+               "skills": skills, "skills_op": judged["skills_op"], "location": location,
                "seniority": judged["seniority"], "work_mode": judged["work_mode"],
                "availability": {"max_notice": judged["availability"]} if judged["availability"] else None}
     if reading["seniority"]:
@@ -254,7 +323,7 @@ def from_model(text, judged):
     phrases = [(0, 0, s) for s in skills]
     reading["ambiguities"] = ambiguities + _phrase_ambiguities(phrases)
     reading["dropped"] = dropped
-    return reading
+    return for_target(reading)
 
 
 def interpret(text):

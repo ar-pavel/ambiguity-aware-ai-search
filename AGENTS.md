@@ -2,7 +2,7 @@
 
 ## Project overview
 A small web prototype in Python 3 (standard library only, 3.8+). Live mode calls the Claude or OpenAI API over HTTPS with `urllib`. A recruiter types a vague
-candidate search. An interpreter turns it into one structured reading plus its ambiguities, and a
+search for candidates or jobs. An interpreter turns it into one structured reading plus its ambiguities, and a
 visible rule chooses to **act**, **show** the reading as editable chips, or **ask** one question.
 Search is structured filtering over synthetic data; there is no vector store and no embeddings.
 

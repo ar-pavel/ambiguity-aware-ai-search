@@ -13,7 +13,7 @@ class TestHandle(unittest.TestCase):
         r = app.handle({"text": "Java developers in London"})
         self.assertEqual(r["mode"], "act")
         self.assertEqual(r["read_as"], "Java · London")
-        self.assertEqual(r["count"], len(r["results"]))
+        self.assertEqual(r["count"], len(r["table"]["rows"]))
         self.assertTrue(r["reason"])
 
     def test_read_as_is_built_from_the_filters_that_ran(self):

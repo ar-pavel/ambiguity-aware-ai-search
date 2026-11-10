@@ -19,7 +19,30 @@ import strategy
 HERE = os.path.dirname(os.path.abspath(__file__))
 WEB = os.path.join(HERE, "web")
 TYPES = {".html": "text/html", ".js": "text/javascript", ".css": "text/css"}
-FIELDS = ("name", "current_title", "skills", "years_experience", "city", "work_mode", "notice")
+NOTICE = {"immediate": "now", "2w": "2 weeks", "1m": "1 month", "3m": "3 months"}
+# The results table for each target: (header, how to show one record's cell).
+COLUMNS = {
+    "candidates": [("Name", "name"), ("Title", "current_title"), ("Skills", "skills"),
+                   ("Years", "years_experience"), ("City", "city"), ("Company", "company"),
+                   ("Work mode", "work_mode"), ("Notice", "notice")],
+    "jobs": [("Job", "title"), ("Company", "company"), ("Skills", "skills"), ("Min. years", "min_years"),
+             ("City", "city"), ("Work mode", "work_mode"), ("Status", "status")],
+}
+
+
+def _cell(rec, key):
+    value = rec[key]
+    if key == "skills":
+        return ", ".join(value)
+    if key == "notice":
+        return NOTICE[value]
+    return str(value)
+
+
+def table(records, target):
+    """Headers and rows of plain strings, so the page needs no knowledge of either record type."""
+    cols = COLUMNS[target]
+    return {"headers": [h for h, _ in cols], "rows": [[_cell(r, k) for _, k in cols] for r in records]}
 
 
 def _apply_edits(reading, choices, op):
@@ -67,11 +90,12 @@ QUESTIONS = {
     "seniority": "What do you mean by %s?",
     "location": "Where should candidates be?",
     "availability": "How soon do they need to start?",
+    "target": "Are you looking for people or for jobs?",
 }
 
 
 def question(reading, slot):
-    """One clarifying question for one slot, each option with the number of candidates it would give."""
+    """One clarifying question for one slot, each option with the number of results it would give."""
     amb = next(a for a in reading["ambiguities"] if a["slot"] == slot)
     text = QUESTIONS.get(slot, "Which did you mean?")
     if "%s" in text:  # built from the reading, never from model text
@@ -106,11 +130,13 @@ def handle(payload):
         return {"error": "Type a request, for example: senior Java developers in London"}
     reading = interpret.interpret(text)
     edited = _apply_edits(reading, payload.get("choices") or {}, payload.get("op"))
+    reading = interpret.for_target(reading)  # the target may have just been switched
     decision = strategy.decide(reading, theta=_theta(payload.get("theta", strategy.THETA)),
                                force=payload.get("mode") if payload.get("mode") != "auto" else None)
     if edited:  # the recruiter has taken control: keep the chips in view and say what happened
         decision = dict(decision, mode="show", reason="Updated with your changes. Tap a chip to change it again.")
     results = search.search(reading)
+    target = reading.get("target") or "candidates"
     return {
         "text": text,
         "reading": reading,
@@ -119,10 +145,12 @@ def handle(payload):
         "read_as": search.describe(reading),
         "chips": chips(reading),
         "question": question(reading, decision["ask_slot"]) if decision["mode"] == "ask" else None,
-        "results": [{k: c[k] for k in FIELDS} for c in results],
+        "target": target,
+        "noun": "job" if target == "jobs" else "candidate",
+        "table": table(results, target),
         "count": len(results),
-        "searched": search.SEARCHED,
-        "not_searched": search.NOT_SEARCHED,
+        "searched": search.SEARCHED[target],
+        "not_searched": search.NOT_SEARCHED[target],
         "interpreter": _interpreter_label(reading.get("source", "rules")),
         "dropped": reading.get("dropped", []),
         "theta": decision["theta"],

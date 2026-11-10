@@ -31,6 +31,7 @@ class TestLog(unittest.TestCase):
         self.assertEqual(first["ambiguities"], ["seniority"])
         self.assertEqual((second["event"], second["mode"], second["count"]), ("edit", "show", 12))
         self.assertEqual(second["choices"], {"seniority": 1})
+        self.assertEqual(second["target"], "candidates")
 
     def test_errors_are_not_logged(self):
         self.assertIsNone(log.write({"text": ""}, app.handle({"text": ""}), self.tmp.name))
