@@ -45,6 +45,15 @@ def handle(payload):
 
 
 class Handler(BaseHTTPRequestHandler):
+    def _local(self):
+        """Only answer requests addressed to this machine (blocks DNS-rebinding pages)."""
+        port = self.server.server_port
+        allowed = {"127.0.0.1:%d" % port, "localhost:%d" % port}
+        if self.headers.get("Host") not in allowed:
+            return False
+        origin = self.headers.get("Origin")
+        return origin is None or origin in {"http://" + h for h in allowed}
+
     def _send(self, code, body, ctype="application/json"):
         data = body if isinstance(body, bytes) else json.dumps(body).encode("utf-8")
         self.send_response(code)
@@ -54,6 +63,8 @@ class Handler(BaseHTTPRequestHandler):
         self.wfile.write(data)
 
     def do_GET(self):
+        if not self._local():
+            return self._send(403, {"error": "open the page at http://127.0.0.1:%d" % self.server.server_port})
         name = "index.html" if self.path in ("/", "") else self.path.lstrip("/")
         path = os.path.normpath(os.path.join(WEB, name))
         if not path.startswith(WEB) or not os.path.isfile(path):
@@ -64,6 +75,8 @@ class Handler(BaseHTTPRequestHandler):
     def do_POST(self):
         if self.path != "/api/search":
             return self._send(404, {"error": "not found"})
+        if not self._local() or not self.headers.get("Content-Type", "").startswith("application/json"):
+            return self._send(403, {"error": "requests must come from this page"})
         try:
             length = int(self.headers.get("Content-Length", 0))
             payload = json.loads(self.rfile.read(length) or b"{}")
