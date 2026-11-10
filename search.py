@@ -96,27 +96,32 @@ SEARCHED = "Searched: job title, skills, years of experience, location, notice p
 NOT_SEARCHED = "Not searched: CV text, notes, emails."
 
 
-def describe(reading):
-    """The 'Read as' line, built from the same filters search() applies (never from model text)."""
-    parts = []
-    skills = reading.get("skills") or []
-    if skills:
-        parts.append((" %s " % reading.get("skills_op", "AND")).join(canonical(s) for s in skills))
+def describe_parts(reading):
+    """One short phrase per filter that search() applies, keyed by slot (used by the chips)."""
+    parts = {}
     loc = reading.get("location")
     if loc:
-        parts.append({"city": loc["value"], "nearby": "%s and nearby" % loc["value"],
-                      "country": loc["value"]}[loc.get("scope", "city")])
+        parts["location"] = {"city": loc["value"], "nearby": "%s and nearby" % loc["value"],
+                             "country": loc["value"]}[loc.get("scope", "city")]
     sen = reading.get("seniority")
     if sen:
         years = "%d+ years" % sen.get("min", 0)
         title = "'%s' in title" % sen.get("contains", "")
-        parts.append({"years": years, "title": title, "either": years + " or " + title}[sen["kind"]])
+        parts["seniority"] = {"years": years, "title": title, "either": years + " or " + title}[sen["kind"]]
     av = reading.get("availability")
     if av:
-        parts.append({"immediate": "can start now", "2w": "notice ≤ 2 weeks",
-                      "1m": "notice ≤ 1 month", "3m": "notice ≤ 3 months"}[av["max_notice"]])
+        parts["availability"] = {"immediate": "can start now", "2w": "notice ≤ 2 weeks",
+                                 "1m": "notice ≤ 1 month", "3m": "notice ≤ 3 months"}[av["max_notice"]]
     if reading.get("work_mode"):
-        parts.append(reading["work_mode"])
+        parts["work_mode"] = reading["work_mode"]
+    return parts
+
+
+def describe(reading):
+    """The 'Read as' line, built from the same filters search() applies (never from model text)."""
+    skills = reading.get("skills") or []
+    head = [(" %s " % reading.get("skills_op", "AND")).join(canonical(s) for s in skills)] if skills else []
+    parts = head + list(describe_parts(reading).values())
     return " · ".join(parts) if parts else "everyone (no filters)"
 
 
