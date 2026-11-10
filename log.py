@@ -40,6 +40,18 @@ def entry(payload, result):
     }
 
 
+def write_event(line, log_dir=None):
+    """Append a write or undo (shortlist, close) to the same log. Every write is recorded."""
+    if not enabled():
+        return None
+    log_dir = log_dir or LOG_DIR
+    os.makedirs(log_dir, exist_ok=True)
+    line = dict(line, t=datetime.datetime.now().isoformat(timespec="seconds"))
+    with open(os.path.join(log_dir, "events.jsonl"), "a", encoding="utf-8") as f:
+        f.write(json.dumps(line) + "\n")
+    return line
+
+
 def write(payload, result, log_dir=None):
     """Append one line. Errors and empty requests are not logged."""
     if not enabled() or "error" in result:
