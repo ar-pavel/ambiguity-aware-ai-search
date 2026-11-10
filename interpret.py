@@ -6,8 +6,9 @@
 Two routes, same output shape:
   * rules (default, SIMULATED): a small rule-based stand-in for the language model. It follows the
     detection rules in the design spec, so it works with no key and no network.
-  * live (IMPLEMENTED, needs your own key): model.py asks a language model for the same JSON shape.
-    The reply is validated; if it is unusable the rules route is used and the page says so.
+  * live (IMPLEMENTED, needs your own key): model.py asks Claude to judge the request with
+    structured outputs; from_model() checks the reply and builds the same shape. If anything fails,
+    the rules route is used and the page says so.
 
 The reading is the single object the page uses for the chips, the question, the "Read as" line and
 the search. Each ambiguity lists its options as small patches to the reading, the option chosen by
@@ -23,6 +24,38 @@ CITIES = sorted({c["city"] for c in search.load()}, key=len, reverse=True)
 COUNTRIES = {"uk": "UK", "united kingdom": "UK", "ireland": "Ireland"}
 SKILL_TERMS = sorted(search.SYNONYMS, key=len, reverse=True)  # longest first, so "sap mm" beats "sap"
 DEFAULT_YEARS = 5  # what "senior" means in years when it is read as experience
+SLOTS = ("skills_op", "seniority", "location", "availability")
+
+
+def make_ambiguity(slot, reading, dominant, evidence):
+    """Build one ambiguity (options, labels, chosen) from the reading's current value for a slot.
+    Both interpreter routes use this, so the chips and the question look the same either way."""
+    if slot == "skills_op":
+        options = [{"skills_op": "AND"}, {"skills_op": "OR"}]
+        labels = ["all of these skills (AND)", "any of these skills (OR)"]
+        chosen = 0 if reading["skills_op"] == "AND" else 1
+    elif slot == "seniority":
+        sen = reading["seniority"]
+        w = sen.get("contains") or "Senior"
+        years = sen.get("min") or DEFAULT_YEARS
+        options = [{"seniority": {"kind": "years", "min": years}},
+                   {"seniority": {"kind": "title", "contains": w}},
+                   {"seniority": {"kind": "either", "min": years, "contains": w}}]
+        labels = ["%d+ years' experience" % years, "'%s' in their job title" % w, "either"]
+        chosen = {"years": 0, "title": 1, "either": 2}[sen["kind"]]
+    elif slot == "location":
+        city = reading["location"]["value"]
+        options = [{"location": {"value": city, "scope": "nearby"}},
+                   {"location": {"value": city, "scope": "city"}}]
+        labels = ["%s and nearby towns" % city, "%s only" % city]
+        chosen = 0 if reading["location"]["scope"] == "nearby" else 1
+    else:
+        options = [{"availability": {"max_notice": "immediate"}},
+                   {"availability": {"max_notice": "2w"}}]
+        labels = ["can start immediately", "notice of 2 weeks or less"]
+        chosen = 0 if reading["availability"]["max_notice"] == "immediate" else 1
+    return {"slot": slot, "options": options, "labels": labels, "chosen": chosen,
+            "dominant": bool(dominant), "evidence": evidence}
 
 
 def _find_skills(text):
@@ -53,15 +86,10 @@ def _operator(text, spans):
     if re.search(r"\bAND\b", between):
         return "AND", None
     word = re.search(r"\b(and|with|or)\b|&", between, re.IGNORECASE)
-    options = [{"skills_op": "AND"}, {"skills_op": "OR"}]
-    labels = ["all of these skills (AND)", "any of these skills (OR)"]
     if word:
         op = "OR" if word.group(0).lower() == "or" else "AND"
-        return op, {"slot": "skills_op", "options": options, "labels": labels,
-                    "chosen": 0 if op == "AND" else 1, "dominant": True,
-                    "evidence": "you wrote '%s'" % word.group(0)}
-    return "AND", {"slot": "skills_op", "options": options, "labels": labels,
-                   "chosen": 0, "dominant": False, "evidence": "no 'and' or 'or' between the skills"}
+        return op, (True, "you wrote '%s'" % word.group(0))
+    return "AND", (False, "no 'and' or 'or' between the skills")
 
 
 def _seniority(text):
@@ -76,14 +104,8 @@ def _seniority(text):
     word = re.search(r"\b(senior|lead)\b", low)
     if not word:
         return None, None
-    w = word.group(1).capitalize()
-    options = [{"seniority": {"kind": "years", "min": DEFAULT_YEARS}},
-               {"seniority": {"kind": "title", "contains": w}},
-               {"seniority": {"kind": "either", "min": DEFAULT_YEARS, "contains": w}}]
-    labels = ["%d+ years' experience" % DEFAULT_YEARS, "'%s' in their job title" % w, "either"]
-    return options[0]["seniority"], {"slot": "seniority", "options": options, "labels": labels,
-                                     "chosen": 0, "dominant": False,
-                                     "evidence": "you wrote '%s'" % word.group(1)}
+    return ({"kind": "years", "min": DEFAULT_YEARS, "contains": word.group(1).capitalize()},
+            (False, "you wrote '%s'" % word.group(1)))
 
 
 def _location(text):
@@ -94,12 +116,7 @@ def _location(text):
     for city in CITIES:
         near = re.search(r"\b(near|around|within[^,]*?of|commutable to)\s+" + city.lower() + r"\b", low)
         if near:
-            options = [{"location": {"value": city, "scope": "nearby"}},
-                       {"location": {"value": city, "scope": "city"}}]
-            labels = ["%s and nearby towns" % city, "%s only" % city]
-            return options[0]["location"], {"slot": "location", "options": options, "labels": labels,
-                                             "chosen": 0, "dominant": False,
-                                             "evidence": "you wrote '%s'" % near.group(1)}
+            return {"value": city, "scope": "nearby"}, (False, "you wrote '%s'" % near.group(1))
         if re.search(r"\b" + city.lower() + r"\b", low):
             return {"value": city, "scope": "city"}, None
     return None, None
@@ -113,12 +130,7 @@ def _availability(text):
     word = re.search(r"\b(available now|immediately|available|now|asap)\b", low)
     if not word:
         return None, None
-    options = [{"availability": {"max_notice": "immediate"}},
-               {"availability": {"max_notice": "2w"}}]
-    labels = ["can start immediately", "notice of 2 weeks or less"]
-    return options[0]["availability"], {"slot": "availability", "options": options, "labels": labels,
-                                        "chosen": 0, "dominant": False,
-                                        "evidence": "you wrote '%s'" % word.group(1)}
+    return {"max_notice": "immediate"}, (False, "you wrote '%s'" % word.group(1))
 
 
 def _work_mode(text):
@@ -149,7 +161,9 @@ def interpret_rules(text):
     availability, av_amb = _availability(text)
     reading = {"skills": [s[2] for s in spans], "skills_op": op, "location": location,
                "seniority": seniority, "availability": availability, "work_mode": _work_mode(text)}
-    reading["ambiguities"] = [a for a in (op_amb, sen_amb, loc_amb, av_amb) if a] + _phrase_ambiguities(spans)
+    judged = zip(SLOTS, (op_amb, sen_amb, loc_amb, av_amb))
+    reading["ambiguities"] = [make_ambiguity(slot, reading, *j) for slot, j in judged if j]
+    reading["ambiguities"] += _phrase_ambiguities(spans)
     reading["source"] = "rules"
     return reading
 
@@ -166,16 +180,87 @@ def apply_option(reading, option):
     return out
 
 
+def _written(term, text):
+    """True if the term appears in the text as a whole word (so 'Go' is not found in 'good')."""
+    return re.search(r"(?<![\w.])" + re.escape(term) + r"(?![\w.])", text, re.IGNORECASE) is not None
+
+
+def _known_place(value):
+    """Map a place the model named to one the data knows ('London, UK' -> 'London'), or None."""
+    for part in [value] + [p.strip() for p in value.split(",")]:
+        low = part.lower()
+        if low in COUNTRIES:
+            return COUNTRIES[low]
+        for city in CITIES:
+            if city.lower() == low:
+                return city
+    return None
+
+
+def from_model(text, judged):
+    """Check the model's judgement and build a reading from it. Returns None if it can't be trusted.
+
+    The model judges; code checks. A skill the user never wrote is dropped (the model may not add
+    requirements), a place the data doesn't know is dropped rather than silently matching nobody,
+    and every option is built by make_ambiguity(), exactly as for the rules route."""
+    skills, dropped = [], []
+    for s in judged.get("skills", []):
+        name = search.canonical(s)
+        aliases = [s, name] + [k for k, v in search.SYNONYMS.items() if v == name]
+        if any(_written(a, text) for a in aliases):
+            if name not in skills:
+                skills.append(name)
+        else:
+            dropped.append("skill '%s' (not in your request)" % s)
+    location = judged["location"]
+    if location:
+        place = _known_place(location["value"])
+        if place is None:
+            dropped.append("location '%s' (not in the data)" % location["value"])
+            location = None
+        else:
+            if place in COUNTRIES.values():
+                scope = "country"
+            else:  # a city: keep "nearby" if the model said so, otherwise the city itself
+                scope = "nearby" if location["scope"] == "nearby" else "city"
+            location = {"value": place, "scope": scope}
+    reading = {"skills": skills, "skills_op": judged["skills_op"], "location": location,
+               "seniority": judged["seniority"], "work_mode": judged["work_mode"],
+               "availability": {"max_notice": judged["availability"]} if judged["availability"] else None}
+    if reading["seniority"]:
+        sen = {k: v for k, v in reading["seniority"].items() if v is not None}
+        if sen["kind"] == "years" and "min" not in sen:
+            return None
+        if sen["kind"] == "title" and not sen.get("contains"):
+            return None
+        reading["seniority"] = sen
+    ambiguities, seen = [], set()
+    for a in judged.get("ambiguities", []):
+        slot = a["slot"]
+        present = reading.get(slot) if slot != "skills_op" else len(skills) > 1
+        if present and slot not in seen:
+            seen.add(slot)
+            ambiguities.append(make_ambiguity(slot, reading, a["dominant"], a["evidence"]))
+    phrases = [(0, 0, s) for s in skills]
+    reading["ambiguities"] = ambiguities + _phrase_ambiguities(phrases)
+    reading["dropped"] = dropped
+    return reading
+
+
 def interpret(text):
     """Use the live model when configured, otherwise the rules. Always returns a valid reading."""
     import model
     if model.live():
-        reading = model.interpret(text)
+        judged = model.judge(text)
+        try:
+            reading = from_model(text, judged) if judged else None
+        except (KeyError, TypeError, ValueError, AttributeError):
+            reading = None  # a reply that doesn't match the schema is treated like no reply
         if reading is not None:
-            reading["source"] = "live"
+            reading["source"] = "Claude (%s)" % model.MODEL
             return reading
         fallback = interpret_rules(text)
-        fallback["source"] = "rules (live model reply was unusable)"
+        fallback["source"] = "rules (the live model was unavailable or its reply was unusable)"
         return fallback
     return interpret_rules(text)
 
