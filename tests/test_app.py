@@ -4,6 +4,7 @@ import unittest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import app  # noqa: E402
+import model  # noqa: E402
 import search  # noqa: E402
 
 
@@ -84,6 +85,21 @@ class TestAskMode(unittest.TestCase):
         self.assertEqual(r["mode"], "show")
         self.assertIn("'Senior' in title", r["read_as"])
         self.assertIsNone(r["question"])
+
+    def test_question_text_never_uses_model_wording(self):
+        os.environ["A2_MODEL"] = "claude"
+        saved = model.judge
+        model.judge = lambda t: {
+            "skills": ["Java"], "skills_op": "AND", "location": None, "availability": None,
+            "work_mode": None, "seniority": {"kind": "years", "min": 5, "contains": "Senior"},
+            "ambiguities": [{"slot": "seniority", "dominant": False,
+                             "evidence": "The recruiter said senior without a number"}]}
+        try:
+            r = app.handle({"text": "senior Java developers"})
+            self.assertEqual(r["question"]["text"], "What do you mean by 'senior'?")
+        finally:
+            model.judge = saved
+            os.environ.pop("A2_MODEL", None)
 
     def test_only_one_question_even_with_several_unclear_parts(self):
         r = app.handle({"text": "senior Java Python devs available now"})

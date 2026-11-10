@@ -73,8 +73,8 @@ def question(reading, slot):
     """One clarifying question for one slot, each option with the number of candidates it would give."""
     amb = next(a for a in reading["ambiguities"] if a["slot"] == slot)
     text = QUESTIONS.get(slot, "Which did you mean?")
-    if "%s" in text:
-        text %= amb["evidence"].replace("you wrote ", "")
+    if "%s" in text:  # built from the reading, never from model text
+        text %= "'%s'" % reading["seniority"].get("contains", "Senior").lower()
     options = [{"label": label, "count": len(search.search(interpret.apply_option(reading, opt)))}
                for label, opt in zip(amb["labels"], amb["options"])]
     return {"slot": slot, "text": text, "options": options, "default": amb["chosen"],
