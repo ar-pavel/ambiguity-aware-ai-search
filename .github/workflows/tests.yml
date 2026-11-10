@@ -23,7 +23,7 @@ jobs:
       A2_MODEL: ""    # always the rule-based stand-in
       A2_LOG: "off"   # no event log in CI
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Tests
         run: python3 run_tests.py
       - name: Self-tests
