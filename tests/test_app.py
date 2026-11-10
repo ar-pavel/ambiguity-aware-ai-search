@@ -34,6 +34,35 @@ class TestHandle(unittest.TestCase):
         self.assertEqual(app.handle({"text": "senior Java developers", "mode": "auto"})["mode"], "ask")
 
 
+class TestShowMode(unittest.TestCase):
+    def test_flipping_and_to_or_changes_the_count(self):
+        before = app.handle({"text": "Java with Python in London"})
+        after = app.handle({"text": "Java with Python in London", "op": "OR"})
+        self.assertGreater(after["count"], before["count"])
+        self.assertIn("Java OR Python", after["read_as"])
+        self.assertEqual(after["mode"], "show")
+
+    def test_choosing_an_option_re_runs_the_search(self):
+        r = app.handle({"text": "senior Java developers in London", "choices": {"seniority": 1}})
+        self.assertIn("'Senior' in title", r["read_as"])
+        self.assertEqual(r["count"], len(search.search(r["reading"])))
+
+    def test_open_choices_are_marked_guessed_until_edited(self):
+        chips = {c.get("slot", c["kind"]): c for c in app.handle({"text": "senior Java developers"})["chips"]}
+        self.assertTrue(chips["seniority"]["guessed"])
+        edited = {c.get("slot", c["kind"]): c for c in
+                  app.handle({"text": "senior Java developers", "choices": {"seniority": 0}})["chips"]}
+        self.assertFalse(edited["seniority"]["guessed"])
+
+    def test_operator_chip_shows_its_evidence(self):
+        op = [c for c in app.handle({"text": "Java with Python"})["chips"] if c["kind"] == "op"][0]
+        self.assertIn("with", op["evidence"])
+
+    def test_bad_choice_is_ignored(self):
+        r = app.handle({"text": "senior Java developers", "choices": {"seniority": 99}})
+        self.assertNotIn("error", r)
+
+
 class TestDescribe(unittest.TestCase):
     def test_every_filter_appears(self):
         line = search.describe({"skills": ["Java", "Python"], "skills_op": "OR",
