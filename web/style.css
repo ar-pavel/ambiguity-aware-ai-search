@@ -40,3 +40,9 @@ button.option { background: #fff; color: var(--ink); border: 1px solid var(--ask
 button.option:hover { background: #fdf3ec; }
 button.option:focus-visible { outline: 3px solid #f0b429; outline-offset: 2px; }
 .chip.answered { border-color: var(--ask); box-shadow: 0 0 0 2px #f6dccb; }
+
+/* Settings bar for comparing strategies. */
+.controls { display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; margin: -.25rem 0 1rem;
+            font-size: .875rem; color: var(--muted); }
+.controls select, .controls input { font: inherit; vertical-align: middle; }
+.controls output { display: inline-block; min-width: 2.5em; font-weight: 600; color: var(--ink); }
