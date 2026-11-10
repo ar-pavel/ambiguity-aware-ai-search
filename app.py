@@ -130,6 +130,7 @@ def handle(payload):
         return {"error": "Type a request, for example: senior Java developers in London"}
     reading = interpret.interpret(text)
     edited = _apply_edits(reading, payload.get("choices") or {}, payload.get("op"))
+    reading = interpret.for_target(reading)  # the target may have just been switched
     decision = strategy.decide(reading, theta=_theta(payload.get("theta", strategy.THETA)),
                                force=payload.get("mode") if payload.get("mode") != "auto" else None)
     if edited:  # the recruiter has taken control: keep the chips in view and say what happened

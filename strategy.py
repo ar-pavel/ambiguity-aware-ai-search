@@ -24,6 +24,13 @@ SLOT_WORDS = {"skills_op": "AND vs OR", "seniority": "'senior'", "location": "th
               "availability": "'available'", "target": "people vs jobs"}
 
 
+def _slot_words(reading, slot):
+    """How to name a slot in a reason; seniority quotes the word written ('senior' or 'lead')."""
+    if slot == "seniority" and (reading.get("seniority") or {}).get("contains"):
+        return "'%s'" % reading["seniority"]["contains"].lower()
+    return SLOT_WORDS.get(slot, slot)
+
+
 def _lists(c):
     """'5 vs 16', or 'two different groups of 1' when the sizes match but the people differ."""
     if c["chosen"] == c["other"]:
@@ -59,8 +66,7 @@ def decide(reading, theta=THETA, force=None, candidates=None):
     elif askable:
         c = askable[0]
         mode = "ask"
-        reason = "Asking because %s gives two different lists (%s)." % (
-            SLOT_WORDS.get(c["slot"], c["slot"]), _lists(c))
+        reason = "Asking because %s gives two different lists (%s)." % (_slot_words(reading, c["slot"]), _lists(c))
     else:
         mode = "show"
         low = [c for c in comps if c["overlap"] < theta]

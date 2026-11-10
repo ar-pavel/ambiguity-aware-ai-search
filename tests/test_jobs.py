@@ -73,6 +73,38 @@ class TestJobSearch(unittest.TestCase):
         self.assertEqual(r["read_as"].split(" · ")[0], "open jobs")
 
 
+class TestNothingChangesSilently(unittest.TestCase):
+    """Review of #30: switching the target, or mixed wording, must not hide a change."""
+
+    def test_switching_to_jobs_lists_availability_as_ignored(self):
+        r = app.handle({"text": "React developers at Bluefin available now", "choices": {"target": 1}})
+        self.assertEqual(r["target"], "jobs")
+        self.assertEqual(r["dropped"], ["availability (jobs have no notice period)"])
+        self.assertNotIn("availability", [c.get("slot") for c in r["chips"]])
+
+    def test_switching_to_jobs_keeps_open(self):
+        r = app.handle({"text": "open Java developers at Bluefin", "choices": {"target": 1}})
+        self.assertEqual(r["read_as"].split(" · ")[0], "open jobs")
+        self.assertTrue(all(row[-1] == "open" for row in r["table"]["rows"]))
+
+    def test_people_and_job_words_search_people_with_a_chip(self):
+        for text in ("candidates for the Python role at Moorgate", "people who held lead roles in Python"):
+            with self.subTest(text=text):
+                r = app.handle({"text": text})
+                self.assertEqual(r["target"], "candidates")
+                self.assertNotEqual(r["mode"], "act")
+                chip = next(c for c in r["chips"] if c.get("slot") == "target")
+                self.assertIn("jobs", " ".join(chip["options"]))
+
+    def test_reason_quotes_the_word_the_user_wrote(self):
+        r = app.handle({"text": "people who held lead roles in Python"})
+        self.assertIn("'lead'", r["reason"])
+        self.assertNotIn("'senior'", r["reason"])
+
+    def test_position_is_not_a_job_word(self):
+        self.assertEqual(read("Java developers looking for a senior position")["target"], "candidates")
+
+
 class TestCompany(unittest.TestCase):
     def test_company_filters_candidates_by_current_employer(self):
         found = search.search(read("Python people at Ironbridge Bank"))
@@ -103,9 +135,10 @@ class TestModelReply(unittest.TestCase):
         expected = dict(read("Java developers at Bluefin")["ambiguities"][0], evidence="you wrote 'at Bluefin'")
         self.assertEqual(r["ambiguities"][0], expected)  # dict() rather than |, which needs Python 3.9
 
-    def test_status_is_ignored_for_candidates(self):
-        r = interpret.from_model("Java developers", dict(self.BASE, status="open"))
-        self.assertIsNone(r["status"])
+    def test_status_does_not_filter_candidates(self):
+        r = interpret.from_model("open Java developers", dict(self.BASE, status="open"))
+        self.assertEqual(search.search(r), search.search(dict(r, status=None)))
+        self.assertNotIn("open", search.describe(r))
 
 
 if __name__ == "__main__":

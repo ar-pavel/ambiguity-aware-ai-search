@@ -26,7 +26,7 @@ SKILL_TERMS = sorted(search.SYNONYMS, key=len, reverse=True)  # longest first, s
 COMPANIES = [c["name"] for c in search.load("companies")]
 DEFAULT_YEARS = 5  # what "senior" means in years when it is read as experience
 SLOTS = ("skills_op", "seniority", "location", "availability", "target")
-JOB_WORDS = r"\b(jobs?|roles?|vacanc(?:y|ies)|openings?|positions?|postings?)\b"
+JOB_WORDS = r"\b(jobs?|roles?|vacanc(?:y|ies)|openings?|postings?)\b"  # not 'position': "a senior position"
 PEOPLE_WORDS = r"\b(candidates?|people|person|someone|anyone|profiles?)\b"
 
 
@@ -158,24 +158,32 @@ def _company(text):
 
 def _target(text, company_words):
     """(target, ambiguity_or_None). People are searched by default; job words switch to jobs.
-    A company with neither kind of word is unclear: people who work there, or its jobs?"""
-    if re.search(JOB_WORDS, text, re.IGNORECASE):
+    Both kinds of word ("candidates for the Python role") mean people, shown as a chip so it can be
+    switched. A company with neither kind of word is unclear: people who work there, or its jobs?"""
+    job = re.search(JOB_WORDS, text, re.IGNORECASE)
+    people = re.search(PEOPLE_WORDS, text, re.IGNORECASE)
+    if job and people:
+        return "candidates", (True, "you wrote '%s' and '%s'" % (people.group(0), job.group(0)))
+    if job:
         return "jobs", None
-    if re.search(PEOPLE_WORDS, text, re.IGNORECASE) or not company_words:
+    if people or not company_words:
         return "candidates", None
     return "candidates", (False, "you wrote '%s' but not whether you want people or jobs" % company_words)
 
 
-def _status(text, target):
-    m = target == "jobs" and re.search(r"\b(open|closed)\b", text, re.IGNORECASE)
+def _status(text):
+    """'open' or 'closed', kept whatever the target, so it still applies if the target is switched to
+    jobs. It only filters jobs (candidates have no status)."""
+    m = re.search(r"\b(open|closed)\b", text, re.IGNORECASE)
     return m.group(1).lower() if m else None
 
 
-def _for_jobs(reading):
-    """Jobs have no notice period: drop availability and say so, rather than silently ignore it."""
+def for_target(reading):
+    """Jobs have no notice period: drop availability and say so, rather than silently ignore it.
+    Run on every reading once its target is final, including after the recruiter switches it."""
     if reading["target"] == "jobs" and reading.get("availability"):
         reading["availability"] = None
-        reading.setdefault("dropped", []).append("availability (jobs have no notice period)")
+        reading["dropped"] = reading.get("dropped", []) + ["availability (jobs have no notice period)"]
         reading["ambiguities"] = [a for a in reading["ambiguities"] if a["slot"] != "availability"]
     return reading
 
@@ -205,12 +213,12 @@ def interpret_rules(text):
     target, target_amb = _target(text, company_words)
     reading = {"target": target, "skills": [s[2] for s in spans], "skills_op": op, "location": location,
                "seniority": seniority, "availability": availability, "work_mode": _work_mode(text),
-               "company": company, "status": _status(text, target)}
+               "company": company, "status": _status(text)}
     judged = zip(SLOTS, (op_amb, sen_amb, loc_amb, av_amb, target_amb))
     reading["ambiguities"] = [make_ambiguity(slot, reading, *j) for slot, j in judged if j]
     reading["ambiguities"] += _phrase_ambiguities(spans)
     reading["source"] = "rules"
-    return _for_jobs(reading)
+    return for_target(reading)
 
 
 def apply_option(reading, option):
@@ -286,7 +294,7 @@ def from_model(text, judged):
         company = known
     target = judged["target"]
     reading = {"target": target, "company": company,
-               "status": judged.get("status") if target == "jobs" else None,
+               "status": judged.get("status"),
                "skills": skills, "skills_op": judged["skills_op"], "location": location,
                "seniority": judged["seniority"], "work_mode": judged["work_mode"],
                "availability": {"max_notice": judged["availability"]} if judged["availability"] else None}
@@ -309,7 +317,7 @@ def from_model(text, judged):
     phrases = [(0, 0, s) for s in skills]
     reading["ambiguities"] = ambiguities + _phrase_ambiguities(phrases)
     reading["dropped"] = dropped
-    return _for_jobs(reading)
+    return for_target(reading)
 
 
 def interpret(text):
