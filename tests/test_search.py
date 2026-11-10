@@ -1,9 +1,14 @@
 import os
 import sys
+import json
 import unittest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import search  # noqa: E402
+
+DATA = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data")
+sys.path.insert(0, DATA)
+import generate  # noqa: E402
 
 CANDS = search.load()
 
@@ -13,13 +18,31 @@ def names(reading):
 
 
 class TestData(unittest.TestCase):
-    def test_forty_unique_candidates(self):
-        self.assertEqual(len(CANDS), 40)
-        self.assertEqual(len({c["id"] for c in CANDS}), 40)
+    def test_two_hundred_unique_candidates(self):
+        self.assertEqual(len(CANDS), 200)
+        self.assertEqual(len({c["id"] for c in CANDS}), 200)
+        self.assertEqual(len({c["name"] for c in CANDS}), 200)
+
+    def test_hand_built_candidates_are_kept_unchanged(self):
+        core = json.load(open(os.path.join(DATA, "core_candidates.json"), encoding="utf-8"))
+        for c in core:
+            self.assertEqual({k: v for k, v in CANDS[c["id"] - 1].items() if k != "company"}, c)
+
+    def test_generator_is_reproducible(self):
+        candidates, companies, jobs = generate.build()
+        self.assertEqual(candidates, CANDS)
+        self.assertEqual(companies, json.load(open(os.path.join(DATA, "companies.json"), encoding="utf-8")))
+        self.assertEqual(jobs, json.load(open(os.path.join(DATA, "jobs.json"), encoding="utf-8")))
+
+    def test_every_company_and_job_links_up(self):
+        companies = {c["name"] for c in json.load(open(os.path.join(DATA, "companies.json"), encoding="utf-8"))}
+        jobs = json.load(open(os.path.join(DATA, "jobs.json"), encoding="utf-8"))
+        self.assertTrue(all(c["company"] in companies for c in CANDS))
+        self.assertTrue(all(j["company"] in companies and j["status"] in ("open", "closed") for j in jobs))
 
     def test_every_candidate_has_every_field(self):
         fields = {"id", "name", "current_title", "skills", "years_experience",
-                  "city", "country", "work_mode", "notice"}
+                  "city", "country", "work_mode", "notice", "company"}
         for c in CANDS:
             self.assertEqual(set(c), fields, c["name"])
             self.assertIn(c["notice"], search.NOTICE_ORDER)

@@ -29,7 +29,7 @@ class TestLog(unittest.TestCase):
         first, second = self.lines()
         self.assertEqual((first["event"], first["mode"], first["asked"]), ("search", "ask", "seniority"))
         self.assertEqual(first["ambiguities"], ["seniority"])
-        self.assertEqual((second["event"], second["mode"], second["count"]), ("edit", "show", 4))
+        self.assertEqual((second["event"], second["mode"], second["count"]), ("edit", "show", 12))
         self.assertEqual(second["choices"], {"seniority": 1})
 
     def test_errors_are_not_logged(self):

@@ -136,7 +136,7 @@ def overlap(a, b):
 if __name__ == "__main__":
     if "--selftest" in sys.argv:
         cands = load()
-        assert len(cands) == 40 and len({c["id"] for c in cands}) == 40
+        assert len(cands) == 200 and len({c["id"] for c in cands}) == 200
         both = search({"skills": ["Java", "Python"], "skills_op": "AND"}, cands)
         either = search({"skills": ["Java", "Python"], "skills_op": "OR"}, cands)
         assert len(both) < len(either)

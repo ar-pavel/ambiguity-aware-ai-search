@@ -18,8 +18,8 @@ Add one when a new kind of ambiguity is supported, or when a real phrasing gives
 3. If the output differs from what the rules say, the code is wrong, not the expectation. Open an issue.
 4. Add the request and its expected mode to `EXPECTED` in `tests/test_strategy.py`, with a short
    comment saying why.
-5. If the request needs a candidate that does not exist yet, add one to `data/candidates.json` with
-   a fake name, and check the existing tests still pass.
+5. If the request needs a candidate that does not exist yet, add one to `data/core_candidates.json`
+   with a fake name, run `python3 data/generate.py`, and check the existing tests still pass.
 
 ## Check
 `python3 run_tests.py` ends with `0 failures, 0 errors`, and the new request appears in the
