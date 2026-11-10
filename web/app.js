@@ -1,6 +1,5 @@
 // The page: send the request, then fill the fixed slots from the server's answer.
 const $ = (id) => document.getElementById(id);
-const NOTICE = { immediate: "now", "2w": "2 weeks", "1m": "1 month", "3m": "3 months" };
 
 // What the recruiter has asked for so far. Edits are re-applied by the server to a fresh reading.
 const state = { text: "", mode: "auto", choices: {}, op: null, lastCount: null, answered: null };
@@ -57,7 +56,7 @@ function chipFor(chip) {
   return wrap;
 }
 
-// Ask mode: one question, each option showing how many candidates it would give.
+// Ask mode: one question, each option showing how many results it would give.
 function renderQuestion(q) {
   const card = el("div", { class: "question", role: "group", "aria-labelledby": "question-text" });
   card.append(el("p", { id: "question-text", class: "question-text" }, q.text));
@@ -98,15 +97,18 @@ function renderInterpretation(data) {
 
 function renderResults(data) {
   const was = state.lastCount !== null && state.lastCount !== data.count ? " (was " + state.lastCount + ")" : "";
-  $("count").textContent = data.count + (data.count === 1 ? " candidate" : " candidates") + was;
+  $("count").textContent = data.count + " " + data.noun + (data.count === 1 ? "" : "s") + was;
   state.lastCount = data.count;
+  // The server sends headers and rows as plain text, for candidates or jobs alike.
+  const head = $("results").querySelector("thead");
   const body = $("results").querySelector("tbody");
-  body.innerHTML = "";
-  for (const c of data.results) {
+  head.innerHTML = ""; body.innerHTML = "";
+  const hr = el("tr");
+  data.table.headers.forEach((h) => hr.append(el("th", { scope: "col" }, h)));
+  head.append(hr);
+  for (const cells of data.table.rows) {
     const row = el("tr");
-    for (const v of [c.name, c.current_title, c.skills.join(", "), c.years_experience, c.city, c.work_mode, NOTICE[c.notice]]) {
-      row.append(el("td", {}, String(v)));
-    }
+    cells.forEach((v) => row.append(el("td", {}, v)));
     body.append(row);
   }
   const ignored = data.dropped.length ? " Ignored: " + data.dropped.join("; ") + "." : "";

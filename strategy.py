@@ -21,7 +21,7 @@ import search
 THETA = 0.5
 
 SLOT_WORDS = {"skills_op": "AND vs OR", "seniority": "'senior'", "location": "the location",
-              "availability": "'available'"}
+              "availability": "'available'", "target": "people vs jobs"}
 
 
 def _lists(c):
@@ -31,12 +31,18 @@ def _lists(c):
     return "%d vs %d" % (c["chosen"], c["other"])
 
 
+def _run(reading, candidates):
+    """Search; a test's own candidate list is used only for readings that search candidates."""
+    use = candidates if reading.get("target", "candidates") == "candidates" else None
+    return search.search(reading, use)
+
+
 def _compare(reading, amb, candidates):
     """Shortlists for the chosen reading and its main alternative, and their overlap."""
     chosen = amb["chosen"]
     other = 1 if chosen == 0 else 0
-    a = search.search(interpret.apply_option(reading, amb["options"][chosen]), candidates)
-    b = search.search(interpret.apply_option(reading, amb["options"][other]), candidates)
+    a = _run(interpret.apply_option(reading, amb["options"][chosen]), candidates)
+    b = _run(interpret.apply_option(reading, amb["options"][other]), candidates)
     return {"slot": amb["slot"], "chosen": len(a), "other": len(b),
             "other_label": amb["labels"][other], "overlap": search.overlap(a, b),
             "dominant": amb["dominant"], "evidence": amb["evidence"]}
@@ -44,7 +50,6 @@ def _compare(reading, amb, candidates):
 
 def decide(reading, theta=THETA, force=None, candidates=None):
     """Return {mode, reason, ask_slot, comparisons}. force = 'act' | 'show' | 'ask' overrides the rule."""
-    candidates = candidates if candidates is not None else search.load()
     comps = [_compare(reading, a, candidates) for a in reading["ambiguities"]]
     askable = sorted((c for c in comps if not c["dominant"] and c["overlap"] < theta),
                      key=lambda c: c["overlap"])

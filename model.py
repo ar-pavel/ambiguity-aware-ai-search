@@ -32,10 +32,14 @@ EFFORT = "low"  # a short extraction task: low effort keeps it fast and cheap
 OPENAI_URL = "https://api.openai.com/v1/chat/completions"
 OPENAI_DEFAULT_MODEL = "gpt-5-mini"
 
-SYSTEM = """You read a recruiter's candidate-search request and report what it asks for.
+SYSTEM = """You read a recruiter's search request and report what it asks for.
 Only use words the recruiter actually wrote. Never change their 'and' into OR.
 
 Fill in the JSON:
+- target: "jobs" if they asked for jobs, roles, vacancies, openings or positions; otherwise "candidates".
+- company: the company named (e.g. "at Bluefin"), as written, or null. For candidates it is where they
+  work now; for jobs it is the company hiring.
+- status: for jobs only, "open" or "closed" if they said so, otherwise null.
 - skills: each skill or technology named, as written (e.g. "Java", "k8s", "SAP MM").
 - skills_op: "OR" if they wrote 'or', otherwise "AND".
 - location: the city or country named, with scope "nearby" if they said near/around/within/commutable,
@@ -46,7 +50,8 @@ Fill in the JSON:
 - availability: "immediate" for now/immediately/available, "2w" for within two weeks, otherwise null.
 - work_mode: "remote", "hybrid" or "onsite" if stated, otherwise null.
 - ambiguities: one entry per part that could reasonably be read two ways. slot is one of
-  skills_op, seniority, location, availability. dominant is true when one reading is clearly meant
+  skills_op, seniority, location, availability, target. A company named without saying people or jobs
+  ("Java developers at Bluefin") makes target ambiguous. dominant is true when one reading is clearly meant
   (e.g. they wrote 'with' or 'and' between skills). evidence quotes their words, like "you wrote 'senior'".
   A capitalised AND/OR, an explicit number of years, or "in <city>" is not ambiguous."""
 
@@ -54,8 +59,12 @@ NULLABLE_STR = {"anyOf": [{"type": "string"}, {"type": "null"}]}
 SCHEMA = {
     "type": "object",
     "additionalProperties": False,
-    "required": ["skills", "skills_op", "location", "seniority", "availability", "work_mode", "ambiguities"],
+    "required": ["target", "company", "status", "skills", "skills_op", "location", "seniority",
+                 "availability", "work_mode", "ambiguities"],
     "properties": {
+        "target": {"type": "string", "enum": ["candidates", "jobs"]},
+        "company": NULLABLE_STR,
+        "status": {"anyOf": [{"type": "null"}, {"type": "string", "enum": ["open", "closed"]}]},
         "skills": {"type": "array", "items": {"type": "string"}},
         "skills_op": {"type": "string", "enum": ["AND", "OR"]},
         "location": {"anyOf": [{"type": "null"}, {
@@ -72,7 +81,7 @@ SCHEMA = {
         "ambiguities": {"type": "array", "items": {
             "type": "object", "additionalProperties": False, "required": ["slot", "dominant", "evidence"],
             "properties": {"slot": {"type": "string",
-                                    "enum": ["skills_op", "seniority", "location", "availability"]},
+                                    "enum": ["skills_op", "seniority", "location", "availability", "target"]},
                            "dominant": {"type": "boolean"}, "evidence": {"type": "string"}}}},
     },
 }
