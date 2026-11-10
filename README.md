@@ -20,7 +20,7 @@ _To do._
 _To do._
 
 ## AI assistance
-_To do._
+Developed utilising Claude Code. Details will be added before submission.
 
 ## Additional files
 _To do._
