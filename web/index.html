@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Ask, Show, or Just Do It?</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main>
+    <h1>Candidate search</h1>
+    <p class="hint">Describe who you are looking for, for example <em>senior Java developers in London</em>.</p>
+
+    <form id="ask-form">
+      <label for="request" class="sr-only">Search request</label>
+      <input id="request" name="request" autocomplete="off" placeholder="e.g. Java with Python in London">
+      <button type="submit">Search</button>
+    </form>
+
+    <!-- One fixed layout for every mode; only the contents of each slot change. -->
+    <section id="mode-line" aria-live="polite" hidden></section>
+    <section id="interpretation" hidden></section>
+    <p id="count" hidden></p>
+    <table id="results" hidden>
+      <thead><tr><th>Name</th><th>Title</th><th>Skills</th><th>Years</th><th>City</th><th>Work mode</th><th>Notice</th></tr></thead>
+      <tbody></tbody>
+    </table>
+    <p id="scope" class="scope" hidden></p>
+    <p id="error" role="alert" hidden></p>
+  </main>
+  <script src="app.js"></script>
+</body>
+</html>
