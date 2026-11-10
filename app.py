@@ -21,14 +21,57 @@ TYPES = {".html": "text/html", ".js": "text/javascript", ".css": "text/css"}
 FIELDS = ("name", "current_title", "skills", "years_experience", "city", "work_mode", "notice")
 
 
+def _apply_edits(reading, choices, op):
+    """Apply the recruiter's chip edits to a fresh reading. Returns True if anything changed."""
+    edited = False
+    for amb in reading["ambiguities"]:
+        idx = choices.get(amb["slot"])
+        if idx is not None and 0 <= int(idx) < len(amb["options"]):
+            reading.update({k: v for k, v in interpret.apply_option(reading, amb["options"][int(idx)]).items()
+                            if k != "ambiguities"})
+            amb["chosen"], amb["edited"] = int(idx), True
+            edited = True
+    if op in ("AND", "OR") and op != reading["skills_op"]:
+        reading["skills_op"], reading["op_edited"] = op, True
+        edited = True
+    return edited
+
+
+def chips(reading):
+    """Everything the reading assumed, as chips. Open choices are marked 'guessed' until edited."""
+    by_slot = {a["slot"]: a for a in reading["ambiguities"]}
+    out = [{"kind": "skill", "text": s} for s in reading["skills"]]
+    if len(reading["skills"]) > 1:
+        amb = by_slot.get("skills_op")
+        out.insert(1, {"kind": "op", "value": reading["skills_op"],
+                       "evidence": amb["evidence"] if amb else "you typed it in capitals",
+                       "guessed": bool(amb and not amb["dominant"]) and not reading.get("op_edited")})
+    for slot, text in search.describe_parts(reading).items():
+        amb = by_slot.get(slot)
+        chip = {"kind": "slot", "slot": slot, "text": text}
+        if amb:
+            chip.update(options=amb["labels"], chosen=amb["chosen"], evidence=amb["evidence"],
+                        guessed=not amb["dominant"] and not amb.get("edited"))
+        out.append(chip)
+    for amb in reading["ambiguities"]:
+        if amb["slot"].startswith("phrase:"):
+            out.append({"kind": "slot", "slot": amb["slot"], "text": amb["labels"][amb["chosen"]],
+                        "options": amb["labels"], "chosen": amb["chosen"], "evidence": amb["evidence"],
+                        "guessed": False})
+    return out
+
+
 def handle(payload):
     """Interpret the request, choose a mode, run the search and describe what ran."""
     text = (payload.get("text") or "").strip()
     if not text:
         return {"error": "Type a request, for example: senior Java developers in London"}
     reading = interpret.interpret(text)
+    edited = _apply_edits(reading, payload.get("choices") or {}, payload.get("op"))
     decision = strategy.decide(reading, theta=float(payload.get("theta", strategy.THETA)),
                                force=payload.get("mode") if payload.get("mode") != "auto" else None)
+    if edited:  # the recruiter has taken control: keep the chips in view and say what happened
+        decision = dict(decision, mode="show", reason="Updated with your changes. Tap a chip to change it again.")
     results = search.search(reading)
     return {
         "text": text,
@@ -36,6 +79,7 @@ def handle(payload):
         "mode": decision["mode"],
         "reason": decision["reason"],
         "read_as": search.describe(reading),
+        "chips": chips(reading),
         "results": [{k: c[k] for k in FIELDS} for c in results],
         "count": len(results),
         "searched": search.SEARCHED,
