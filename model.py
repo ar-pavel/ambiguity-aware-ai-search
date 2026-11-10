@@ -3,6 +3,8 @@
 To use it (otherwise the rule-based stand-in in interpret.py runs):
     cp .env.example .env              # then set A2_MODEL=claude and your ANTHROPIC_API_KEY
 Settings already in the shell environment take priority over .env. .env is ignored by git.
+Privacy: live mode sends the typed request (only that text) to Anthropic's API. Candidate data never leaves
+this machine; the search runs locally.
 
 The model only *judges*: which skills, place, seniority and availability the request names, which of
 those are unclear, and whether one reading is clearly meant. Structured outputs force the reply into

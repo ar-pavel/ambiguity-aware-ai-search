@@ -73,12 +73,47 @@ class TestFromModel(unittest.TestCase):
         judged = dict(SENIOR, skills=["Java", "Kubernetes"])
         r = interpret.from_model("senior Java developers", judged)
         self.assertEqual(r["skills"], ["Java"])
-        self.assertEqual(r["dropped"], ["Kubernetes"])
+        self.assertEqual(r["dropped"], ["skill 'Kubernetes' (not in your request)"])
 
     def test_ambiguity_for_a_missing_slot_is_ignored(self):
         judged = dict(SENIOR, ambiguities=[{"slot": "location", "dominant": False, "evidence": "?"}],
                       location=None)
         self.assertEqual(interpret.from_model("Java developers", judged)["ambiguities"], [])
+
+
+class TestChecks(unittest.TestCase):
+    """The model judges; code checks. Each test is a way a model reply could mislead the page."""
+    BASE = {"skills_op": "AND", "location": None, "seniority": None, "availability": None,
+            "work_mode": None, "ambiguities": []}
+
+    def test_skill_must_be_a_whole_word(self):
+        r = interpret.from_model("good React developers", dict(self.BASE, skills=["React", "Go"]))
+        self.assertEqual(r["skills"], ["React"])
+        r = interpret.from_model("JavaScript devs", dict(self.BASE, skills=["Java"]))
+        self.assertEqual(r["skills"], [])
+
+    def test_synonym_written_by_the_user_counts(self):
+        r = interpret.from_model("k8s engineers", dict(self.BASE, skills=["Kubernetes"]))
+        self.assertEqual(r["skills"], ["Kubernetes"])
+
+    def test_place_is_mapped_to_the_data_or_dropped(self):
+        r = interpret.from_model("Java devs in London", dict(self.BASE, skills=["Java"],
+                                 location={"value": "London, UK", "scope": "city"}))
+        self.assertEqual(r["location"], {"value": "London", "scope": "city"})
+        r = interpret.from_model("Java devs in Paris", dict(self.BASE, skills=["Java"],
+                                 location={"value": "Paris", "scope": "city"}))
+        self.assertIsNone(r["location"])
+        self.assertIn("location 'Paris' (not in the data)", r["dropped"])
+
+    def test_malformed_reply_falls_back_instead_of_crashing(self):
+        os.environ["A2_MODEL"] = "claude"
+        saved, model.judge = model.judge, (lambda text: {"skills": ["Java"]})
+        try:
+            r = interpret.interpret("Java devs")
+            self.assertIn("rules", r["source"])
+        finally:
+            model.judge = saved
+            os.environ.pop("A2_MODEL", None)
 
 
 class TestRouting(unittest.TestCase):

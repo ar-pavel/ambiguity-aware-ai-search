@@ -180,21 +180,51 @@ def apply_option(reading, option):
     return out
 
 
+def _written(term, text):
+    """True if the term appears in the text as a whole word (so 'Go' is not found in 'good')."""
+    return re.search(r"(?<![\w.])" + re.escape(term) + r"(?![\w.])", text, re.IGNORECASE) is not None
+
+
+def _known_place(value):
+    """Map a place the model named to one the data knows ('London, UK' -> 'London'), or None."""
+    for part in [value] + [p.strip() for p in value.split(",")]:
+        low = part.lower()
+        if low in COUNTRIES:
+            return COUNTRIES[low]
+        for city in CITIES:
+            if city.lower() == low:
+                return city
+    return None
+
+
 def from_model(text, judged):
     """Check the model's judgement and build a reading from it. Returns None if it can't be trusted.
 
     The model judges; code checks. A skill the user never wrote is dropped (the model may not add
-    requirements), and every option is built by make_ambiguity(), exactly as for the rules route."""
-    low = text.lower()
+    requirements), a place the data doesn't know is dropped rather than silently matching nobody,
+    and every option is built by make_ambiguity(), exactly as for the rules route."""
     skills, dropped = [], []
     for s in judged.get("skills", []):
         name = search.canonical(s)
-        if s.lower() in low or name.lower() in low:
+        aliases = [s, name] + [k for k, v in search.SYNONYMS.items() if v == name]
+        if any(_written(a, text) for a in aliases):
             if name not in skills:
                 skills.append(name)
         else:
-            dropped.append(s)
-    reading = {"skills": skills, "skills_op": judged["skills_op"], "location": judged["location"],
+            dropped.append("skill '%s' (not in your request)" % s)
+    location = judged["location"]
+    if location:
+        place = _known_place(location["value"])
+        if place is None:
+            dropped.append("location '%s' (not in the data)" % location["value"])
+            location = None
+        else:
+            if place in COUNTRIES.values():
+                scope = "country"
+            else:  # a city: keep "nearby" if the model said so, otherwise the city itself
+                scope = "nearby" if location["scope"] == "nearby" else "city"
+            location = {"value": place, "scope": scope}
+    reading = {"skills": skills, "skills_op": judged["skills_op"], "location": location,
                "seniority": judged["seniority"], "work_mode": judged["work_mode"],
                "availability": {"max_notice": judged["availability"]} if judged["availability"] else None}
     if reading["seniority"]:
@@ -222,7 +252,10 @@ def interpret(text):
     import model
     if model.live():
         judged = model.judge(text)
-        reading = from_model(text, judged) if judged else None
+        try:
+            reading = from_model(text, judged) if judged else None
+        except (KeyError, TypeError, ValueError, AttributeError):
+            reading = None  # a reply that doesn't match the schema is treated like no reply
         if reading is not None:
             reading["source"] = "Claude (%s)" % model.MODEL
             return reading
