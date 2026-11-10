@@ -61,6 +61,55 @@ class TestJudge(unittest.TestCase):
         self.assertIsNone(model.judge("x", FakePost(error=KeyError("ANTHROPIC_API_KEY"))))
 
 
+class FakeOpenAI:
+    """Stands in for the OpenAI HTTPS call."""
+    def __init__(self, reply=None, finish="stop", refusal=None):
+        self.reply, self.finish, self.refusal, self.sent = reply, finish, refusal, None
+
+    def __call__(self, body):
+        self.sent = body
+        return {"choices": [{"finish_reason": self.finish, "message": {
+            "content": json.dumps(self.reply), "refusal": self.refusal}}]}
+
+
+class TestOpenAI(unittest.TestCase):
+    def setUp(self):
+        os.environ["A2_MODEL"] = "openai"
+
+    def tearDown(self):
+        for k in ("A2_MODEL", "A2_OPENAI_MODEL"):
+            os.environ.pop(k, None)
+
+    def test_request_uses_strict_structured_output_with_the_same_prompt_and_schema(self):
+        post = FakeOpenAI(SENIOR)
+        self.assertEqual(model.judge("senior Java developers in London", post), SENIOR)
+        fmt = post.sent["response_format"]
+        self.assertEqual(fmt["type"], "json_schema")
+        self.assertTrue(fmt["json_schema"]["strict"])
+        self.assertIs(fmt["json_schema"]["schema"], model.SCHEMA)
+        self.assertEqual(post.sent["messages"][0], {"role": "system", "content": model.SYSTEM})
+
+    def test_model_name_can_be_set(self):
+        os.environ["A2_OPENAI_MODEL"] = "my-model"
+        post = FakeOpenAI(SENIOR)
+        model.judge("x", post)
+        self.assertEqual(post.sent["model"], "my-model")
+        self.assertEqual(model.label(), "OpenAI (my-model)")
+
+    def test_refusal_or_truncation_gives_none(self):
+        self.assertIsNone(model.judge("x", FakeOpenAI(SENIOR, refusal="I can't help with that.")))
+        self.assertIsNone(model.judge("x", FakeOpenAI(SENIOR, finish="length")))
+
+    def test_reply_goes_through_the_same_checks(self):
+        judged = dict(SENIOR, skills=["Java", "Go"])
+        r = interpret.from_model("senior Java developers in London", model.judge("x", FakeOpenAI(judged)))
+        self.assertEqual(r["skills"], ["Java"])
+
+    def test_unknown_provider_means_rules(self):
+        os.environ["A2_MODEL"] = "something-else"
+        self.assertFalse(model.live())
+
+
 class TestFromModel(unittest.TestCase):
     def test_builds_the_same_shape_as_the_rules(self):
         r = interpret.from_model("senior Java developers in London", SENIOR)
