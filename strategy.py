@@ -24,6 +24,11 @@ SLOT_WORDS = {"skills_op": "AND vs OR", "seniority": "'senior'", "location": "th
               "availability": "'available'", "target": "people vs jobs"}
 
 
+FORCED = {"act": "Searched straight away with my best reading.",
+          "show": "Showing my reading so you can edit it.",
+          "ask": "Checking with you before searching."}
+
+
 def slot_words(reading, slot):
     """How to name a slot in a reason; seniority quotes the word written ('senior' or 'lead')."""
     if slot == "seniority" and (reading.get("seniority") or {}).get("contains"):
@@ -72,8 +77,13 @@ def decide(reading, theta=THETA, force=None, candidates=None):
         low = [c for c in comps if c["overlap"] < theta]
         if low:
             c = low[0]
-            reason = "Used my reading because %s. Choosing %s would give a different list (%s). Tap a chip to change it." % (
-                c["evidence"], c["other_label"], _lists(c))
+            if c["slot"] == "skills_op":
+                op = reading["skills_op"]
+                hint = "Tap %s ⇄ to switch to %s." % (op, "OR" if op == "AND" else "AND")
+            else:
+                hint = "Change it with the chip marked ▾."
+            reason = "Used my reading because %s. Choosing %s would give a different list (%s). %s" % (
+                c["evidence"], c["other_label"], _lists(c), hint)
         else:
             worst = min(c["overlap"] for c in comps)
             reason = "Showing my reading: the other choices change little (overlap %d%%)." % round(worst * 100)
@@ -86,7 +96,7 @@ def decide(reading, theta=THETA, force=None, candidates=None):
             reason = "Nothing was unclear, so there is nothing to ask. Searched straight away."
             force = "act"
         else:
-            reason = "Mode set by hand to %s. (The rule would have chosen %s.)" % (force, mode)
+            reason = FORCED[force]  # user-facing; the rule's own choice is in rule_mode, the Why? section and the log
         mode = force
     return {"mode": mode, "reason": reason, "ask_slot": ask_slot if mode == "ask" else None,
             "theta": theta, "comparisons": comps, "rule_mode": rule_mode}
