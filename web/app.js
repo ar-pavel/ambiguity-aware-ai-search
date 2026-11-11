@@ -108,7 +108,8 @@ function restoreFocus() {
 // ---- One assistant turn -------------------------------------------------------------------------
 
 function assistantTurn(data, isLive) {
-  const turn = el("section", { class: "turn assistant " + (isLive ? "live" : "frozen") });
+  const kind = data.error ? "error" : data.mode;   // the mode colours the turn's edge
+  const turn = el("section", { class: "turn assistant " + (isLive ? "live" : "frozen") + " is-" + kind });
   turn.data = data;
   if (data.error) {
     turn.append(el("p", { class: "error" }, data.error));
@@ -164,7 +165,7 @@ function remember(data) {
 
 function modeLine(data) {
   const p = el("p", { class: "mode-line" });
-  p.append(el("strong", { class: "mode mode-" + data.mode }, data.mode.toUpperCase()), el("span", {}, " · " + data.reason));
+  p.append(el("strong", { class: "mode mode-" + data.mode }, capital(data.mode)), el("span", { class: "reason" }, data.reason));
   if (data._first) p.append(el("span", { class: "first-reason" }, "At first: " + data._first));
   return p;
 }

@@ -1,125 +1,163 @@
-/* A conversation that keeps the reading visible and editable. Calm, readable, no framework. */
+/* A conversation that keeps the reading visible and editable.
+   Colour carries meaning, never decoration: pine = act, cobalt = show, ochre = ask and anything guessed.
+   Each assistant turn wears its mode on its left edge, so scrolling the conversation shows the
+   sequence of decisions at a glance. System fonts only: the app runs offline with nothing to install. */
 :root {
-  --ink: #1f2933; --muted: #616e7c; --line: #d9e2ec; --soft: #f5f7fa; --page: #fbfcfd;
-  --act: #2f6f4e; --show: #2d6ca2; --ask: #a0522d; --focus: #f0b429; --user: #1f2933;
-  --radius: 14px;
+  --ink: #1f2b38;        /* text, the recruiter's turns */
+  --muted: #5b6878;      /* secondary text; 5.6:1 on white */
+  --page: #eef1f4;       /* the page behind the conversation */
+  --surface: #ffffff;    /* the live turn */
+  --rule: #d5dce4;
+  --act: #2e6b4f;        /* pine: searched straight away */
+  --show: #2f5fa7;       /* cobalt: showed its reading */
+  --ask: #b0650c;        /* ochre: asked first, or guessed */
+  --act-tint: #e6f1eb; --show-tint: #e8eef8; --ask-tint: #fbefe1;
+  --focus: #f0b429;
+  --serif: "Iowan Old Style", "Charter", "Bitstream Charter", Cambria, Georgia, serif;
+  --sans: "Avenir Next", Seravek, "Segoe UI Variable Text", "Segoe UI", Ubuntu, "Noto Sans", system-ui, sans-serif;
 }
 * { box-sizing: border-box; }
 html, body { height: 100%; }
-body { margin: 0; font: 16px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; color: var(--ink);
-       background: var(--page); display: flex; flex-direction: column; }
+body { margin: 0; font: 16px/1.55 var(--sans); color: var(--ink); background: var(--page);
+       display: flex; flex-direction: column; -webkit-font-smoothing: antialiased; }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
-button { padding: .55rem 1rem; font: inherit; border: 1px solid var(--ink); border-radius: 10px;
+h1, h2 { font-family: var(--serif); font-weight: 600; letter-spacing: -.01em; }
+
+button { padding: .55rem 1.05rem; font: inherit; font-weight: 600; border: 1px solid var(--ink); border-radius: 8px;
          background: var(--ink); color: #fff; cursor: pointer; }
-button:focus-visible, input:focus-visible, select:focus-visible, summary:focus-visible {
-  outline: 3px solid var(--focus); outline-offset: 2px; }
-button.secondary { background: #fff; color: var(--ink); }
-button.link { padding: 0; border: 0; background: none; color: var(--show); text-decoration: underline; }
-button:disabled { opacity: .5; cursor: not-allowed; }
+button:hover { background: #2c3c4e; }
+button.secondary { background: var(--surface); color: var(--ink); }
+button.secondary:hover { background: var(--page); }
+button.link { padding: 0; border: 0; background: none; color: var(--show); font-weight: 500;
+              text-decoration: underline; text-underline-offset: 3px; }
+button:disabled { opacity: .45; cursor: not-allowed; }
 button[aria-disabled="true"] { opacity: .6; cursor: progress; }
+:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
 
-/* Header and the column everything lines up in. */
-.top, #chat, .composer, .study-footer { width: 100%; max-width: 900px; margin: 0 auto; padding-left: 1rem; padding-right: 1rem; }
-.top { display: flex; justify-content: space-between; align-items: baseline; padding-top: 1rem; padding-bottom: .5rem;
-       border-bottom: 1px solid var(--line); }
-.top h1 { margin: 0; font-size: 1.2rem; }
-#chat { flex: 1; overflow-y: auto; padding-top: 1rem; padding-bottom: 1rem; scroll-padding-top: 1rem; }
+/* One column for everything, so the eye never has to re-find the edge. */
+.top, #chat, .composer, .study-footer { width: 100%; max-width: 860px; margin: 0 auto; padding-left: 1rem; padding-right: 1rem; }
+.top { display: flex; justify-content: space-between; align-items: baseline; padding-top: 1.1rem; padding-bottom: .6rem; }
+.top h1 { margin: 0; font-size: 1.3rem; }
+#chat { flex: 1; overflow-y: auto; padding-top: .5rem; padding-bottom: 1.5rem; }
 
-/* Turns. The recruiter on the right, the assistant on the left. */
-.turn { margin: 0 0 1rem; }
+/* The first screen: the question the recruiter answers by typing. */
+.welcome { padding: 2.5rem 0 1.5rem; }
+.welcome-title { margin: 0 0 .4rem; font-size: clamp(1.8rem, 4vw, 2.5rem); line-height: 1.15; }
+.welcome p { margin: 0 0 1.1rem; max-width: 58ch; color: var(--muted); }
+.suggestions { display: flex; flex-wrap: wrap; gap: .5rem; }
+button.suggestion { background: var(--surface); color: var(--ink); font-weight: 500; border-color: var(--rule); border-radius: 999px;
+                    padding: .4rem .9rem; }
+button.suggestion:hover { border-color: var(--ink); background: var(--surface); }
+
+/* Turns: the recruiter on the right in ink; the assistant on the left, edged in its mode's colour. */
+.turn { margin: 0 0 1.1rem; }
 .turn.user { display: flex; justify-content: flex-end; }
-.turn.user p { margin: 0; max-width: 75%; padding: .5rem .9rem; border-radius: var(--radius) var(--radius) 4px var(--radius);
-               background: var(--user); color: #fff; }
-.turn.assistant { padding: .85rem 1rem; border: 1px solid var(--line); border-radius: 4px var(--radius) var(--radius) var(--radius);
-                  background: #fff; }
-.turn.assistant.live { border-color: #b6c6d6; box-shadow: 0 1px 6px rgba(31, 41, 51, .07); }
-.turn.assistant.frozen { background: var(--soft); color: #3e4c59; }
-.turn.assistant > p { margin: 0 0 .5rem; }
+.turn.user p { margin: 0; max-width: 72%; padding: .5rem .95rem; border-radius: 16px 16px 4px 16px;
+               background: var(--ink); color: #fff; }
+.turn.assistant { padding: .9rem 1.1rem 1rem; border-left: 5px solid var(--rule); border-radius: 0 12px 12px 0; }
+.turn.assistant.is-act { border-left-color: var(--act); }
+.turn.assistant.is-show { border-left-color: var(--show); }
+.turn.assistant.is-ask { border-left-color: var(--ask); }
+.turn.assistant.is-error { border-left-color: #b42318; }
+.turn.assistant.live { background: var(--surface); box-shadow: 0 1px 2px rgba(31, 43, 56, .06), 0 6px 20px rgba(31, 43, 56, .06); }
+.turn.assistant.frozen { background: transparent; color: #3d4a59; padding-top: .4rem; padding-bottom: .4rem; }
+.turn.assistant > p { margin: 0 0 .55rem; }
 .turn.assistant > :last-child { margin-bottom: 0; }
 .turn.note { text-align: center; font-size: .85rem; color: var(--muted); }
-.turn.thinking { color: var(--muted); font-style: italic; border-style: dashed; }
-.welcome p { margin: 0 0 .75rem; }
-.suggestions { display: flex; flex-wrap: wrap; gap: .5rem; }
-button.suggestion { background: #fff; color: var(--ink); border-color: var(--line); border-radius: 999px; padding: .35rem .8rem; }
-button.suggestion:hover { border-color: var(--show); }
+.turn.thinking { padding: .5rem 1.1rem; border-left: 5px dotted var(--rule); color: var(--muted); font-style: italic; }
 
-/* Inside an assistant turn. */
-.mode-line { padding: .45rem .7rem; border-left: 4px solid var(--line); background: var(--soft); border-radius: 0 6px 6px 0; }
-.mode { letter-spacing: .05em; }
-.mode-act { color: var(--act); } .mode-show { color: var(--show); } .mode-ask { color: var(--ask); }
-.first-reason { display: block; margin-top: .2rem; font-size: .875rem; color: var(--muted); }
+/* Inside a turn: the mode and its reason lead. */
+.mode-line { display: flex; flex-wrap: wrap; gap: .25rem .6rem; align-items: baseline; }
+.mode { font-size: .9rem; font-weight: 700; padding: .05rem .55rem; border-radius: 6px; }
+.mode-act { color: var(--act); background: var(--act-tint); }
+.mode-show { color: var(--show); background: var(--show-tint); }
+.mode-ask { color: var(--ask); background: var(--ask-tint); }
+.reason { flex: 1 1 20rem; }
+.first-reason { flex-basis: 100%; font-size: .875rem; color: var(--muted); }
+.frozen .mode-line .reason { color: var(--muted); }
 .read-as { font-weight: 600; }
-.notice { padding: .4rem .7rem; border-left: 4px solid var(--act); background: #eef6f1; border-radius: 0 6px 6px 0; }
+.notice { padding: .45rem .75rem; border-radius: 8px; background: var(--act-tint); color: #1d4a35; }
 .error { color: #b42318; }
 .ignored { font-size: .9rem; color: var(--ask); font-weight: 600; }
-.count-row { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: .5rem; margin: .5rem 0 .25rem; }
-.count { margin: 0; color: var(--muted); font-weight: 600; }
+.count-row { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: .5rem; margin: .7rem 0 .2rem; }
+.count { margin: 0; font-weight: 700; font-variant-numeric: tabular-nums; }
 .scope { font-size: .8rem; color: var(--muted); }
-.asked .muted, .muted { color: var(--muted); }
+.muted { color: var(--muted); }
 
 /* Tables scroll inside their turn, never the page sideways. */
-.table-wrap { overflow-x: auto; margin-top: .25rem; }
-table { width: 100%; border-collapse: collapse; font-size: .9rem; }
-th, td { text-align: left; padding: .35rem .5rem; border-bottom: 1px solid var(--line); vertical-align: top; }
-th { font-weight: 600; color: var(--muted); white-space: nowrap; }
-details.earlier summary, details.why summary { cursor: pointer; color: var(--show); width: max-content; font-size: .9rem; }
-details.why { margin: -.25rem 0 .5rem; }
-.why-body { padding: .5rem .75rem; border-left: 4px solid var(--line); margin-top: .25rem; font-size: .9rem; }
+.table-wrap { overflow-x: auto; margin-top: .3rem; }
+table { width: 100%; border-collapse: collapse; font-size: .9rem; font-variant-numeric: tabular-nums; }
+th, td { text-align: left; padding: .4rem .55rem; border-bottom: 1px solid var(--rule); vertical-align: top; }
+th { font-weight: 600; font-size: .8rem; color: var(--muted); white-space: nowrap; border-bottom-color: var(--ink); }
+tbody tr:hover { background: #f6f8fa; }
+details > summary { cursor: pointer; color: var(--show); width: max-content; font-size: .9rem; font-weight: 500; }
+details.why { margin: .1rem 0 .6rem; }
+.why-body { padding: .5rem .8rem; margin-top: .3rem; border-radius: 8px; background: var(--page); font-size: .9rem; }
 .why-body p { margin: 0 0 .5rem; }
 .why-note { color: var(--muted); }
 
-/* Chips: every assumption is visible and, where it was a choice, editable (UX review fix 2). */
-.chips { display: flex; flex-wrap: wrap; gap: .4rem; align-items: center; margin-bottom: .4rem; }
-.chip { display: inline-flex; align-items: center; gap: .3rem; padding: .25rem .65rem; border: 1px solid var(--line);
-        border-radius: 999px; background: #fff; font: inherit; font-size: .9rem; color: var(--ink); }
-.chip.fixed { border-color: transparent; background: #eef2f6; }
-.chip.choice { border-color: var(--show); }
+/* Chips: fixed parts are plain tokens; only choices look like controls (UX review fix 2). */
+.chips { display: flex; flex-wrap: wrap; gap: .4rem; align-items: center; margin-bottom: .45rem; }
+.chip { display: inline-flex; align-items: center; gap: .3rem; padding: .25rem .7rem; border: 1.5px solid var(--rule);
+        border-radius: 999px; background: var(--surface); font: inherit; font-size: .9rem; color: var(--ink); }
+.chip.fixed { border-color: transparent; background: var(--page); }
+.chip.choice { border-color: var(--show); color: var(--show); font-weight: 600; }
 button.chip { cursor: pointer; }
-.chip.op { font-weight: 600; border-color: var(--show); color: var(--show); background: #fff; }
+.chip.op { font-weight: 700; border-color: var(--show); color: var(--show); background: var(--surface); }
+button.chip.op:hover { background: var(--show-tint); }
 .chip select { appearance: none; -webkit-appearance: none; border: 0; background: transparent; font: inherit;
                color: inherit; cursor: pointer; padding-right: 0; }
 .chip:focus-within { outline: 3px solid var(--focus); outline-offset: 2px; }
 .chip.guessed { border-style: dashed; border-color: var(--ask); }
-.chip.answered { border-color: var(--ask); box-shadow: 0 0 0 2px #f6dccb; }
-.caret { color: var(--show); pointer-events: none; }
-.tag { font-size: .8rem; color: var(--ask); }
+.chip.answered { box-shadow: 0 0 0 3px var(--ask-tint); }
+.caret { pointer-events: none; }
+.tag { font-size: .8rem; color: var(--ask); font-weight: 600; }
 
 /* Ask: one question; each option is a one-click reply with its result count. */
-fieldset.question { min-width: 0; margin: 0; padding: .75rem; border: 1px solid var(--ask); border-radius: 10px; }
+fieldset.question { min-width: 0; margin: .2rem 0 0; padding: .8rem .9rem .9rem; border: 0; border-radius: 10px; background: var(--ask-tint); }
 fieldset.question:focus { outline: 3px solid var(--focus); outline-offset: 2px; }
-legend.question-text { padding: 0 .25rem; font-weight: 600; }
-.options { display: flex; flex-wrap: wrap; gap: .5rem; margin-bottom: .5rem; }
-button.option { background: #fff; color: var(--ink); border-color: var(--ask); border-radius: 999px; }
-button.option:hover { background: #fdf3ec; }
+legend.question-text { float: left; width: 100%; margin-bottom: .6rem; padding: 0; font-family: var(--serif); font-size: 1.15rem; font-weight: 600; }
+.options { clear: both; display: flex; flex-wrap: wrap; gap: .5rem; margin-bottom: .6rem; }
+button.option { background: var(--surface); color: var(--ink); font-weight: 600; border: 1.5px solid var(--ask); border-radius: 999px; }
+button.option:hover { background: #fff7ee; }
+.asked { color: var(--muted); }
+.asked::first-line { color: #3d4a59; }
 
 /* Composer, pinned under the conversation. */
-.composer { display: flex; gap: .5rem; padding-top: .75rem; padding-bottom: .5rem; border-top: 1px solid var(--line); }
-.composer input { flex: 1; min-width: 0; padding: .65rem .9rem; font: inherit; border: 1px solid #b6c6d6; border-radius: 12px; background: #fff; }
+.composer { display: flex; gap: .5rem; padding-top: .8rem; padding-bottom: .4rem; }
+.composer input { flex: 1; min-width: 0; padding: .7rem 1rem; font: inherit; border: 1.5px solid #b9c4d0; border-radius: 10px;
+                  background: var(--surface); color: var(--ink); }
+.composer input:focus-visible { border-color: var(--ink); outline-offset: 1px; }
 
 /* Study settings: small, in the corner, out of the task path. */
-.study-footer { display: flex; justify-content: flex-end; padding-bottom: .5rem; }
+.study-footer { display: flex; justify-content: flex-end; padding-bottom: .6rem; }
 details.study { font-size: .8rem; color: var(--muted); text-align: right; }
-details.study summary { cursor: pointer; width: max-content; margin-left: auto; }
+details.study summary { margin-left: auto; color: var(--muted); font-size: .8rem; }
 .controls { display: flex; flex-wrap: wrap; gap: 1rem; justify-content: flex-end; align-items: center; margin-top: .4rem; }
 .controls select, .controls input { font: inherit; vertical-align: middle; }
-.controls output { display: inline-block; min-width: 2.5em; font-weight: 600; color: var(--ink); }
+.controls output { display: inline-block; min-width: 2.5em; font-weight: 700; color: var(--ink); }
 
-/* The confirmation for every write. */
-dialog { max-width: 36rem; width: calc(100% - 2rem); max-height: calc(100vh - 4rem); overflow: auto;
-         border: 1px solid var(--line); border-radius: 12px; padding: 1.25rem; }
-dialog::backdrop { background: rgba(31, 41, 51, .45); }
-dialog h2 { margin: 0 0 .5rem; font-size: 1.15rem; }
+/* The confirmation for every write: calm, and the safe choice first. */
+dialog { max-width: 36rem; width: calc(100% - 2rem); max-height: calc(100vh - 4rem); overflow: auto; color: var(--ink);
+         border: 0; border-top: 5px solid var(--ask); border-radius: 12px; padding: 1.3rem 1.4rem;
+         box-shadow: 0 20px 50px rgba(31, 43, 56, .25); }
+dialog::backdrop { background: rgba(31, 43, 56, .5); }
+dialog h2 { margin: 0 0 .5rem; font-size: 1.3rem; }
 .confirm-read-as { margin: 0 0 .5rem; color: var(--muted); }
-#job-pick { display: block; margin: .5rem 0; font-weight: 600; }
-#job-pick select { display: block; width: 100%; margin-top: .25rem; padding: .4rem; font: inherit; font-weight: normal; }
-.confirm-summary { font-weight: 600; margin: .5rem 0; }
-.confirm-changes { max-height: 14rem; overflow: auto; margin: 0 0 .5rem; padding-left: 1.25rem; }
+#job-pick { display: block; margin: .6rem 0; font-weight: 600; }
+#job-pick select { display: block; width: 100%; margin-top: .3rem; padding: .5rem; font: inherit; font-weight: 500;
+                   border: 1.5px solid #b9c4d0; border-radius: 8px; background: var(--surface); }
+.confirm-summary { font-weight: 700; margin: .6rem 0; }
+.confirm-changes { max-height: 14rem; overflow: auto; margin: 0 0 .6rem; padding: .5rem .5rem .5rem 1.7rem;
+                   border-radius: 8px; background: var(--page); font-size: .92rem; }
 .confirm-skipped { margin-bottom: .5rem; color: var(--muted); }
 .confirm-error { color: #b42318; margin: .25rem 0; }
 .confirm-buttons { display: flex; justify-content: flex-end; gap: .5rem; }
-.confirm-undo { margin: .5rem 0 0; font-size: .875rem; color: var(--muted); text-align: right; }
+.confirm-undo { margin: .6rem 0 0; font-size: .85rem; color: var(--muted); text-align: right; }
 
 @media (max-width: 600px) {
-  .turn.user p { max-width: 90%; }
-  .turn.assistant { padding: .7rem; }
+  .turn.user p { max-width: 88%; }
+  .turn.assistant { padding-left: .8rem; padding-right: .8rem; }
+  .welcome { padding-top: 1.5rem; }
 }
+@media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
