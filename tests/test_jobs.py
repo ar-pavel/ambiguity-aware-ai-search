@@ -85,7 +85,8 @@ class TestNothingChangesSilently(unittest.TestCase):
     def test_switching_to_jobs_keeps_open(self):
         r = app.handle({"text": "open Java developers at Bluefin", "choices": {"target": 1}})
         self.assertEqual(r["read_as"].split(" · ")[0], "open jobs")
-        self.assertTrue(all(row[-1] == "open" for row in r["table"]["rows"]))
+        status = r["table"]["headers"].index("Status")
+        self.assertTrue(all(row[status] == "open" for row in r["table"]["rows"]))
 
     def test_people_and_job_words_search_people_with_a_chip(self):
         for text in ("candidates for the Python role at Moorgate", "people who held lead roles in Python"):

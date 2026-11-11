@@ -37,14 +37,39 @@
 
     <!-- One fixed layout for every mode; only the contents of each slot change. -->
     <section id="mode-line" aria-live="polite" hidden></section>
+    <p id="notice" role="status" hidden></p>
     <section id="interpretation" hidden></section>
-    <p id="count" hidden></p>
+    <div class="count-row">
+      <p id="count" hidden></p>
+      <!-- Write actions: shown only with results, never while a question is open. Always confirmed. -->
+      <div id="actions" hidden></div>
+    </div>
     <table id="results" hidden>
       <thead></thead>
       <tbody></tbody>
     </table>
     <p id="scope" class="scope" hidden></p>
     <p id="error" role="alert" hidden></p>
+
+    <!-- The confirmation for every write: what was searched, exactly what will change, and what will not. -->
+    <dialog id="confirm" aria-labelledby="confirm-title">
+      <form method="dialog">
+        <h2 id="confirm-title">Check before changing anything</h2>
+        <p class="confirm-read-as"></p>
+        <label id="job-pick" hidden>Shortlist for
+          <select id="job"><option value="">Choose a job…</option></select>
+        </label>
+        <p class="confirm-summary"></p>
+        <ul class="confirm-changes"></ul>
+        <details class="confirm-skipped" hidden><summary></summary><ul></ul></details>
+        <p class="confirm-error" role="alert"></p>
+        <div class="confirm-buttons">
+          <button value="cancel" class="secondary" id="confirm-cancel">Cancel</button>
+          <button value="apply" id="confirm-apply" type="button">Confirm</button>
+        </div>
+        <p class="confirm-undo">You can undo this afterwards.</p>
+      </form>
+    </dialog>
   </main>
   <script src="app.js"></script>
 </body>

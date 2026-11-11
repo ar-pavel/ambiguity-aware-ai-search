@@ -16,9 +16,12 @@ cp .env.example .env      # live mode: set A2_MODEL=claude or openai, and that p
 - the "Read as" line is built from the filters that ran, never from model text
 - status words are exactly: implemented, simulated, planned
 - tuning numbers (such as the threshold θ) live in one named constant with a one-line reason
+- reads follow act / show / ask; every write (shortlist, close) goes plan -> confirm -> apply, can be
+  undone, and is logged. Only `store.py` writes, to `state/state.json`; `data/` is never changed
 
 ## Never
-- commit API keys, `.env` files or logs
+- commit API keys, `.env` files, logs or `state/`
+- write data without a confirmed plan (`actions.apply` refuses a fingerprint that no longer matches)
 - use code, data, screenshots or branding from any real product
 - add a dependency; the standard library is the whole toolbox
 - label something "implemented" that is simulated or planned

@@ -119,6 +119,99 @@ function renderResults(data) {
   show("count"); show("results", data.count > 0); show("scope");
 }
 
+// ---- Write actions: plan -> confirm in a dialog -> apply -> undo -------------------------------
+
+const searchPayload = () => ({ text: state.text, mode: state.mode, choices: state.choices, op: state.op, theta: theta() });
+let pending = null;   // the plan shown in the dialog, and the button that opened it
+
+async function post(path, body) {
+  const res = await fetch(path, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+  return res.json();
+}
+
+function renderActions(data) {
+  const bar = $("actions");
+  bar.innerHTML = "";
+  const action = data.target === "jobs" ? ["close", "Close these jobs…"] : ["shortlist", "Shortlist for a job…"];
+  const b = el("button", { type: "button", class: "secondary" }, action[1]);
+  b.addEventListener("click", () => openPlan(action[0], b, null));
+  bar.append(b);
+  show("actions", data.mode !== "ask" && data.count > 0);
+}
+
+function fillPlan(plan) {
+  const d = $("confirm");
+  d.querySelector(".confirm-read-as").textContent = "Your search: " + (plan.read_as || "");
+  d.querySelector(".confirm-summary").textContent = plan.summary || "";
+  const list = d.querySelector(".confirm-changes");
+  list.innerHTML = "";
+  (plan.changes || []).forEach((c) => list.append(el("li", {}, c.label + (c.before ? "  (" + c.before + " → " + c.after + ")" : ""))));
+  const skipped = d.querySelector(".confirm-skipped");
+  skipped.querySelector("ul").innerHTML = "";
+  (plan.skipped || []).forEach((s) => skipped.querySelector("ul").append(el("li", {}, s.label + ": " + s.why)));
+  skipped.querySelector("summary").textContent = (plan.skipped || []).length + " will not change";
+  skipped.hidden = !(plan.skipped || []).length;
+  const pick = $("job");
+  $("job-pick").hidden = plan.action !== "shortlist";
+  if (plan.jobs && pick.options.length === 1) {
+    plan.jobs.forEach((j) => pick.append(el("option", { value: j.id }, j.label)));
+  }
+  if (plan.action === "shortlist") pick.value = plan.job_id || "";
+  d.querySelector(".confirm-error").textContent = plan.valid ? "" : (plan.error || "");
+  const apply = $("confirm-apply");
+  apply.textContent = plan.confirm_label || "Confirm";
+  apply.disabled = !plan.valid;
+}
+
+async function openPlan(action, trigger, jobId) {
+  const plan = await post("/api/plan", { action, job_id: jobId, search: searchPayload() });
+  if (!plan.action) plan.action = action;
+  pending = { plan, trigger };
+  fillPlan(plan);
+  const d = $("confirm");
+  if (!d.open) { d.showModal(); $("confirm-cancel").focus(); }  // the safe choice has focus first
+}
+
+$("job").addEventListener("change", () => openPlan("shortlist", pending.trigger, $("job").value || null));
+
+$("confirm-apply").addEventListener("click", async () => {
+  const { plan } = pending;
+  const out = await post("/api/apply", { action: plan.action, job_id: plan.job_id, fingerprint: plan.fingerprint, search: searchPayload() });
+  if (!out.ok) {  // refused: show what is true now, and let the recruiter confirm again
+    if (out.plan) { pending.plan = Object.assign({ action: plan.action }, out.plan); fillPlan(pending.plan); }
+    $("confirm").querySelector(".confirm-error").textContent = out.error;
+    return;
+  }
+  $("confirm").close();
+  setNotice(out.done + ".", true);
+  runSearch();
+});
+
+// Esc and Cancel close the dialog without writing anything; focus goes back to the button that opened it.
+$("confirm").addEventListener("close", () => {
+  const p = pending;
+  $("job").innerHTML = '<option value="">Choose a job…</option>';
+  if (p && p.trigger && document.body.contains(p.trigger)) p.trigger.focus();
+});
+
+function setNotice(text, canUndo) {
+  const n = $("notice");
+  n.innerHTML = "";
+  n.append(el("span", {}, text + " "));
+  if (canUndo) {
+    const u = el("button", { type: "button", class: "link" }, "Undo");
+    u.addEventListener("click", async () => {
+      const out = await post("/api/undo", {});
+      setNotice(out.ok ? out.done + "." : out.error, false);
+      runSearch();
+      $("notice").focus();
+    });
+    n.append(u);
+  }
+  n.tabIndex = -1;
+  show("notice");
+}
+
 function render(data) {
   show("error", false);
   if (data.error) {
@@ -131,14 +224,17 @@ function render(data) {
   if (data.mode === "ask") {  // ask before searching: no results until the question is answered
     ["count", "results", "scope"].forEach((id) => show(id, false));
     state.lastCount = null;
+    show("actions", false);
   } else {
     renderResults(data);
+    renderActions(data);
   }
 }
 
 $("ask-form").addEventListener("submit", (e) => {
   e.preventDefault();
   Object.assign(state, { text: $("request").value, mode: chosenMode(), choices: {}, op: null, lastCount: null, answered: null });
+  show("notice", false);
   runSearch();
 });
 

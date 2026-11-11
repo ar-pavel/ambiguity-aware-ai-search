@@ -46,3 +46,20 @@ button.option:focus-visible { outline: 3px solid #f0b429; outline-offset: 2px; }
             font-size: .875rem; color: var(--muted); }
 .controls select, .controls input { font: inherit; vertical-align: middle; }
 .controls output { display: inline-block; min-width: 2.5em; font-weight: 600; color: var(--ink); }
+
+/* Write actions and their confirmation. */
+.count-row { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: .5rem; }
+button.secondary { background: #fff; color: var(--ink); }
+button:disabled { opacity: .5; cursor: not-allowed; }
+#notice { padding: .4rem .75rem; border-left: 4px solid var(--act); background: #eef6f1; margin: 0 0 .75rem; }
+dialog { max-width: 36rem; width: calc(100% - 2rem); border: 1px solid var(--line); border-radius: 8px; padding: 1.25rem; }
+dialog::backdrop { background: rgba(31, 41, 51, .45); }
+dialog h2 { margin: 0 0 .5rem; font-size: 1.15rem; }
+.confirm-read-as { margin: 0 0 .5rem; color: var(--muted); }
+.confirm-summary { font-weight: 600; margin: .5rem 0; }
+.confirm-changes { max-height: 14rem; overflow: auto; margin: 0 0 .5rem; padding-left: 1.25rem; }
+.confirm-skipped { margin-bottom: .5rem; color: var(--muted); }
+.confirm-error { color: #b42318; margin: .25rem 0; }
+.confirm-buttons { display: flex; justify-content: flex-end; gap: .5rem; }
+.confirm-undo { margin: .5rem 0 0; font-size: .875rem; color: var(--muted); text-align: right; }
+#job-pick select { font: inherit; max-width: 100%; }

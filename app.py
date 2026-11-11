@@ -11,8 +11,10 @@ import os
 import sys
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
+import actions
 import interpret
 import log
+import store
 import search
 import strategy
 
@@ -26,7 +28,7 @@ COLUMNS = {
                    ("Years", "years_experience"), ("City", "city"), ("Company", "company"),
                    ("Work mode", "work_mode"), ("Notice", "notice")],
     "jobs": [("Job", "title"), ("Company", "company"), ("Skills", "skills"), ("Min. years", "min_years"),
-             ("City", "city"), ("Work mode", "work_mode"), ("Status", "status")],
+             ("City", "city"), ("Work mode", "work_mode"), ("Status", "status"), ("Shortlist", "shortlist")],
 }
 
 
@@ -34,6 +36,8 @@ def _cell(rec, key):
     value = rec[key]
     if key == "skills":
         return ", ".join(value)
+    if key == "shortlist":
+        return str(len(value))
     if key == "notice":
         return NOTICE[value]
     return str(value)
@@ -125,9 +129,14 @@ def _theta(value):
 
 def handle(payload):
     """Interpret the request, choose a mode, run the search and describe what ran."""
+    return _run(payload)[0]
+
+
+def _run(payload):
+    """handle(), plus the records themselves (the write actions work on exactly these)."""
     text = (payload.get("text") or "").strip()
     if not text:
-        return {"error": "Type a request, for example: senior Java developers in London"}
+        return {"error": "Type a request, for example: senior Java developers in London"}, []
     reading = interpret.interpret(text)
     edited = _apply_edits(reading, payload.get("choices") or {}, payload.get("op"))
     reading = interpret.for_target(reading)  # the target may have just been switched
@@ -154,7 +163,48 @@ def handle(payload):
         "interpreter": _interpreter_label(reading.get("source", "rules")),
         "dropped": reading.get("dropped", []),
         "theta": decision["theta"],
-    }
+    }, results
+
+
+def _plan(payload):
+    """Re-run the recruiter's search on the server and plan the action on its records."""
+    result, records = _run(payload.get("search") or {})
+    if "error" in result:
+        return result, {"valid": False, "error": result["error"]}
+    if result["mode"] == "ask":
+        return result, {"valid": False, "error": "Answer the question first, so it is clear which records you mean."}
+    job_id = payload.get("job_id")
+    try:
+        job_id = int(job_id) if job_id not in (None, "") else None
+    except (TypeError, ValueError):
+        job_id = None
+    plan = actions.plan(payload.get("action"), records, result["target"], job_id)
+    plan["read_as"] = result["read_as"]
+    return result, plan
+
+
+def plan_action(payload):
+    """What a write would change. Writes nothing (so Cancel needs nothing undone)."""
+    return _plan(payload)[1]
+
+
+def apply_action(payload, log_dir=None):
+    """Apply a confirmed plan: recomputed now, and refused unless it is exactly what was confirmed."""
+    with store.LOCK:
+        result, plan = _plan(payload)
+        out = actions.apply(plan, payload.get("fingerprint"))
+    if out["ok"]:
+        log.write_event({"event": "write", "action": plan["action"], "job_id": plan.get("job_id"),
+                         "text": result.get("text"), "read_as": plan.get("read_as"), "changed": out["changed"],
+                         "skipped": out["skipped"], "fingerprint": plan["fingerprint"]}, log_dir)
+    return out
+
+
+def undo_action(log_dir=None):
+    out = actions.undo()
+    if out["ok"]:
+        log.write_event({"event": "undo", "done": out["done"]}, log_dir)
+    return out
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -185,16 +235,21 @@ class Handler(BaseHTTPRequestHandler):
         with open(path, "rb") as f:
             self._send(200, f.read(), TYPES.get(os.path.splitext(path)[1], "text/plain"))
 
+    ROUTES = {"/api/search": handle, "/api/plan": plan_action, "/api/apply": apply_action,
+              "/api/undo": lambda payload: undo_action()}
+
     def do_POST(self):
-        if self.path != "/api/search":
+        route = self.ROUTES.get(self.path)
+        if route is None:
             return self._send(404, {"error": "not found"})
         if not self._local() or not self.headers.get("Content-Type", "").startswith("application/json"):
             return self._send(403, {"error": "requests must come from this page"})
         try:
             length = int(self.headers.get("Content-Length", 0))
             payload = json.loads(self.rfile.read(length) or b"{}")
-            result = handle(payload)
-            log.write(payload, result)
+            result = route(payload)
+            if route is handle:
+                log.write(payload, result)
             self._send(200, result)
         except (ValueError, KeyError) as e:
             self._send(400, {"error": "bad request: %s" % e})
