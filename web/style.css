@@ -75,6 +75,7 @@ button.suggestion:hover { border-color: var(--ink); background: var(--surface); 
 .turn.assistant.is-show { border-left-color: var(--show); }
 .turn.assistant.is-ask { border-left-color: var(--ask); }
 .turn.assistant.is-error { border-left-color: var(--danger); }
+.turn.assistant.is-done { border-left-color: var(--rule); }
 .turn.assistant.live { background: var(--surface); box-shadow: 0 1px 2px rgba(var(--shadow), .05), 0 8px 24px rgba(var(--shadow), .07); }
 .turn.assistant.frozen { background: transparent; color: #3a4558; padding-top: .4rem; padding-bottom: .4rem; }
 .turn.assistant > p { margin: 0 0 .55rem; }

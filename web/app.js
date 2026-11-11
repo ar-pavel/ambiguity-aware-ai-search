@@ -54,7 +54,8 @@ function addAssistant(data) {
   document.querySelectorAll("#chat .turn:not(.live) .notice button").forEach((b) => b.remove());
   const said = data._notice ? data._notice.text + " " : "";
   announce(data.error ? data.error
-    : said + capital(data.mode) + ". " + data.reason + (data.mode === "ask" ? "" : " " + results(data.count, data.noun) + "."));
+    : data._notice ? said + results(data.count, data.noun) + " in your search."
+    : capital(data.mode) + ". " + data.reason + (data.mode === "ask" ? "" : " " + results(data.count, data.noun) + "."));
   // Keep the recruiter's own turn in view above the reply, so it reads as an exchange.
   const before = turn.previousElementSibling;
   (before && before.classList.contains("user") ? before : turn).scrollIntoView({ block: "start" });
@@ -158,7 +159,8 @@ function assistantTurn(data, isLive) {
   if (isLive && !data.error) remember(data);
   // The mode colours the turn's edge. The reply to an answered question stays an ask turn, so the
   // conversation reads ask -> answered, not ask -> show.
-  const kind = data.error ? "error" : data._answered ? "ask" : data.mode;
+  // A re-run after a write or undo made no new decision, so it carries no mode colour or tag.
+  const kind = data.error ? "error" : data._notice ? "done" : data._answered ? "ask" : data.mode;
   const turn = el("section", { class: "turn assistant " + (isLive ? "live" : "frozen") + " is-" + kind });
   turn.data = data;
   if (data.error) {
@@ -231,10 +233,13 @@ const withoutHint = (reason, hint) => (hint && reason.endsWith(" " + hint) ? rea
 // After a write or undo, the turn leads with that result, and the mode line steps back.
 function modeLine(data, isLive) {
   const p = el("p", { class: "mode-line" + (data._notice ? " quiet" : "") });
-  const mode = data._answered ? "ask" : data.mode;
-  p.append(el("strong", { class: "mode mode-" + mode }, data._answered ? "Ask · answered" : capital(mode)),
-           el("span", { class: "reason" }, data._notice ? "Your search again, after that change."   // the full reason is under Why?
-             : isLive ? data.reason : withoutHint(data.reason, data.hint)));
+  if (data._notice) {   // the search's own reason is under Why?
+    p.append(el("span", { class: "reason" }, "Results for “" + data.text + "” with that change applied."));
+  } else {
+    const mode = data._answered ? "ask" : data.mode;
+    p.append(el("strong", { class: "mode mode-" + mode }, data._answered ? "Ask · answered" : capital(mode)),
+             el("span", { class: "reason" }, isLive ? data.reason : withoutHint(data.reason, data.hint)));
+  }
   if (!isLive) p.append(el("span", { class: "earlier" }, "Earlier · read-only"));
   if (data._first) p.append(el("span", { class: "first-reason" }, "At first: " + data._first));
   return p;
