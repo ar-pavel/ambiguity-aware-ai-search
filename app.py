@@ -233,9 +233,11 @@ def _run(payload):
         # Searching would return every record and call it "nothing was unclear", which is not what
         # "hello" or "candidates named Matin" meant. Reported like an error, so nothing is searched,
         # planned or logged, but worded as a reply.
-        return {"error": "I didn't find anything I can search for in “%s”: I can't use “%s”. I search by skill, "
-                         "place, company, role or seniority, for example “Java developers in London” or "
-                         "“open jobs at Bluefin”." % (text, " ".join(unused)),
+        unusable = " ".join(unused)
+        lead = ("I can't search for “%s”." % unusable if unusable.lower() == text.lower().strip(" .!?")
+                else "I didn't find anything I can search for in “%s”: I can't use “%s”." % (text, unusable))
+        return {"error": lead + " I search by skill, place, company, role or seniority, for example "
+                                "“Java developers in London” or “open jobs at Bluefin”.",
                 "nothing": True, "text": text}, []
     named = re.search(r"\b(?:named|called)\s+([A-Za-z][A-Za-z'-]*)", text, re.I)
     if named:  # names are not searched: say so instead of quietly searching without it

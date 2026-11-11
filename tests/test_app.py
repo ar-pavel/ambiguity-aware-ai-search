@@ -146,7 +146,7 @@ class TestNothingToSearch(unittest.TestCase):
         for text in ["hello", "thanks!", "asdf qwerty", "rockstar ninja"]:
             r = app.handle({"text": text})
             self.assertTrue(r.get("nothing"), text)
-            self.assertIn("I didn't find anything I can search for in “%s”" % text, r["error"])
+            self.assertTrue(r["error"].startswith("I can't search for “%s”." % text.strip("!")), r["error"])
 
     def test_words_it_cannot_search_by_are_named(self):
         r = app.handle({"text": "candidates named matin"})
