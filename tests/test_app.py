@@ -4,6 +4,7 @@ import unittest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import app  # noqa: E402
+import replies  # noqa: E402
 import model  # noqa: E402
 import search  # noqa: E402
 
@@ -224,8 +225,8 @@ class TestWhy(unittest.TestCase):
         self.assertIn("nothing to compare", w["summary"])
 
     def test_percent_never_hides_which_side_of_theta(self):
-        self.assertEqual(app._pct(0.497, 0.5), "49.7%")
-        self.assertEqual(app._pct(0.5, 0.5), "50%")
+        self.assertEqual(replies.pct(0.497, 0.5), "49.7%")
+        self.assertEqual(replies.pct(0.5, 0.5), "50%")
 
 
 class TestChangeMessages(unittest.TestCase):

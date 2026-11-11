@@ -21,14 +21,14 @@ import store
 ACTIONS = {"close": "jobs", "shortlist": "candidates"}  # the target each action works on
 
 
-def _job_label(job):
+def job_label(job):
     return "%s at %s (%s)" % (job["title"], job["company"], job["city"])
 
 
 def open_jobs():
     """Jobs a candidate can be shortlisted for, for the page's job picker."""
     jobs = [j for j in search.load("jobs") if j["status"] == "open"]
-    return [{"id": j["id"], "label": _job_label(j)} for j in sorted(jobs, key=lambda j: (j["company"], j["title"]))]
+    return [{"id": j["id"], "label": job_label(j)} for j in sorted(jobs, key=lambda j: (j["company"], j["title"]))]
 
 
 def _fingerprint(action, job_id, changes, skipped):
@@ -69,7 +69,7 @@ def plan(action, records, target, job_id=None):
     changes, skipped, out = [], [], {"action": action, "job_id": job_id}
     if action == "close":
         for j in records:
-            item = {"id": j["id"], "label": _job_label(j)}
+            item = {"id": j["id"], "label": job_label(j)}
             if j["status"] == "closed":
                 skipped.append(dict(item, why="already closed"))
             else:
@@ -95,8 +95,8 @@ def plan(action, records, target, job_id=None):
         if job["status"] != "open":
             out.update(valid=False, error="That job is closed.", changes=[], skipped=[])
             return out
-        out["job"] = _job_label(job)
-        out["summary"] = "Add %d candidate%s to the shortlist for %s." % (n, "" if n == 1 else "s", _job_label(job))
+        out["job"] = job_label(job)
+        out["summary"] = "Add %d candidate%s to the shortlist for %s." % (n, "" if n == 1 else "s", job_label(job))
         out.update(_fit(changes, job, {c["id"]: c for c in records}))
         out["confirm_label"] = "Shortlist %d candidate%s" % (n, "" if n == 1 else "s")
     out.update(changes=changes, skipped=skipped, valid=bool(changes),
