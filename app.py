@@ -218,11 +218,13 @@ def _run(payload):
     if edited:
         decision["reason"] = change_message(reading, payload.get("last"), len(results),
                                             "job" if target == "jobs" else "candidate")
+        decision["hint"] = None
     return {
         "text": text,
         "reading": reading,
         "mode": decision["mode"],
         "reason": decision["reason"],
+        "hint": decision.get("hint"),  # the "how to change it" sentence at the end of reason, if any
         "read_as": search.describe(reading),
         "chips": chips(reading),
         "question": question(reading, decision["ask_slot"]) if decision["mode"] == "ask" else None,

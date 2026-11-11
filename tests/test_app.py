@@ -64,6 +64,16 @@ class TestShowMode(unittest.TestCase):
         self.assertNotIn("error", r)
 
 
+    def test_hint_is_sent_apart_so_an_earlier_turn_can_drop_it(self):
+        r = app.handle({"text": "Java with Python in London"})
+        self.assertEqual(r["mode"], "show")
+        self.assertEqual(r["hint"], "Tap AND ⇄ to switch to OR.")
+        self.assertTrue(r["reason"].endswith(" " + r["hint"]))
+        edited = app.handle({"text": "Java with Python in London", "op": "OR", "last": {"op": True}})
+        self.assertIsNone(edited["hint"])  # after an edit the reason says what changed, with no hint
+        self.assertIsNone(app.handle({"text": "Java developers in London"})["hint"])
+
+
 class TestAskMode(unittest.TestCase):
     def test_ask_returns_one_question_with_real_counts(self):
         r = app.handle({"text": "senior Java developers"})

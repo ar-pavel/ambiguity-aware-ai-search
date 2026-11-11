@@ -5,21 +5,26 @@
 :root {
   --ink: #1f2b38;        /* text, the recruiter's turns */
   --muted: #5b6878;      /* secondary text; 5.6:1 on white */
-  --page: #eef1f4;       /* the page behind the conversation */
+  --page: #f3f5f8;       /* the conversation panel */
+  --side: #dde3ea;       /* outside the panel, on wide screens */
   --surface: #ffffff;    /* the live turn */
   --rule: #d5dce4;
   --act: #2e6b4f;        /* pine: searched straight away */
   --show: #2f5fa7;       /* cobalt: showed its reading */
   --ask: #b0650c;        /* ochre: asked first, or guessed */
   --act-tint: #e6f1eb; --show-tint: #e8eef8; --ask-tint: #fbefe1;
+  --ask-text: #7f4706;   /* ask on its tint: 6.9:1 */
+  --guess: #6b4c9a;      /* plum: an assumption I made, not a question I asked */
   --focus: #f0b429;
   --serif: "Iowan Old Style", "Charter", "Bitstream Charter", Cambria, Georgia, serif;
   --sans: "Avenir Next", Seravek, "Segoe UI Variable Text", "Segoe UI", Ubuntu, "Noto Sans", system-ui, sans-serif;
 }
 * { box-sizing: border-box; }
 html, body { height: 100%; }
-body { margin: 0; font: 16px/1.55 var(--sans); color: var(--ink); background: var(--page);
-       display: flex; flex-direction: column; -webkit-font-smoothing: antialiased; }
+body { margin: 0; font: 16px/1.55 var(--sans); color: var(--ink); background: var(--side); -webkit-font-smoothing: antialiased; }
+/* The app is one panel, set apart from the sides of a wide screen. */
+.app { display: flex; flex-direction: column; height: 100%; width: 100%; max-width: 920px; margin: 0 auto;
+       background: var(--page); box-shadow: 0 0 0 1px #cfd7e0, 0 0 40px rgba(31, 43, 56, .08); }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 h1, h2 { font-family: var(--serif); font-weight: 600; letter-spacing: -.01em; }
 
@@ -32,19 +37,20 @@ button.link { padding: 0; border: 0; background: none; color: var(--show); font-
               text-decoration: underline; text-underline-offset: 3px; }
 button:disabled { opacity: .45; cursor: not-allowed; }
 button[aria-disabled="true"] { opacity: .6; cursor: progress; }
-:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+:focus-visible { outline: 3px solid var(--ink); outline-offset: 2px; box-shadow: 0 0 0 6px var(--focus); }
 
 /* One column for everything, so the eye never has to re-find the edge. */
-.top, #chat, .composer, .study-footer { width: 100%; max-width: 860px; margin: 0 auto; padding-left: 1rem; padding-right: 1rem; }
-.top { display: flex; justify-content: space-between; align-items: baseline; padding-top: 1.1rem; padding-bottom: .6rem; }
+.top, #chat, .composer, .study-footer { width: 100%; padding-left: 1.5rem; padding-right: 1.5rem; }
+.top { display: flex; justify-content: space-between; align-items: baseline; padding-top: 1.1rem; padding-bottom: .7rem;
+       border-bottom: 1px solid var(--rule); }
 .top h1 { margin: 0; font-size: 1.3rem; }
-#chat { flex: 1; overflow-y: auto; padding-top: .5rem; padding-bottom: 1.5rem; }
+#chat { flex: 1; min-height: 0; overflow-y: auto; padding-top: .5rem; padding-bottom: 1.5rem; }
 
 /* The first screen: the question the recruiter answers by typing. */
 .welcome { padding: 2.5rem 0 1.5rem; }
 .welcome-title { margin: 0 0 .4rem; font-size: clamp(1.8rem, 4vw, 2.5rem); line-height: 1.15; }
 .welcome p { margin: 0 0 1.1rem; max-width: 58ch; color: var(--muted); }
-.suggestions { display: flex; flex-wrap: wrap; gap: .5rem; }
+.suggestions { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; }
 button.suggestion { background: var(--surface); color: var(--ink); font-weight: 500; border-color: var(--rule); border-radius: 999px;
                     padding: .4rem .9rem; }
 button.suggestion:hover { border-color: var(--ink); background: var(--surface); }
@@ -71,14 +77,18 @@ button.suggestion:hover { border-color: var(--ink); background: var(--surface); 
 .mode { font-size: .9rem; font-weight: 700; padding: .05rem .55rem; border-radius: 6px; }
 .mode-act { color: var(--act); background: var(--act-tint); }
 .mode-show { color: var(--show); background: var(--show-tint); }
-.mode-ask { color: var(--ask); background: var(--ask-tint); }
+.mode-ask { color: var(--ask-text); background: var(--ask-tint); }
+.mode-line.quiet { font-size: .875rem; color: var(--muted); }
+.earlier { margin-left: auto; font-size: .78rem; color: var(--muted); }
 .reason { flex: 1 1 20rem; }
 .first-reason { flex-basis: 100%; font-size: .875rem; color: var(--muted); }
 .frozen .mode-line .reason { color: var(--muted); }
 .read-as { font-weight: 600; }
 .notice { padding: .45rem .75rem; border-radius: 8px; background: var(--act-tint); color: #1d4a35; }
+.notice.quiet { padding: .2rem 0; background: none; color: var(--muted); font-size: .875rem; }
+.notice:focus { outline: 3px solid var(--ink); outline-offset: 2px; }
 .error { color: #b42318; }
-.ignored { font-size: .9rem; color: var(--ask); font-weight: 600; }
+.ignored { font-size: .9rem; color: var(--guess); font-weight: 600; }
 .count-row { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: .5rem; margin: .7rem 0 .2rem; }
 .count { margin: 0; font-weight: 700; font-variant-numeric: tabular-nums; }
 .scope { font-size: .8rem; color: var(--muted); }
@@ -107,15 +117,17 @@ button.chip { cursor: pointer; }
 button.chip.op:hover { background: var(--show-tint); }
 .chip select { appearance: none; -webkit-appearance: none; border: 0; background: transparent; font: inherit;
                color: inherit; cursor: pointer; padding-right: 0; }
-.chip:focus-within { outline: 3px solid var(--focus); outline-offset: 2px; }
-.chip.guessed { border-style: dashed; border-color: var(--ask); }
+.chip:focus-within { outline: 3px solid var(--ink); outline-offset: 2px; }
+.chip.guessed { border-style: dashed; border-color: var(--guess); }
 .chip.answered { box-shadow: 0 0 0 3px var(--ask-tint); }
+.chip select:focus-visible { outline: none; box-shadow: none; }
 .caret { pointer-events: none; }
-.tag { font-size: .8rem; color: var(--ask); font-weight: 600; }
+.tag { font-size: .8rem; color: var(--guess); font-weight: 600; }
 
 /* Ask: one question; each option is a one-click reply with its result count. */
-fieldset.question { min-width: 0; margin: .2rem 0 0; padding: .8rem .9rem .9rem; border: 0; border-radius: 10px; background: var(--ask-tint); }
-fieldset.question:focus { outline: 3px solid var(--focus); outline-offset: 2px; }
+fieldset.question { min-width: 0; margin: .2rem 0 0; padding: .8rem .9rem .9rem; border: 1.5px solid var(--ask); border-radius: 10px; }
+fieldset.question:focus { outline: 3px solid var(--ink); outline-offset: 2px; }
+.turn.live:focus { outline: none; }
 legend.question-text { float: left; width: 100%; margin-bottom: .6rem; padding: 0; font-family: var(--serif); font-size: 1.15rem; font-weight: 600; }
 .options { clear: both; display: flex; flex-wrap: wrap; gap: .5rem; margin-bottom: .6rem; }
 button.option { background: var(--surface); color: var(--ink); font-weight: 600; border: 1.5px solid var(--ask); border-radius: 999px; }
@@ -124,7 +136,7 @@ button.option:hover { background: #fff7ee; }
 .asked::first-line { color: #3d4a59; }
 
 /* Composer, pinned under the conversation. */
-.composer { display: flex; gap: .5rem; padding-top: .8rem; padding-bottom: .4rem; }
+.composer { display: flex; gap: .5rem; padding-top: .8rem; padding-bottom: .4rem; border-top: 1px solid var(--rule); }
 .composer input { flex: 1; min-width: 0; padding: .7rem 1rem; font: inherit; border: 1.5px solid #b9c4d0; border-radius: 10px;
                   background: var(--surface); color: var(--ink); }
 .composer input:focus-visible { border-color: var(--ink); outline-offset: 1px; }
@@ -158,6 +170,7 @@ dialog h2 { margin: 0 0 .5rem; font-size: 1.3rem; }
 @media (max-width: 600px) {
   .turn.user p { max-width: 88%; }
   .turn.assistant { padding-left: .8rem; padding-right: .8rem; }
+  .top, #chat, .composer, .study-footer { padding-left: 1rem; padding-right: 1rem; }
   .welcome { padding-top: 1.5rem; }
 }
 @media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }

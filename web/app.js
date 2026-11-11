@@ -7,8 +7,9 @@ const $ = (id) => document.getElementById(id);
 // What the recruiter has asked for so far. Edits are re-applied by the server to a fresh reading.
 // last: the control just used (the server says what it changed). focus: the control to refocus after re-render.
 // notice: the result of a write or undo, shown at the top of the next assistant turn.
+// undoable: the latest write that can still be undone; its Undo stays on the live turn until used.
 const state = { text: "", mode: "auto", choices: {}, op: null, lastCount: null, lastNoun: null, answered: null,
-                last: null, focus: null, firstReason: null, notice: null, busy: false };
+                last: null, focus: null, firstReason: null, firstHint: null, notice: null, undoable: null, busy: false };
 const chosenMode = () => $("mode").value;          // the strategy picked in the study settings
 const theta = () => Number($("theta").value);       // the rule's overlap threshold
 const live = () => document.querySelector("#chat .turn.live");
@@ -49,9 +50,11 @@ function freezeLive() {
 function addAssistant(data) {
   freezeLive();
   const turn = append(assistantTurn(data, true));
-  // Screen readers hear one short line, not the whole table.
-  $("status").textContent = data.error ? data.error
-    : data.mode.toUpperCase() + ". " + data.reason + (data.mode === "ask" ? "" : " " + results(data.count, data.noun) + ".");
+  // Only the newest notice may undo: undo always reverses the most recent write.
+  document.querySelectorAll("#chat .turn:not(.live) .notice button").forEach((b) => b.remove());
+  const said = data._notice ? data._notice.text + " " : "";
+  announce(data.error ? data.error
+    : said + capital(data.mode) + ". " + data.reason + (data.mode === "ask" ? "" : " " + results(data.count, data.noun) + "."));
   // Keep the recruiter's own turn in view above the reply, so it reads as an exchange.
   const before = turn.previousElementSibling;
   (before && before.classList.contains("user") ? before : turn).scrollIntoView({ block: "start" });
@@ -66,7 +69,13 @@ function setBusy(on) {
     .forEach((c) => { c.disabled = on; });
 }
 
-async function runSearch() {
+// What a reply is computed from. Saved before a change, so a failed reply can put it back.
+const snapshot = () => JSON.parse(JSON.stringify({ text: state.text, mode: state.mode, choices: state.choices,
+  op: state.op, answered: state.answered, last: state.last }));
+
+// prev: the state before the recruiter's change. If the reply fails, the change is undone on the page
+// too, so the live turn still matches what the server would do, and it stays usable for a retry.
+async function runSearch(prev) {
   planSeq++;  // a confirmation for the old results must not open over the new ones
   setBusy(true);
   const slow = setTimeout(() => {
@@ -88,36 +97,77 @@ async function runSearch() {
     clearTimeout(slow);
     if (thinking) { thinking.remove(); thinking = null; }
   }
-  addAssistant(data);
-  setBusy(false);
-  restoreFocus();
+  try {
+    if (data.error && live()) {
+      if (prev) Object.assign(state, prev);
+      addError(data.error);
+    } else {
+      addAssistant(data);
+    }
+  } finally {
+    setBusy(false);   // even if drawing the reply failed, the page must not stay locked
+    restoreFocus();
+    if (state.settingsChanged) rerunWithSettings();
+  }
+}
+
+// A failed reply is reported under the live turn, which stays live so the recruiter can retry.
+function addError(text) {
+  const turn = append(el("section", { class: "turn assistant is-error" }));
+  if (state.notice) { turn.append(noticeLine(state.notice, true)); state.notice = null; }
+  turn.append(el("p", { class: "error" }, text));
+  announce(turn.textContent);
+  turn.scrollIntoView({ block: "start" });
+}
+
+// Screen readers hear one short line per reply, not the whole table. Cleared first, so the same
+// words twice in a row are still read out.
+function announce(text) {
+  $("status").textContent = "";
+  setTimeout(() => { $("status").textContent = text; }, 50);
 }
 
 // After a re-render, put focus back on the control the recruiter used (UX review fix 3).
 // "question": a new request was sent, so focus its question if one is asked. Other re-runs (a study
 // setting, an undo) leave focus where the recruiter is working.
 function restoreFocus() {
-  if (!state.focus) return;
+  if (!state.focus) return keepFocus();
   const turn = live();
-  const target = !turn ? null : state.focus === "question" ? turn.querySelector("fieldset")
+  const target = !turn ? null
+    : state.focus === "question" ? turn.querySelector("fieldset")
+    : state.focus === "reading" ? turn.querySelector("fieldset, .chips button, .chips select")
+    : state.focus === "notice" ? turn.querySelector(".notice")
     : turn.querySelector('[data-slot="' + state.focus + '"]');
-  if (target) target.focus();
+  if (target) target.focus(); else keepFocus();
   state.focus = null;
+}
+
+// If the control the recruiter used has gone (a disabled or replaced button), focus the new reply,
+// so keyboard users are never dropped at the top of the page.
+function keepFocus() {
+  const a = document.activeElement;
+  if (a && a !== document.body && !a.disabled && document.body.contains(a)) return;
+  const turn = live();
+  if (turn) { turn.setAttribute("tabindex", "-1"); turn.focus({ preventScroll: true }); }
+  else $("request").focus();
 }
 
 // ---- One assistant turn -------------------------------------------------------------------------
 
 function assistantTurn(data, isLive) {
-  const kind = data.error ? "error" : data.mode;   // the mode colours the turn's edge
+  if (isLive && !data.error) remember(data);
+  // The mode colours the turn's edge. The reply to an answered question stays an ask turn, so the
+  // conversation reads ask -> answered, not ask -> show.
+  const kind = data.error ? "error" : data._answered ? "ask" : data.mode;
   const turn = el("section", { class: "turn assistant " + (isLive ? "live" : "frozen") + " is-" + kind });
   turn.data = data;
   if (data.error) {
     turn.append(el("p", { class: "error" }, data.error));
     return turn;
   }
-  if (isLive) remember(data);
   if (data._notice) turn.append(noticeLine(data._notice, isLive));
-  turn.append(modeLine(data), whyBox(data.why));
+  else if (isLive && state.undoable) turn.append(noticeLine({ text: "Last change: " + state.undoable, canUndo: true, quiet: true }, true));
+  turn.append(modeLine(data, isLive), whyBox(data.why));
   if (data.mode === "ask" && data.question) {
     turn.append(isLive ? questionCard(data.question) : askedLine(data.question));
     return turn;   // ask before searching: no results until the question is answered
@@ -126,9 +176,16 @@ function assistantTurn(data, isLive) {
     turn.append(isLive ? chipRow(data) : el("p", { class: "read-as" }, "Read as: " + data.read_as));
   } else {
     turn.append(el("p", { class: "read-as" }, "Read as: " + data.read_as));
-    if (isLive) {
+    // Act keeps its answer; any editable chips open in place, with no extra exchange (fair to act).
+    // With nothing to choose, the way to change it is to type a new request.
+    if (isLive && data.chips.some((c) => c.kind === "op" || c.options)) {
       const toShow = el("button", { type: "button", class: "link" }, "Edit this reading");
-      toShow.addEventListener("click", () => act("Edit this reading", () => { state.mode = "show"; state.last = null; }));
+      toShow.addEventListener("click", () => {
+        const row = chipRow(data, false);
+        toShow.replaceWith(row);
+        const first = row.querySelector("button, select");
+        if (first) first.focus();
+      });
       turn.append(toShow);
     }
   }
@@ -147,8 +204,12 @@ function assistantTurn(data, isLive) {
 function remember(data) {
   if (data._seen) return;
   data._seen = true;
-  if (!state.last) state.firstReason = data.reason;
-  if (state.last && state.firstReason && state.firstReason !== data.reason) data._first = state.firstReason;
+  // A re-run after a write or undo is not a new start: keep the first reason of the request.
+  if (!state.last && !state.notice) { state.firstReason = data.reason; state.firstHint = data.hint; }
+  if (state.last && state.firstReason && state.firstReason !== data.reason) {
+    data._first = withoutHint(state.firstReason, state.firstHint);   // its "Tap…" no longer applies
+  }
+  data._answered = !!(state.last && state.last.answered);
   if (data.mode !== "ask") {
     // "(was N)" only compares like with like: not 5 candidates with 1 job.
     if (state.lastCount !== null && state.lastNoun === data.noun && state.lastCount !== data.count) {
@@ -163,9 +224,15 @@ function remember(data) {
   state.notice = null;
 }
 
-function modeLine(data) {
-  const p = el("p", { class: "mode-line" });
-  p.append(el("strong", { class: "mode mode-" + data.mode }, capital(data.mode)), el("span", { class: "reason" }, data.reason));
+const withoutHint = (reason, hint) => (hint && reason.endsWith(" " + hint) ? reason.slice(0, -hint.length - 1) : reason);
+
+// After a write or undo, the turn leads with that result, and the mode line steps back.
+function modeLine(data, isLive) {
+  const p = el("p", { class: "mode-line" + (data._notice ? " quiet" : "") });
+  const mode = data._answered ? "ask" : data.mode;
+  p.append(el("strong", { class: "mode mode-" + mode }, data._answered ? "Ask · answered" : capital(mode)),
+           el("span", { class: "reason" }, isLive ? data.reason : withoutHint(data.reason, data.hint)));
+  if (!isLive) p.append(el("span", { class: "earlier" }, "Earlier · read-only"));
   if (data._first) p.append(el("span", { class: "first-reason" }, "At first: " + data._first));
   return p;
 }
@@ -226,15 +293,16 @@ function askedLine(q) {
 
 // Show: a chip for each assumption. Fixed parts are flat text; only choices look and act like controls
 // (UX review fix 2): open choices are dropdowns marked ▾, the AND/OR operator is a one-click ⇄ toggle.
-function chipRow(data) {
+function chipRow(data, withReset = true) {
   const wrap = el("div");
   const row = el("div", { class: "chips", role: "group", "aria-label": "How I read your request" });
   data.chips.forEach((c) => row.append(chipFor(c)));
   const reset = el("button", { type: "button", class: "link" }, "Reset to my words");
   reset.addEventListener("click", () => act("Reset to my words", () => {
-    Object.assign(state, { choices: {}, op: null, answered: null, last: null, mode: chosenMode(), focus: "question" });
+    Object.assign(state, { choices: {}, op: null, answered: null, last: null, mode: chosenMode(), focus: "reading" });
   }));
-  wrap.append(row, reset);
+  wrap.append(row);
+  if (withReset) wrap.append(reset);
   return wrap;
 }
 
@@ -243,7 +311,7 @@ function chipFor(chip) {
   if (chip.kind === "op") {
     const other = chip.value === "AND" ? "OR" : "AND";
     const b = el("button", { type: "button", class: "chip op" + (chip.guessed ? " guessed" : ""), "data-slot": "op",
-                             title: chip.evidence, "aria-label": "Skills joined by " + chip.value + ". Switch to " + other + "." },
+                             title: chip.evidence, "aria-label": chip.value + " ⇄ " + other + (chip.guessed ? " (guessed)" : "") + ": skills joined by " + chip.value + "; press to switch to " + other + "." },
                  chip.value + " ⇄ " + other + (chip.guessed ? " (guessed)" : ""));
     b.addEventListener("click", () => act("Switch " + chip.value + " to " + other, () => {
       state.op = other; state.mode = "show"; state.last = { op: true }; state.focus = "op";
@@ -253,7 +321,7 @@ function chipFor(chip) {
   if (!chip.options) return el("span", { class: "chip fixed" }, chip.text);
   const answered = chip.slot === state.answered ? " answered" : "";
   const wrap = el("label", { class: "chip choice" + (chip.guessed ? " guessed" : "") + answered, title: chip.evidence });
-  const select = el("select", { "aria-label": "Change: " + chip.text, "data-slot": chip.slot });
+  const select = el("select", { "aria-label": chip.text + (chip.guessed ? " (guessed)" : "") + ": change", "data-slot": chip.slot });
   chip.options.forEach((label, i) => {
     const opt = el("option", { value: i }, label);
     if (i === chip.chosen) opt.selected = true;
@@ -273,9 +341,10 @@ function chipFor(chip) {
 // Every control in the live turn is a reply: say it in the recruiter's turn, change the state, re-run.
 function act(said, change) {
   if (state.busy) return;
+  const prev = snapshot();
   addUser(said);
   change();
-  runSearch();
+  runSearch(prev);
 }
 
 function tableBox(table) {
@@ -321,17 +390,21 @@ function actionButton(data) {
 // The result of a write or undo, at the top of the next turn. Only the latest one can be undone:
 // undo always reverses the most recent write, so an older Undo button would undo the wrong thing.
 function noticeLine(notice, isLive) {
-  const n = el("p", { class: "notice" });
+  const n = el("p", { class: "notice" + (notice.quiet ? " quiet" : ""), tabindex: "-1" });
   n.append(el("span", {}, notice.text + " "));
   if (notice.canUndo && isLive) {
-    const u = el("button", { type: "button", class: "link" }, "Undo");
+    const u = el("button", { type: "button", class: "link", "aria-label": "Undo: " + notice.text }, "Undo");
     u.addEventListener("click", async () => {
       if (state.busy) return;
-      addUser("Undo");
+      setBusy(true);
+      u.disabled = true;
+      addUser("Undo: " + notice.text.replace(/^Last change: /, "").replace(/\.$/, ""));
       let out;
       try { out = await post("/api/undo", {}); } catch (e) { out = { ok: false, error: "Could not reach the app." }; }
       state.notice = { text: out.ok ? out.done + "." : out.error, canUndo: false };
+      if (out.ok) state.undoable = null;
       state.last = null;
+      state.focus = "notice";
       runSearch();
     });
     n.append(u);
@@ -373,6 +446,10 @@ async function openPlan(action, trigger, jobId) {
   if (fromButton && trigger.getAttribute("aria-disabled") === "true") return;  // already preparing
   const seq = ++planSeq;
   const label = trigger.textContent;
+  if (!fromButton) {   // a new job was chosen: the old plan must not be confirmable meanwhile
+    $("confirm-apply").disabled = true;
+    d.querySelector(".confirm-error").textContent = "";
+  }
   if (fromButton) { trigger.setAttribute("aria-disabled", "true"); trigger.textContent = "Preparing…"; }
   let plan = null;
   try {
@@ -383,7 +460,11 @@ async function openPlan(action, trigger, jobId) {
     if (fromButton) { trigger.removeAttribute("aria-disabled"); trigger.textContent = label; }
   }
   if (seq !== planSeq) return;
-  if (!plan) { addAssistant({ error: "Could not reach the app. Is python3 app.py still running?" }); return; }
+  if (!plan) {
+    const msg = "Could not reach the app. Is python3 app.py still running?";
+    if (d.open) d.querySelector(".confirm-error").textContent = msg; else addError(msg);
+    return;
+  }
   if (!plan.action) plan.action = action;
   pending = { plan, trigger };
   fillPlan(plan);
@@ -397,9 +478,19 @@ document.addEventListener("keydown", (e) => {
 $("job").addEventListener("change", () => openPlan("shortlist", pending.trigger, $("job").value || null));
 
 $("confirm-apply").addEventListener("click", async () => {
+  const apply = $("confirm-apply");
+  if (apply.disabled) return;
+  apply.disabled = true;   // one write per confirmation, however often it is clicked
   const { plan } = pending;
-  const said = $("confirm-apply").textContent;
-  const out = await post("/api/apply", { action: plan.action, job_id: plan.job_id, fingerprint: plan.fingerprint, search: searchPayload() });
+  const said = apply.textContent + (plan.job ? " for " + plan.job : "");
+  let out;
+  try {
+    out = await post("/api/apply", { action: plan.action, job_id: plan.job_id, fingerprint: plan.fingerprint, search: searchPayload() });
+  } catch (e) {
+    $("confirm").querySelector(".confirm-error").textContent = "Could not reach the app, so nothing was changed. Try again.";
+    apply.disabled = false;
+    return;
+  }
   if (!out.ok) {  // refused: show what is true now, and let the recruiter confirm again
     if (out.plan) { pending.plan = Object.assign({ action: plan.action }, out.plan); fillPlan(pending.plan); }
     $("confirm").querySelector(".confirm-error").textContent = out.error;
@@ -408,7 +499,9 @@ $("confirm-apply").addEventListener("click", async () => {
   $("confirm").close();
   addUser("Confirmed: " + said);
   state.notice = { text: out.done + ".", canUndo: true };
+  state.undoable = out.done + ".";
   state.last = null;
+  state.focus = "notice";
   runSearch();
 });
 
@@ -425,11 +518,12 @@ $("confirm").addEventListener("close", () => {
 function send(text) {
   text = text.trim();
   if (!text || state.busy) return;
+  const prev = snapshot();
   addUser(text);
   Object.assign(state, { text, mode: chosenMode(), choices: {}, op: null, lastCount: null,
                          answered: null, last: null, notice: null, focus: "question" });  // the question is next
   $("request").value = "";
-  runSearch();
+  runSearch(prev);
 }
 
 $("ask-form").addEventListener("submit", (e) => { e.preventDefault(); send($("request").value); });
@@ -437,17 +531,20 @@ document.querySelectorAll(".suggestion").forEach((b) => b.addEventListener("clic
 
 $("new-chat").addEventListener("click", () => {
   if (state.busy) return;
+  planSeq++;   // a confirmation still loading belongs to the conversation being cleared
   document.querySelectorAll("#chat .turn:not(.welcome)").forEach((t) => t.remove());
   Object.assign(state, { text: "", choices: {}, op: null, lastCount: null, lastNoun: null, answered: null,
                          last: null, focus: null, firstReason: null, notice: null });
-  $("status").textContent = "";
+  announce("New conversation.");
   $("request").focus();
 });
 
 // Changing a setting re-runs the current request from scratch, so each strategy can be compared.
 function rerunWithSettings() {
   $("theta-value").textContent = Math.round(theta() * 100) + "%";
-  if (!state.text || state.busy) return;
+  if (state.busy) { state.settingsChanged = true; return; }   // re-run once the current reply lands
+  state.settingsChanged = false;
+  if (!state.text) return;
   const strategy = $("mode").selectedOptions[0].textContent;
   addNote("Study setting: " + strategy + ", ask below " + Math.round(theta() * 100) + "%. Reading “" + state.text + "” again.");
   Object.assign(state, { mode: chosenMode(), choices: {}, op: null, lastCount: null, answered: null, last: null, focus: null });
