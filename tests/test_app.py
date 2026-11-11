@@ -194,3 +194,30 @@ class TestWhy(unittest.TestCase):
     def test_percent_never_hides_which_side_of_theta(self):
         self.assertEqual(app._pct(0.497, 0.5), "49.7%")
         self.assertEqual(app._pct(0.5, 0.5), "50%")
+
+
+class TestChangeMessages(unittest.TestCase):
+    """UX review fix 1: after an edit, the reason line says what changed and what it gave."""
+
+    def test_operator_switch(self):
+        r = app.handle({"text": "Java with Python in London", "op": "OR", "last": {"op": True}})
+        self.assertEqual(r["reason"], "You switched AND → OR: %d candidates." % r["count"])
+
+    def test_answer_echoes_the_question(self):
+        r = app.handle({"text": "senior Java developers", "choices": {"seniority": 1},
+                        "last": {"slot": "seniority", "answered": True}})
+        self.assertTrue(r["reason"].startswith("I asked what you meant by 'senior'; you chose 'Senior' in their job title"))
+
+    def test_chip_edit(self):
+        r = app.handle({"text": "Python devs near London", "choices": {"location": 1}, "last": {"slot": "location"}})
+        self.assertEqual(r["reason"], "You chose London only: %d candidates." % r["count"])
+
+    def test_unknown_last_control_still_reports_the_count(self):
+        r = app.handle({"text": "Python devs near London", "choices": {"location": 1}, "last": "nonsense"})
+        self.assertEqual(r["reason"], "Updated with your changes: %d candidates." % r["count"])
+
+    def test_forced_mode_copy_is_for_the_recruiter_and_the_rule_is_logged(self):
+        import log
+        r = app.handle({"text": "senior Java developers", "mode": "show"})
+        self.assertEqual(r["reason"], "Showing my reading so you can edit it.")
+        self.assertEqual(log.entry({"mode": "show"}, r)["rule_mode"], "ask")
