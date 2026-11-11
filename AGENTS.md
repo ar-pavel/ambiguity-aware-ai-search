@@ -5,15 +5,17 @@ A small web prototype in Python 3.8+, standard library only. A recruiter types a
 candidates or jobs in a chat. An interpreter turns it into one structured reading plus its ambiguities,
 and a visible rule chooses to **act**, **show** the reading as editable chips, or **ask** one question.
 Search is structured filtering over synthetic data; there is no vector store and no embeddings. Live
-mode calls Claude or OpenAI over HTTPS with `urllib`; without a key, a rule-based stand-in reads the
-request (labelled *simulated*).
+mode calls Claude or OpenAI over HTTPS, or a local model through Ollama, with `urllib`; otherwise a
+rule-based stand-in reads the request (labelled *simulated*), and it is also the fallback whenever a
+live model cannot be used.
 
 ## Build and test
 ```
 python3 run_tests.py      # CI runs this on Python 3.8 and 3.13 for every push and pull request
 ruff check .              # CI runs ruff 0.17.4 (rules in pyproject.toml); the app itself needs nothing installed
 python3 app.py            # then open http://127.0.0.1:8770 (--port to change it, Ctrl+C to stop)
-cp .env.example .env      # live mode: set A2_MODEL=claude or openai, and that provider's key
+cp .env.example .env      # live mode: A2_MODEL=claude or openai (+ key), or ollama (a local model, no key)
+python3 tools/compare.py --with rules,ollama:qwen3:14b   # the scripted requests through each interpreter
 ```
 
 ## Code map
@@ -25,7 +27,7 @@ cp .env.example .env      # live mode: set A2_MODEL=claude or openai, and that p
 | `assistant/server.py` | HTTP server and the request handlers (`/api/search`, `plan`, `apply`, `undo`, `command`) |
 | `assistant/replies.py` | what the page shows: table, chips, the one question, the sentence after an edit, Why? |
 | `assistant/interpret.py` | rule-based stand-in, the checks on a live model's reply, and what cannot be searched |
-| `assistant/model.py` | the live Claude or OpenAI call |
+| `assistant/model.py` | the live call: Claude, OpenAI, or a local model through Ollama |
 | `assistant/strategy.py` | the act / show / ask rule and its reason (`python3 -m assistant.strategy "<request>"`) |
 | `assistant/search.py` | filters, and the "Read as" line built from them |
 | `assistant/commands.py` | typed follow-ups ("shortlist them for the Java role") |
@@ -35,6 +37,7 @@ cp .env.example .env      # live mode: set A2_MODEL=claude or openai, and that p
 | `web/` | the chat page: `index.html`, `app.js`, `style.css` |
 | `data/generate.py` | builds the synthetic data from a fixed seed |
 | `tests/` | one test file per module, run by `run_tests.py` |
+| `tools/compare.py` | runs the scripted requests through each interpreter and tabulates the outcomes |
 
 ## Conventions
 - One interpretation object drives the chips, the question, the "Read as" line and the search.
