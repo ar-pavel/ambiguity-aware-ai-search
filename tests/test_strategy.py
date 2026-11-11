@@ -47,7 +47,8 @@ class TestRule(unittest.TestCase):
     def test_manual_override_is_reported(self):
         d = decide("senior Java developers", force="act")
         self.assertEqual(d["mode"], "act")
-        self.assertIn("would have chosen ask", d["reason"])
+        self.assertEqual(d["rule_mode"], "ask")  # reported in Why? and the log (UX review fix 8)
+        self.assertEqual(d["reason"], strategy.FORCED["act"])
 
     def test_cannot_ask_when_nothing_is_unclear(self):
         d = decide("Java developers in London", force="ask")

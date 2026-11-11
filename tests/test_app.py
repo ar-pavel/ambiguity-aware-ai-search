@@ -156,3 +156,68 @@ class TestDescribe(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestWhy(unittest.TestCase):
+    """Issue #27: the "Why?" rows are the rule's own comparison, not a separate story."""
+
+    def test_rows_match_the_rule(self):
+        import interpret
+        import strategy
+        for text in ("senior Java developers", "Python devs near London", "Java Python devs in London"):
+            with self.subTest(text=text):
+                r = app.handle({"text": text})
+                d = strategy.decide(interpret.interpret_rules(text))
+                self.assertEqual(len(r["why"]["rows"]), len(d["comparisons"]))
+                for row, c in zip(r["why"]["rows"], d["comparisons"]):
+                    self.assertEqual([x["count"] for x in row["readings"]], [c["chosen"], c["other"]])
+                    self.assertEqual(row["overlap"], round(c["overlap"], 2))
+                self.assertEqual(r["why"]["rule_mode"], d["mode"])
+
+    def test_verdict_follows_theta(self):
+        ask = app.handle({"text": "Python devs near London", "theta": 0.9})["why"]["rows"][0]["verdict"]
+        show = app.handle({"text": "Python devs near London", "theta": 0.1})["why"]["rows"][0]["verdict"]
+        self.assertEqual(ask, "below θ (90%): ask")
+        self.assertEqual(show, "at least θ (10%): show, don't ask")
+
+    def test_overrides_are_explained(self):
+        forced = app.handle({"text": "senior Java developers", "mode": "act"})["why"]
+        self.assertIn("the rule alone would have chosen ask", forced["notes"][0])
+        edited = app.handle({"text": "senior Java developers", "choices": {"seniority": 1}})["why"]
+        self.assertTrue(any("You changed the reading" in n for n in edited["notes"]))
+
+    def test_nothing_unclear_says_so(self):
+        w = app.handle({"text": "Java developers in London"})["why"]
+        self.assertEqual(w["rows"], [])
+        self.assertIn("nothing to compare", w["summary"])
+
+    def test_percent_never_hides_which_side_of_theta(self):
+        self.assertEqual(app._pct(0.497, 0.5), "49.7%")
+        self.assertEqual(app._pct(0.5, 0.5), "50%")
+
+
+class TestChangeMessages(unittest.TestCase):
+    """UX review fix 1: after an edit, the reason line says what changed and what it gave."""
+
+    def test_operator_switch(self):
+        r = app.handle({"text": "Java with Python in London", "op": "OR", "last": {"op": True}})
+        self.assertEqual(r["reason"], "You switched AND → OR: %d candidates." % r["count"])
+
+    def test_answer_echoes_the_question(self):
+        r = app.handle({"text": "senior Java developers", "choices": {"seniority": 1},
+                        "last": {"slot": "seniority", "answered": True}})
+        self.assertTrue(r["reason"].startswith("I asked what you meant by 'senior'; you chose 'Senior' in their job title"))
+
+    def test_chip_edit(self):
+        r = app.handle({"text": "Python devs near London", "choices": {"location": 1}, "last": {"slot": "location"}})
+        self.assertEqual(r["reason"], "You chose London only: %d candidates." % r["count"])
+
+    def test_unknown_last_control_still_reports_the_count(self):
+        r = app.handle({"text": "Python devs near London", "choices": {"location": 1}, "last": "nonsense"})
+        self.assertEqual(r["reason"], "Updated with your changes: %d candidates." % r["count"])
+
+    def test_forced_mode_copy_is_for_the_recruiter_and_the_rule_is_logged(self):
+        import log
+        r = app.handle({"text": "senior Java developers", "mode": "show"})
+        self.assertEqual(r["reason"], "Showing my reading so you can edit it.")
+        self.assertEqual(log.entry({"mode": "show"}, r)["rule_mode"], "ask")
