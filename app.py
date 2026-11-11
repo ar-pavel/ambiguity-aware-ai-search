@@ -324,7 +324,8 @@ def _command(text, search_payload):
     if len(matched) == 1:
         reason = "%s matches %d open jobs." % (_quoted(matched), len(found))
     elif every:
-        reason = "%s match %d open jobs." % (" and ".join("'%s'" % w for w in matched), len(found))
+        quoted = ["'%s'" % w for w in matched]
+        reason = "%s and %s match %d open jobs." % (", ".join(quoted[:-1]), quoted[-1], len(found))
     else:
         reason = "%d open jobs match %s." % (len(found), _quoted(matched))
     if len(found) > MAX_OPTIONS:

@@ -119,6 +119,11 @@ class TestJobs(Base):
         self.assertEqual(sorted(o["job_id"] for o in out["options"]), [6, 8, 19, 20])
         self.assertTrue(all(set(o) == {"job_id", "label"} for o in out["options"]))
 
+    def test_several_matched_words_read_as_a_list(self):
+        out = self.command("shortlist them for the Senior SAP Consultant role")
+        self.assertEqual(out["kind"], "ask")
+        self.assertEqual(out["reason"], "'Senior', 'SAP' and 'Consultant' match 2 open jobs.")
+
     def test_options_are_capped_and_the_rest_are_mentioned(self):
         out = self.command("shortlist these for a developer role")
         self.assertEqual(out["kind"], "ask")
