@@ -38,24 +38,6 @@
       <tbody></tbody>
     </table>
     <p id="error" role="alert" hidden></p>
-    <!-- Study settings: for comparing the strategies, kept out of the task path (UX review fix 6). -->
-    <details class="study">
-      <summary>Study settings</summary>
-      <div class="controls">
-      <label>Strategy
-        <select id="mode">
-          <option value="auto">Auto: the rule decides</option>
-          <option value="act">Always act</option>
-          <option value="show">Always show</option>
-          <option value="ask">Always ask</option>
-        </select>
-      </label>
-      <label>Ask when the lists share less than
-        <input id="theta" type="range" min="0" max="1" step="0.05" value="0.5" aria-describedby="theta-value">
-        <output id="theta-value" for="theta">50%</output>
-      </label>
-      </div>
-    </details>
 
     <!-- The confirmation for every write: what was searched, exactly what will change, and what will not. -->
     <dialog id="confirm" aria-labelledby="confirm-title">
@@ -77,6 +59,26 @@
       </form>
     </dialog>
   </main>
+  <footer class="study-footer">
+    <!-- Study settings: for comparing the strategies, kept out of the task path (UX review fix 6). -->
+    <details class="study">
+      <summary>Study settings</summary>
+      <div class="controls">
+      <label>Strategy
+        <select id="mode">
+          <option value="auto">Auto: the rule decides</option>
+          <option value="act">Always act</option>
+          <option value="show">Always show</option>
+          <option value="ask">Always ask</option>
+        </select>
+      </label>
+      <label>Ask when the lists share less than
+        <input id="theta" type="range" min="0" max="1" step="0.05" value="0.5" aria-describedby="theta-value">
+        <output id="theta-value" for="theta">50%</output>
+      </label>
+      </div>
+    </details>
+  </footer>
   <script src="app.js"></script>
 </body>
 </html>
