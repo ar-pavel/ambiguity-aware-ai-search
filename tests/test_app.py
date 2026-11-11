@@ -156,3 +156,41 @@ class TestDescribe(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestWhy(unittest.TestCase):
+    """Issue #27: the "Why?" rows are the rule's own comparison, not a separate story."""
+
+    def test_rows_match_the_rule(self):
+        import interpret
+        import strategy
+        for text in ("senior Java developers", "Python devs near London", "Java Python devs in London"):
+            with self.subTest(text=text):
+                r = app.handle({"text": text})
+                d = strategy.decide(interpret.interpret_rules(text))
+                self.assertEqual(len(r["why"]["rows"]), len(d["comparisons"]))
+                for row, c in zip(r["why"]["rows"], d["comparisons"]):
+                    self.assertEqual([x["count"] for x in row["readings"]], [c["chosen"], c["other"]])
+                    self.assertEqual(row["overlap"], round(c["overlap"], 2))
+                self.assertEqual(r["why"]["rule_mode"], d["mode"])
+
+    def test_verdict_follows_theta(self):
+        ask = app.handle({"text": "Python devs near London", "theta": 0.9})["why"]["rows"][0]["verdict"]
+        show = app.handle({"text": "Python devs near London", "theta": 0.1})["why"]["rows"][0]["verdict"]
+        self.assertEqual(ask, "below θ (90%): ask")
+        self.assertEqual(show, "at least θ (10%): show, don't ask")
+
+    def test_overrides_are_explained(self):
+        forced = app.handle({"text": "senior Java developers", "mode": "act"})["why"]
+        self.assertIn("the rule alone would have chosen ask", forced["notes"][0])
+        edited = app.handle({"text": "senior Java developers", "choices": {"seniority": 1}})["why"]
+        self.assertTrue(any("You changed the reading" in n for n in edited["notes"]))
+
+    def test_nothing_unclear_says_so(self):
+        w = app.handle({"text": "Java developers in London"})["why"]
+        self.assertEqual(w["rows"], [])
+        self.assertIn("nothing to compare", w["summary"])
+
+    def test_percent_never_hides_which_side_of_theta(self):
+        self.assertEqual(app._pct(0.497, 0.5), "49.7%")
+        self.assertEqual(app._pct(0.5, 0.5), "50%")

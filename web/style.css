@@ -63,3 +63,12 @@ dialog h2 { margin: 0 0 .5rem; font-size: 1.15rem; }
 .confirm-buttons { display: flex; justify-content: flex-end; gap: .5rem; }
 .confirm-undo { margin: .5rem 0 0; font-size: .875rem; color: var(--muted); text-align: right; }
 #job-pick select { font: inherit; max-width: 100%; }
+
+/* Why? The rule's numbers, collapsed by default. */
+#why { margin: -.25rem 0 .75rem; font-size: .9rem; }
+#why summary { cursor: pointer; color: var(--show); width: max-content; }
+#why summary:focus-visible { outline: 3px solid #f0b429; outline-offset: 2px; }
+.why-body { padding: .5rem .75rem; border-left: 4px solid var(--line); margin-top: .25rem; }
+.why-body p { margin: 0 0 .5rem; }
+.why-table { font-size: .875rem; margin-bottom: .5rem; }
+.why-note { color: var(--muted); }

@@ -212,14 +212,40 @@ function setNotice(text, canUndo) {
   show("notice");
 }
 
+// The rule's comparison, row by row. Stays open or closed as the recruiter left it.
+function renderWhy(why) {
+  const body = $("why").querySelector(".why-body");
+  body.innerHTML = "";
+  body.append(el("p", {}, why.summary));
+  if (why.rows.length) {
+    const t = el("table", { class: "why-table" });
+    const head = el("tr");
+    ["Unclear part", "Reading used", "Other reading", "Lists share", "Result"].forEach((h) => head.append(el("th", { scope: "col" }, h)));
+    t.append(el("thead"), el("tbody"));
+    t.tHead.append(head);
+    for (const r of why.rows) {
+      const row = el("tr");
+      const [used, other] = r.readings;
+      [r.part, used.label + " → " + used.count, other.label + " → " + other.count,
+       r.share, r.verdict].forEach((v) => row.append(el("td", {}, String(v))));
+      t.tBodies[0].append(row);
+    }
+    body.append(t);
+  }
+  why.notes.forEach((n) => body.append(el("p", { class: "why-note" }, n)));
+  show("why");
+}
+
 function render(data) {
   show("error", false);
   if (data.error) {
     $("error").textContent = data.error;
     show("error");
+    show("why", false);
     return;
   }
   renderModeLine(data);
+  renderWhy(data.why);
   renderInterpretation(data);
   if (data.mode === "ask") {  // ask before searching: no results until the question is answered
     ["count", "results", "scope"].forEach((id) => show(id, false));
