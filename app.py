@@ -12,6 +12,7 @@ import sys
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 import actions
+import commands
 import interpret
 import log
 import store
@@ -239,13 +240,17 @@ def _run(payload):
     }, results
 
 
+ANSWER_FIRST = "Answer the question first, so it is clear which records you mean."
+MAX_OPTIONS = 6  # job choices offered for an unclear typed command; more than this reads as a list, not a question
+
+
 def _plan(payload):
     """Re-run the recruiter's search on the server and plan the action on its records."""
     result, records = _run(payload.get("search") or {})
     if "error" in result:
         return result, {"valid": False, "error": result["error"]}
     if result["mode"] == "ask":
-        return result, {"valid": False, "error": "Answer the question first, so it is clear which records you mean."}
+        return result, {"valid": False, "error": ANSWER_FIRST}
     job_id = payload.get("job_id")
     try:
         job_id = int(job_id) if job_id not in (None, "") else None
@@ -270,6 +275,64 @@ def apply_action(payload, log_dir=None):
         log.write_event({"event": "write", "action": plan["action"], "job_id": plan.get("job_id"),
                          "text": result.get("text"), "read_as": plan.get("read_as"), "changed": out["changed"],
                          "skipped": out["skipped"], "fingerprint": plan["fingerprint"]}, log_dir)
+    return out
+
+
+def _quoted(words):
+    return " or ".join("'%s'" % w for w in words)
+
+
+def _command(text, search_payload):
+    """The answer to a typed follow-up. Reads only: the page still confirms before anything is written."""
+    cmd = commands.parse(text)
+    if cmd is None or not (search_payload.get("text") or "").strip():
+        return {"kind": "search"}
+    result, records = _run(search_payload)
+    if "error" in result:
+        return {"kind": "search"}
+    if result["mode"] == "ask":
+        return {"kind": "error", "error": ANSWER_FIRST}
+    action = cmd["action"]
+    if actions.wrong_target(action, result["target"]):
+        return {"kind": "error", "error": actions.wrong_target(action, result["target"])}
+    n = len(records)
+    on_screen = "the %d %s%s on screen" % (n, result["noun"], "" if n == 1 else "s")
+    if action == "close":
+        return {"kind": "plan", "action": "close", "job_id": None, "reason": "You asked to close %s." % on_screen}
+    jobs = [j for j in search.load("jobs") if j["status"] == "open"]  # a closed job is never offered
+    found, matched, every = commands.match_jobs(cmd["job_words"], jobs)
+    if len(found) == 1:
+        return {"kind": "plan", "action": "shortlist", "job_id": found[0]["id"],
+                "reason": "You asked to shortlist %s for %s." % (on_screen, actions._job_label(found[0]))}
+    if not found:
+        why = ("no open job matches %s, so " % _quoted(cmd["job_words"])) if cmd["job_words"] else ""
+        return {"kind": "plan", "action": "shortlist", "job_id": None,
+                "reason": "You asked to shortlist %s; %schoose the job in the dialog." % (on_screen, why)}
+    labels = {j["id"]: j["label"] for j in actions.open_jobs()}
+    order = list(labels)  # the picker's order (company, then title)
+    found.sort(key=lambda j: order.index(j["id"]))
+    if len(matched) == 1:
+        reason = "%s matches %d open jobs." % (_quoted(matched), len(found))
+    elif every:
+        reason = "%s match %d open jobs." % (" and ".join("'%s'" % w for w in matched), len(found))
+    else:
+        reason = "%d open jobs match %s." % (len(found), _quoted(matched))
+    if len(found) > MAX_OPTIONS:
+        reason += " Showing the first %d; choose the job in the dialog for the other %d." % (
+            MAX_OPTIONS, len(found) - MAX_OPTIONS)
+    return {"kind": "ask", "action": "shortlist", "text": "Which job did you mean?", "reason": reason,
+            "options": [{"job_id": j["id"], "label": labels[j["id"]]} for j in found[:MAX_OPTIONS]]}
+
+
+def command_action(payload, log_dir=None):
+    """A typed follow-up such as "add them to the Java shortlist at Bluefin": is it a write command,
+    and for which job? Returns one of {"kind": "search" | "plan" | "ask" | "error", ...}. Writes nothing."""
+    text = (payload.get("text") or "").strip()
+    out = _command(text, payload.get("search") or {})
+    if out["kind"] != "search":  # a new search is logged by /api/search itself
+        action = out.get("action") or commands.parse(text)["action"]
+        log.write_event({"event": "command", "text": text, "kind": out["kind"], "action": action,
+                         "job_id": out.get("job_id"), "error": out.get("error")}, log_dir)
     return out
 
 
@@ -309,6 +372,7 @@ class Handler(BaseHTTPRequestHandler):
             self._send(200, f.read(), TYPES.get(os.path.splitext(path)[1], "text/plain"))
 
     ROUTES = {"/api/search": handle, "/api/plan": plan_action, "/api/apply": apply_action,
+              "/api/command": command_action,
               "/api/undo": lambda payload: undo_action()}
 
     def do_POST(self):
