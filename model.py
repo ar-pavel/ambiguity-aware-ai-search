@@ -53,14 +53,18 @@ Fill in the JSON:
   skills_op, seniority, location, availability, target. A company named without saying people or jobs
   ("Java developers at Bluefin") makes target ambiguous. dominant is true when one reading is clearly meant
   (e.g. they wrote 'with' or 'and' between skills). evidence quotes their words, like "you wrote 'senior'".
-  A capitalised AND/OR, an explicit number of years, or "in <city>" is not ambiguous."""
+  A capitalised AND/OR, an explicit number of years, or "in <city>" is not ambiguous.
+- unsupported: the parts of the request these fields cannot hold, quoted exactly as written, so the
+  recruiter is told instead of the search quietly ignoring them. kind "name" for a person's name
+  ("named Matin"), "place" for a place that is not a real city or country, "other" for anything else
+  (salary, CV content, a greeting). Empty when everything fits the fields above."""
 
 NULLABLE_STR = {"anyOf": [{"type": "string"}, {"type": "null"}]}
 SCHEMA = {
     "type": "object",
     "additionalProperties": False,
     "required": ["target", "company", "status", "skills", "skills_op", "location", "seniority",
-                 "availability", "work_mode", "ambiguities"],
+                 "availability", "work_mode", "ambiguities", "unsupported"],
     "properties": {
         "target": {"type": "string", "enum": ["candidates", "jobs"]},
         "company": NULLABLE_STR,
@@ -83,6 +87,10 @@ SCHEMA = {
             "properties": {"slot": {"type": "string",
                                     "enum": ["skills_op", "seniority", "location", "availability", "target"]},
                            "dominant": {"type": "boolean"}, "evidence": {"type": "string"}}}},
+        "unsupported": {"type": "array", "items": {
+            "type": "object", "additionalProperties": False, "required": ["text", "kind"],
+            "properties": {"text": {"type": "string"},
+                           "kind": {"type": "string", "enum": ["name", "place", "other"]}}}},
     },
 }
 

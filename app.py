@@ -13,7 +13,6 @@ What the page shows is built in replies.py.
 """
 import json
 import os
-import re
 import sys
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
@@ -60,22 +59,18 @@ def handle(payload):
     return _run(payload)[0]
 
 
-# Words that carry no filter: asking for everyone ("show me all candidates") uses only these.
-FILLER = set("""
-show me find get give list search look looking for i we need want see who are is be with and or the a an
-of all any every everyone everybody anyone anybody some please our my candidate candidates people person
-someone profile profiles
-""".split())
+EXAMPLES = "I search by skill, place, company, role or seniority, for example “Java developers in London” or " \
+           "“open jobs at Bluefin”."
 
 
-def _unused_words(reading, text):
-    """The words of a request with no filter that the search could not use. Empty when the request only
-    asks for everyone ("all candidates"), so that one still searches everyone."""
-    if reading["skills"] or search.describe_parts(reading):
-        return None   # it named something to search for
-    return [w for w in re.findall(r"[A-Za-z0-9][A-Za-z0-9'+#.-]*", text) if w.lower() not in FILLER] or (
-        None if re.search(interpret.PEOPLE_WORDS, text, re.I) or re.search(r"\bevery(?:one|body)\b", text, re.I)
-        else [text])
+def _nothing_reply(text, unsupported):
+    """What to say when the request names nothing the search can use. The reasons come from
+    interpret.WHY, chosen by code from each item's kind."""
+    named = [u for u in unsupported if u["kind"] != "other"]
+    if named:
+        parts = "; ".join("“%s”: %s" % (u["text"], interpret.WHY[u["kind"]]) for u in named)
+        return "I can't search for that (%s). %s" % (parts, EXAMPLES)
+    return "I didn't find anything I can search for in “%s”. %s" % (text, EXAMPLES)
 
 
 def _run(payload):
@@ -84,21 +79,14 @@ def _run(payload):
     if not text:
         return {"error": "Type a request, for example: senior Java developers in London"}, []
     reading = interpret.interpret(text)
-    unused = _unused_words(reading, text)
-    if unused:
+    if not interpret.has_filters(reading) and not interpret.asks_for_everyone(text):
         # Searching would return every record and call it "nothing was unclear", which is not what
-        # "hello" or "candidates named Matin" meant. Reported like an error, so nothing is searched,
-        # planned or logged, but worded as a reply.
-        unusable = " ".join(unused)
-        lead = ("I can't search for “%s”." % unusable if unusable.lower() == text.lower().strip(" .!?")
-                else "I didn't find anything I can search for in “%s”: I can't use “%s”." % (text, unusable))
-        return {"error": lead + " I search by skill, place, company, role or seniority, for example "
-                                "“Java developers in London” or “open jobs at Bluefin”.",
-                "nothing": True, "text": text}, []
-    named = re.search(r"\b(?:named|called)\s+([A-Za-z][A-Za-z'-]*)", text, re.I)
-    if named:  # names are not searched: say so instead of quietly searching without it
-        note = "the name “%s” (searching by name is not supported)" % named.group(1)
-        reading["dropped"] = reading.get("dropped", []) + [note]
+        # "hello" or "candidates named Matin" meant. This holds even if a live model flagged nothing.
+        # Reported like an error, so nothing is searched, planned or logged, but worded as a reply.
+        return {"error": _nothing_reply(text, reading.get("unsupported", [])), "nothing": True, "text": text}, []
+    # What the search could not use is listed under Ignored, never dropped silently.
+    reading["dropped"] = reading.get("dropped", []) + [
+        "“%s” (%s)" % (u["text"], interpret.WHY[u["kind"]]) for u in reading.get("unsupported", [])]
     edited = _apply_edits(reading, payload.get("choices") or {}, payload.get("op"))
     reading = interpret.for_target(reading)  # the target may have just been switched
     decision = strategy.decide(reading, theta=_theta(payload.get("theta", strategy.THETA)),

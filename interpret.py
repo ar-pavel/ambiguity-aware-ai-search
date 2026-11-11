@@ -188,6 +188,72 @@ def for_target(reading):
     return reading
 
 
+# ---- What the request asks for that the search cannot do --------------------------------------------
+# The reading lists these as "unsupported", so the page can say so instead of searching without them.
+# The reason shown is chosen by code from the kind, never written by a model.
+WHY = {"name": "searching by name is not supported",
+       "place": "not a place in the data",
+       "other": "not something I can search by"}
+
+# Words that carry no filter: asking for everyone ("show me all candidates") uses only these.
+FILLER = set("""
+show me find get give list search look looking for i we need want see who are is be with and or the a an
+of all any every everyone everybody anyone anybody some please our my candidate candidates people person
+someone profile profiles
+""".split())
+
+_WORD = r"[A-Za-z0-9][A-Za-z0-9'+#.-]*"
+
+
+def has_filters(reading):
+    """True when the reading names anything the search can filter on."""
+    return bool(reading["skills"]) or bool(search.describe_parts(reading))
+
+
+def asks_for_everyone(text):
+    """True when every word only asks for everyone ("show me all candidates"), so no filter is meant."""
+    words = re.findall(_WORD, text)
+    return bool(words) and all(w.lower() in FILLER for w in words)
+
+
+def _known_word(word):
+    """True if the word is something the search knows: a place, a company word, a skill or a target."""
+    low = word.lower()
+    return (low in COUNTRIES or any(c.lower() == low for c in CITIES)
+            or any(low in n.lower().split() for n in COMPANIES) or low in search.SYNONYMS
+            or re.fullmatch(JOB_WORDS + "|" + PEOPLE_WORDS, low, re.I) is not None)
+
+
+def unsupported_rules(text, reading):
+    """The stand-in's guess at what the request asks for that the search cannot do (simulated):
+    a name ("named Matin", "called Matin"), a place the data doesn't know ("near Narnia"), or, when
+    nothing could be searched, the words left over ("hello")."""
+    found = []
+    named = re.search(r"\bnamed\s+(" + _WORD + ")", text, re.I) or re.search(r"\bcalled\s+([A-Z][A-Za-z'-]*)", text)
+    if named:
+        found.append({"text": named.group(0), "kind": "name"})
+    for m in re.finditer(r"\b(near|around|from|based in|in)\s+([A-Z][A-Za-z-]+)", text):
+        if not _known_word(m.group(2)) and not any(m.group(0) in f["text"] for f in found):
+            found.append({"text": m.group(0), "kind": "place" if m.group(1).lower() != "in" else "other"})
+    if not has_filters(reading) and not asks_for_everyone(text):
+        covered = " ".join(f["text"] for f in found).lower().split()
+        rest = [w for w in re.findall(_WORD, text) if w.lower() not in FILLER and w.lower() not in covered]
+        if rest:
+            found.append({"text": " ".join(rest), "kind": "other"})
+    return found
+
+
+def checked_unsupported(items, text):
+    """Keep only what the user really wrote, with a known kind (the model may not invent requests)."""
+    out = []
+    for item in items or []:
+        quote = str(item.get("text", "")).strip()[:60]
+        seen = [o["text"].lower() for o in out]
+        if item.get("kind") in WHY and quote and _written(quote, text) and quote.lower() not in seen:
+            out.append({"text": quote, "kind": item["kind"]})
+    return out[:3]
+
+
 def _phrase_ambiguities(spans):
     """A multi-word skill such as 'SAP MM' is kept as one phrase; show that choice as a chip."""
     out = []
@@ -217,6 +283,7 @@ def interpret_rules(text):
     judged = zip(SLOTS, (op_amb, sen_amb, loc_amb, av_amb, target_amb))
     reading["ambiguities"] = [make_ambiguity(slot, reading, *j) for slot, j in judged if j]
     reading["ambiguities"] += _phrase_ambiguities(spans)
+    reading["unsupported"] = unsupported_rules(text, reading)
     reading["source"] = "rules"
     return for_target(reading)
 
@@ -323,6 +390,7 @@ def from_model(text, judged):
     phrases = [(0, 0, s) for s in skills]
     reading["ambiguities"] = ambiguities + _phrase_ambiguities(phrases)
     reading["dropped"] = dropped
+    reading["unsupported"] = checked_unsupported(judged.get("unsupported"), text)
     return for_target(reading)
 
 
