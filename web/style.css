@@ -21,7 +21,9 @@
 }
 * { box-sizing: border-box; }
 html, body { height: 100%; }
-body { margin: 0; font: 16px/1.55 var(--sans); color: var(--ink); background: var(--side); -webkit-font-smoothing: antialiased; }
+body { margin: 0; font: 16px/1.55 var(--sans); color: var(--ink); -webkit-font-smoothing: antialiased;
+       /* a faint dot grid at the sides, like squared paper; the panel itself stays plain */
+       background-color: var(--side); background-image: radial-gradient(#b9c4d0 1px, transparent 1.2px); background-size: 18px 18px; }
 /* The app is one panel, set apart from the sides of a wide screen. */
 .app { display: flex; flex-direction: column; height: 100%; width: 100%; max-width: 920px; margin: 0 auto;
        background: var(--page); box-shadow: 0 0 0 1px #cfd7e0, 0 0 40px rgba(31, 43, 56, .08); }
