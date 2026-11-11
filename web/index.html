@@ -8,77 +8,74 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <main>
+  <header class="top">
     <h1>Recruitment search</h1>
-    <p class="hint">Describe the people or jobs you are looking for, for example <em>senior Java developers in London</em>
-      or <em>open Python roles</em>.</p>
+    <button type="button" class="link" id="new-chat">New conversation</button>
+  </header>
 
-    <form id="ask-form">
-      <label for="request" class="sr-only">Search request</label>
-      <input id="request" name="request" autocomplete="off" placeholder="e.g. Java with Python in London">
-      <button type="submit">Search</button>
-    </form>
-
-
-    <!-- One fixed layout for every mode; only the contents of each slot change. -->
-    <section id="mode-line" aria-live="polite" hidden></section>
-    <!-- Why this mode: the rule's own numbers, collapsed by default (Amershi G11). -->
-    <details id="why" hidden><summary>Why?</summary><div class="why-body"></div></details>
-    <p id="notice" role="status" hidden></p>
-    <section id="interpretation" hidden></section>
-    <div class="count-row">
-      <p id="count" aria-live="polite" hidden></p>
-      <!-- Write actions: shown only with results, never while a question is open. Always confirmed. -->
-      <div id="actions" hidden></div>
-    </div>
-    <p id="ignored" class="ignored" hidden></p>
-    <p id="scope" class="scope" hidden></p>
-    <table id="results" hidden>
-      <thead></thead>
-      <tbody></tbody>
-    </table>
-    <p id="error" role="alert" hidden></p>
-
-    <!-- The confirmation for every write: what was searched, exactly what will change, and what will not. -->
-    <dialog id="confirm" aria-labelledby="confirm-title">
-      <form method="dialog">
-        <h2 id="confirm-title">Check before changing anything</h2>
-        <p class="confirm-read-as"></p>
-        <label id="job-pick" hidden>Shortlist for
-          <select id="job"><option value="">Choose a job…</option></select>
-        </label>
-        <p class="confirm-summary"></p>
-        <ul class="confirm-changes"></ul>
-        <details class="confirm-skipped" hidden><summary></summary><ul></ul></details>
-        <p class="confirm-error" role="alert"></p>
-        <div class="confirm-buttons">
-          <button value="cancel" class="secondary" id="confirm-cancel">Cancel</button>
-          <button value="apply" id="confirm-apply" type="button">Confirm</button>
-        </div>
-        <p class="confirm-undo">You can undo this afterwards.</p>
-      </form>
-    </dialog>
+  <!-- The conversation. Each request or action is a turn. Only the latest assistant turn is live:
+       its chips, question and buttons work; earlier turns are frozen, so a click never applies to an
+       old request. The reading stays visible and directly editable (W3 L07 hybrid). -->
+  <p id="status" class="sr-only" role="status"></p>
+  <main id="chat" aria-label="Conversation">
+    <section class="turn assistant welcome">
+      <p>Describe the people or jobs you are looking for. When something is unclear, I will say how I read it,
+        or ask you one question first.</p>
+      <div class="suggestions" aria-label="Examples">
+        <button type="button" class="suggestion">senior Java developers</button>
+        <button type="button" class="suggestion">Java with Python in London</button>
+        <button type="button" class="suggestion">Java developers at Bluefin</button>
+        <button type="button" class="suggestion">open jobs in London</button>
+      </div>
+    </section>
   </main>
+
+  <form id="ask-form" class="composer">
+    <label for="request" class="sr-only">Your request</label>
+    <input id="request" name="request" autocomplete="off" placeholder="e.g. Python and AWS people in London">
+    <button type="submit">Send</button>
+  </form>
+
   <footer class="study-footer">
     <!-- Study settings: for comparing the strategies, kept out of the task path (UX review fix 6). -->
     <details class="study">
       <summary>Study settings</summary>
       <div class="controls">
-      <label>Strategy
-        <select id="mode">
-          <option value="auto">Auto: the rule decides</option>
-          <option value="act">Always act</option>
-          <option value="show">Always show</option>
-          <option value="ask">Always ask</option>
-        </select>
-      </label>
-      <label>Ask when the lists share less than
-        <input id="theta" type="range" min="0" max="1" step="0.05" value="0.5" aria-describedby="theta-value">
-        <output id="theta-value" for="theta">50%</output>
-      </label>
+        <label>Strategy
+          <select id="mode">
+            <option value="auto">Auto: the rule decides</option>
+            <option value="act">Always act</option>
+            <option value="show">Always show</option>
+            <option value="ask">Always ask</option>
+          </select>
+        </label>
+        <label>Ask when the lists share less than
+          <input id="theta" type="range" min="0" max="1" step="0.05" value="0.5" aria-describedby="theta-value">
+          <output id="theta-value" for="theta">50%</output>
+        </label>
       </div>
     </details>
   </footer>
+
+  <!-- The confirmation for every write: what was searched, exactly what will change, and what will not. -->
+  <dialog id="confirm" aria-labelledby="confirm-title">
+    <form method="dialog">
+      <h2 id="confirm-title">Check before changing anything</h2>
+      <p class="confirm-read-as"></p>
+      <label id="job-pick" hidden>Shortlist for
+        <select id="job"><option value="">Choose a job…</option></select>
+      </label>
+      <p class="confirm-summary"></p>
+      <ul class="confirm-changes"></ul>
+      <details class="confirm-skipped" hidden><summary></summary><ul></ul></details>
+      <p class="confirm-error" role="alert"></p>
+      <div class="confirm-buttons">
+        <button value="cancel" class="secondary" id="confirm-cancel">Cancel</button>
+        <button value="apply" id="confirm-apply" type="button">Confirm</button>
+      </div>
+      <p class="confirm-undo">You can undo this afterwards.</p>
+    </form>
+  </dialog>
   <script src="app.js"></script>
 </body>
 </html>
