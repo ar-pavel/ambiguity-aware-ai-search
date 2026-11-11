@@ -60,6 +60,7 @@ def title_for(rng, stem, years):
 
 
 def build():
+    """The candidates, companies and jobs, the same every time for the same SEED."""
     rng = random.Random(SEED)
     with open(os.path.join(HERE, "core_candidates.json"), encoding="utf-8") as f:
         core = json.load(f)

@@ -6,6 +6,7 @@ import unittest
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import app  # noqa: E402
 import interpret  # noqa: E402
+import replies  # noqa: E402
 import search  # noqa: E402
 import strategy  # noqa: E402
 
@@ -34,7 +35,7 @@ class TestTarget(unittest.TestCase):
         self.assertEqual(r["company"], "Bluefin Analytics")
         d = strategy.decide(r)
         self.assertEqual((d["mode"], d["ask_slot"]), ("ask", "target"))
-        q = app.question(r, "target")
+        q = replies.question(r, "target")
         self.assertEqual([o["label"] for o in q["options"]],
                          ["people who work at Bluefin Analytics", "jobs at Bluefin Analytics"])
         self.assertEqual([o["count"] for o in q["options"]], [5, 1])

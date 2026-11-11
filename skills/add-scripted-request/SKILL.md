@@ -18,7 +18,9 @@ Add one when a new kind of ambiguity is supported, or when a real phrasing gives
 3. If the output differs from what the rules say, the code is wrong, not the expectation. Open an issue.
 4. Add the request and its expected mode to `EXPECTED` in `tests/test_strategy.py`, with a short
    comment saying why.
-5. If the request needs a candidate that does not exist yet, add one to `data/core_candidates.json`
+5. If the text is a follow-up command ("shortlist them for the Java role", "close these"), it belongs
+   in `tests/test_commands.py` instead: add it to the commands or the searches that must stay searches.
+6. If the request needs a candidate that does not exist yet, add one to `data/core_candidates.json`
    with a fake name, run `python3 data/generate.py`, and check the existing tests still pass.
 
 ## Check

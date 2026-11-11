@@ -5,6 +5,7 @@ import unittest
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import app  # noqa: E402
 import model  # noqa: E402
+import replies  # noqa: E402
 import search  # noqa: E402
 
 
@@ -257,8 +258,8 @@ class TestWhy(unittest.TestCase):
         self.assertIn("nothing to compare", w["summary"])
 
     def test_percent_never_hides_which_side_of_theta(self):
-        self.assertEqual(app._pct(0.497, 0.5), "49.7%")
-        self.assertEqual(app._pct(0.5, 0.5), "50%")
+        self.assertEqual(replies.pct(0.497, 0.5), "49.7%")
+        self.assertEqual(replies.pct(0.5, 0.5), "50%")
 
 
 class TestChangeMessages(unittest.TestCase):
@@ -271,7 +272,8 @@ class TestChangeMessages(unittest.TestCase):
     def test_answer_echoes_the_question(self):
         r = app.handle({"text": "senior Java developers", "choices": {"seniority": 1},
                         "last": {"slot": "seniority", "answered": True}})
-        self.assertTrue(r["reason"].startswith("I asked what you meant by 'senior'; you chose 'Senior' in their job title"))
+        self.assertTrue(r["reason"].startswith(
+            "I asked what you meant by 'senior'; you chose 'Senior' in their job title"))
 
     def test_chip_edit(self):
         r = app.handle({"text": "Python devs near London", "choices": {"location": 1}, "last": {"slot": "location"}})

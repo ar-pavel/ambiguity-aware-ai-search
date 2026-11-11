@@ -51,6 +51,7 @@ def load(name="candidates"):
 
 
 def is_job(rec):
+    """Jobs and candidates share the search; only a job has a minimum number of years."""
     return "min_years" in rec
 
 
