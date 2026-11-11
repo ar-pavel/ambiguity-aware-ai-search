@@ -97,7 +97,8 @@ def decide(reading, theta=THETA, force=None, candidates=None):
             reason = "Nothing was unclear, so there is nothing to ask. Searched straight away."
             force = "act"
         else:
-            reason, hint = FORCED[force], None  # user-facing; the rule's own choice is in rule_mode, the Why? section and the log
+            # user-facing; the rule's own choice is in rule_mode, the Why? section and the log
+            reason, hint = FORCED[force], None
         mode = force
     return {"mode": mode, "reason": reason, "hint": hint, "ask_slot": ask_slot if mode == "ask" else None,
             "theta": theta, "comparisons": comps, "rule_mode": rule_mode}

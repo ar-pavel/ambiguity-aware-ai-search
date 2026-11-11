@@ -30,3 +30,15 @@ jobs:
         run: |
           python3 search.py --selftest
           python3 interpret.py --selftest
+
+  # Style and likely-bug checks. Ruff runs only here, never at runtime: the app still needs nothing
+  # installed. Pinned, so a new ruff release cannot fail a build on its own. Rules: pyproject.toml.
+  lint:
+    runs-on: ubuntu-latest
+    container: python:3.13-slim
+    steps:
+      - uses: actions/checkout@v5
+      - name: Ruff
+        run: |
+          pip install --quiet ruff==0.17.4
+          ruff check .
