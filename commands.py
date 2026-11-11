@@ -7,27 +7,28 @@
 parse() only recognises the command; it never writes. The command still goes through the same
 plan -> confirm -> apply as the buttons, so a misread command costs one Cancel, not a write.
 
-A non-command must stay a new search, so the verb counts only when it is clearly a verb:
-  * it starts the text ("close these", "shortlist for the Senior Backend Engineer role"), or
-  * it is applied to the current results ("can you close them", "add those to the shortlist").
+A non-command must stay a new search, so the verb counts only when it is clearly pointed at the
+results on screen:
+  * it takes a referent: "shortlist them", "close all of these", "add those to the Java shortlist", or
+  * it starts the text and goes straight on to name the job: "shortlist for the Senior Backend
+    Engineer role", "add to the shortlist for Bluefin".
+"shortlist Java developers in London" describes people, not the results, so it is a search.
 "Closed", "shortlisted" and "close to London" never count, and "shortlist" as a noun
-("everyone on the Java shortlist") is not a verb.
+("everyone on the shortlist for Bluefin") is not a verb.
 """
 import re
 
 REFERENT = r"(?:all\s+(?:of\s+)?(?:them|these|those|the\s+results)|them|these|those|all|everyone|everybody|the\s+results)"
 _START = r"^\s*(?:(?:please|ok(?:ay)?|now|then|and|so|can\s+you|could\s+you|would\s+you)[\s,]+)*"
-# "close to London", "close by Leeds": an adjective about a place, not the verb.
-_NOT_CLOSE = r"\s+(?:to|by|near|enough|proximity)\b"
+_TO_JOB = r"\s+(?:for|to|on|onto)\b"  # the verb goes straight on to name the job
 
 SHORTLIST = [
-    re.compile(_START + r"shortlist\b", re.I),                                   # shortlist ... (at the start)
-    re.compile(r"\bshortlist\s+" + REFERENT + r"\b", re.I),                      # ... shortlist them ...
-    re.compile(_START + r"(?:add|put)\b.*?\b(?:to|on|onto|in)\b.*\bshortlist\b", re.I),
+    re.compile(r"\bshortlist\s+" + REFERENT + r"\b", re.I),                       # shortlist them ...
+    re.compile(_START + r"shortlist" + _TO_JOB, re.I),                             # shortlist for the ... role
     re.compile(r"\b(?:add|put)\s+" + REFERENT + r"\b.*?\b(?:to|on|onto|in)\b.*\bshortlist\b", re.I),
+    re.compile(_START + r"(?:add|put)" + _TO_JOB + r".*\bshortlist\b", re.I),    # add to the shortlist for ...
 ]
-CLOSE_START = re.compile(_START + r"close\b(?!" + _NOT_CLOSE + r")", re.I)
-CLOSE_REFERENT = re.compile(r"\bclose\s+" + REFERENT + r"\b", re.I)
+CLOSE = re.compile(r"\bclose\s+" + REFERENT + r"\b", re.I)                       # close these / them / all
 
 # Words that carry no information about which job is meant.
 STOP = set("""
@@ -58,7 +59,7 @@ def parse(text):
     if any(p.search(text) for p in SHORTLIST):
         words = [w for w in _words(text) if w.lower() not in STOP]
         return {"action": "shortlist", "job_words": words}
-    if CLOSE_REFERENT.search(text) or CLOSE_START.search(text):
+    if CLOSE.search(text):
         # Close works on the results on screen, so nothing else may describe which jobs:
         # "close these 3 jobs" is a command, "close all Java jobs in London" is a new search.
         rest = [w for w in _words(text) if w.lower() not in STOP and not w.isdigit()]

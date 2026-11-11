@@ -49,6 +49,27 @@ class TestDetection(unittest.TestCase):
                 self.assertIsNone(commands.parse(text))
 
 
+    def test_verb_naming_the_job_is_a_command(self):
+        cases = {
+            "shortlist for the Senior Backend Engineer role": ["Senior", "Backend", "Engineer"],
+            "Shortlist for the Java role at Bluefin": ["Java", "Bluefin"],
+            "please shortlist for Northwind": ["Northwind"],
+            "add to the shortlist for Bluefin": ["Bluefin"],
+            "ok, put on the Java shortlist": ["Java"],
+        }
+        for text, words in cases.items():
+            with self.subTest(text=text):
+                self.assertEqual(commands.parse(text), {"action": "shortlist", "job_words": words})
+
+    def test_verb_describing_people_is_a_search(self):
+        # The recruiter is describing a search, not pointing at the results on screen.
+        for text in ("shortlist Java developers in London", "Shortlist senior Python people",
+                     "can you shortlist Java developers", "add Java developers to the shortlist",
+                     "close", "close the jobs", "close Bluefin jobs", "close Java jobs in London"):
+            with self.subTest(text=text):
+                self.assertIsNone(commands.parse(text))
+
+
 class Base(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
@@ -78,6 +99,13 @@ class TestJobs(Base):
         self.assertEqual(out, {"kind": "plan", "action": "shortlist", "job_id": 4,
                                "reason": "You asked to shortlist the 45 candidates on screen for "
                                          "Senior Backend Engineer at Bluefin Analytics (London)."})
+
+    def test_shortlist_for_a_role_shortlists_what_is_on_screen(self):
+        self.assertEqual(self.command("shortlist Java developers in London"), {"kind": "search"})
+        out = self.command("shortlist for the Senior Backend Engineer role")
+        self.assertEqual((out["kind"], out["job_id"]), ("plan", 4))
+        self.assertIn("the 45 candidates on screen", out["reason"])
+        self.assertFalse(os.path.exists(store.PATH))
 
     def test_company_and_skill_narrow_to_one_job(self):
         out = self.command("add them to the Java shortlist at Bluefin")
