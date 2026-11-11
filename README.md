@@ -9,11 +9,13 @@ what is unclear and decides whether to **act** (just search), **show** how it re
 editable chips (small labelled controls), or **ask** one question, and it always says why. Changes to records are never guessed:
 each one is confirmed first and can be undone. Built as an MSc project at the University of Birmingham.
 
-*README prose: about 1,230 words (code, commands, tables and headings not counted).*
+*README prose: about 1,255 words (code, commands, tables and headings not counted).*
 
 ```bash
 python3 app.py          # needs Python 3.8+, nothing to install; open http://127.0.0.1:8770
 ```
+
+![System diagram: the read path on top, changes to records below; each part marked implemented, simulated or planned](docs/system.png)
 
 **How it works.** An *interpreter* turns the request into one structured *reading* (target, skills,
 place, seniority…) plus the parts that are unclear. For each unclear part, the rule compares the two
@@ -155,4 +157,7 @@ in the browser.
 
 - `AGENTS.md`: working rules for coding agents and people. `skills/`: two task procedures.
 - `.env.example`: live-interpreter and logging settings. `.github/workflows/tests.yml`: CI. `pyproject.toml`: ruff's rules.
+- `docs/system.png` (source `docs/system.dot`): the system diagram.
+- `docs/storyboards/`: `storyboard-show.png`, `storyboard-ask.png`, `storyboard-write.png`, five frames each
+  from real screenshots; `make_storyboards.py` rebuilds the pages.
 - Created locally, ignored by git: `state/state.json`, `logs/events.jsonl`, `.env`.
