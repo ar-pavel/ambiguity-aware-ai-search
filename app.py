@@ -59,12 +59,34 @@ def handle(payload):
     return _run(payload)[0]
 
 
+EXAMPLES = "I search by skill, place, company, role or seniority, for example “Java developers in London” or " \
+           "“open jobs at Bluefin”."
+
+
+def _nothing_reply(text, unsupported):
+    """What to say when the request names nothing the search can use. The reasons come from
+    interpret.WHY, chosen by code from each item's kind."""
+    named = [u for u in unsupported if u["kind"] != "other"]
+    if named:
+        parts = "; ".join("“%s”: %s" % (u["text"], interpret.WHY[u["kind"]]) for u in named)
+        return "I can't search for that (%s). %s" % (parts, EXAMPLES)
+    return "I didn't find anything I can search for in “%s”. %s" % (text, EXAMPLES)
+
+
 def _run(payload):
     """handle(), plus the records themselves (the write actions work on exactly these)."""
     text = (payload.get("text") or "").strip()
     if not text:
         return {"error": "Type a request, for example: senior Java developers in London"}, []
     reading = interpret.interpret(text)
+    if not interpret.has_filters(reading) and not interpret.asks_for_everyone(text):
+        # Searching would return every record and call it "nothing was unclear", which is not what
+        # "hello" or "candidates named Matin" meant. This holds even if a live model flagged nothing.
+        # Reported like an error, so nothing is searched, planned or logged, but worded as a reply.
+        return {"error": _nothing_reply(text, reading.get("unsupported", [])), "nothing": True, "text": text}, []
+    # What the search could not use is listed under Ignored, never dropped silently.
+    reading["dropped"] = reading.get("dropped", []) + [
+        "“%s” (%s)" % (u["text"], interpret.WHY[u["kind"]]) for u in reading.get("unsupported", [])]
     edited = _apply_edits(reading, payload.get("choices") or {}, payload.get("op"))
     reading = interpret.for_target(reading)  # the target may have just been switched
     decision = strategy.decide(reading, theta=_theta(payload.get("theta", strategy.THETA)),

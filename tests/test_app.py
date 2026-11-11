@@ -140,6 +140,60 @@ class TestHonestNotes(unittest.TestCase):
         self.assertTrue(any("strategy setting chose show" in n for n in r["why"]["notes"]))
 
 
+class TestNothingToSearch(unittest.TestCase):
+    """What the search cannot use is said, never dropped silently, and nothing is not "everyone"."""
+
+    def test_greeting_or_noise_is_not_searched(self):
+        for text in ["hello", "thanks!", "asdf qwerty", "rockstar ninja", "developers"]:
+            r = app.handle({"text": text})
+            self.assertTrue(r.get("nothing"), text)
+            lead = "I didn't find anything I can search for in “%s”." % text
+            self.assertTrue(r["error"].startswith(lead), r["error"])
+
+    def test_a_name_alone_says_why(self):
+        r = app.handle({"text": "candidates named matin"})
+        self.assertTrue(r.get("nothing"))
+        self.assertTrue(r["error"].startswith(
+            "I can't search for that (“named matin”: searching by name is not supported)."), r["error"])
+
+    def test_what_cannot_be_used_next_to_a_filter_is_listed_as_ignored(self):
+        r = app.handle({"text": "Java developers named Matin"})
+        self.assertEqual(r["count"], app.handle({"text": "Java developers"})["count"])
+        self.assertIn("“named Matin” (searching by name is not supported)", r["dropped"])
+        r = app.handle({"text": "Java developers near Narnia"})
+        self.assertIn("“near Narnia” (not a place in the data)", r["dropped"])
+        r = app.handle({"text": "Java developers in Narnia"})
+        self.assertIn("“in Narnia” (not something I can search by)", r["dropped"])
+
+    def test_a_verb_is_not_a_name(self):
+        self.assertEqual(app.handle({"text": "Python developers who called clients"})["dropped"], [])
+
+    def test_asking_for_everyone_still_searches(self):
+        for text in ["candidates", "all candidates", "everyone", "show me people", "show me all"]:
+            self.assertEqual(app.handle({"text": text})["count"], 200, text)
+        self.assertEqual(app.handle({"text": "jobs"})["count"], 30)
+        self.assertEqual(app.handle({"text": "Java"})["mode"], "act")
+
+    def test_a_model_that_flags_nothing_still_cannot_search_everyone(self):
+        os.environ["A2_MODEL"] = "claude"
+        saved = model.judge
+        model.judge = lambda text: {"target": "candidates", "company": None, "status": None, "skills": [],
+                                    "skills_op": "AND", "location": None, "seniority": None, "availability": None,
+                                    "work_mode": None, "ambiguities": [], "unsupported": []}
+        try:
+            r = app.handle({"text": "hello"})
+            self.assertTrue(r.get("nothing"))
+        finally:
+            model.judge = saved
+            os.environ.pop("A2_MODEL", None)
+
+    def test_nothing_cannot_be_planned_or_commanded(self):
+        plan = app.plan_action({"action": "shortlist", "job_id": 4, "search": {"text": "hello"}})
+        self.assertFalse(plan["valid"])
+        command = app.command_action({"text": "shortlist them", "search": {"text": "hello"}})
+        self.assertEqual(command, {"kind": "search"})
+
+
 class TestControls(unittest.TestCase):
     def test_every_strategy_can_be_forced_for_comparison(self):
         for mode in ("act", "show", "ask"):

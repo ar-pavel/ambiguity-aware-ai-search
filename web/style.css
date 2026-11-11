@@ -76,6 +76,9 @@ button.suggestion:hover { border-color: var(--ink); background: var(--surface); 
 .turn.assistant.is-ask { border-left-color: var(--ask); }
 .turn.assistant.is-error { border-left-color: var(--danger); }
 .turn.assistant.is-done { border-left-color: var(--rule); }
+.turn.assistant.reply { display: flex; flex-wrap: wrap; align-items: baseline; gap: .2rem .6rem; background: var(--surface);
+                        box-shadow: 0 1px 2px rgba(var(--shadow), .05); }
+.turn.assistant.reply > p, .turn.assistant.reply > .options, .turn.assistant.reply > fieldset { flex: 1 1 85%; margin: 0; }
 /* The reply to a write or undo: only what was done, compact. */
 .turn.assistant.result { padding: 0; border-left: 0; background: none; box-shadow: none; }
 .turn.result .notice { display: inline-block; margin: 0; }
@@ -197,6 +200,7 @@ kbd.key { display: inline-grid; place-items: center; min-width: 1.45em; height: 
 button[type=submit] kbd.key { margin: 0 0 0 .45em; color: #fff; background: rgba(255, 255, 255, .14); border-color: rgba(255, 255, 255, .35); }
 button.option { display: inline-flex; align-items: center; }
 .key-hint { margin: .1rem 0 0; font-size: .8rem; color: var(--muted); }
-.mark.small { gap: 2px; margin-right: .1rem; align-self: center; }
+/* The assistant's sign sits inside each of its turns, in the top-left corner, on its own line. */
+.turn.assistant .mark.small { flex: 0 0 100%; display: flex; gap: 3px; margin: 0 0 .45rem; }
 .mark.small i { width: 6px; height: 6px; }
-.frozen .mark.small { opacity: .55; }
+.frozen .mark.small { opacity: .6; }

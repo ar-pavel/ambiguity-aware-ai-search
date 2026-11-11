@@ -41,6 +41,10 @@ cp .env.example .env      # live mode: set A2_MODEL=claude or openai, and that p
 - Reads follow act / show / ask. Every write (shortlist, close) goes plan -> confirm -> apply, can be
   undone, and is logged. Only `store.py` writes; `data/` is never changed.
 - The skills-fit warning is advice: it never blocks a write and is not part of the fingerprint.
+- What the search cannot use is never dropped silently. The interpreter lists it in `unsupported`
+  (stand-in by heuristic, a live model through the schema; code keeps only words the user wrote), and
+  the page shows it under Ignored. The reason shown comes from `interpret.WHY`, not model text. A
+  request with nothing to search for is never a search of everyone.
 - A typed follow-up only names the action and the job; it opens the same confirmation and never writes.
   When unsure whether text is a command, treat it as a new search.
 - The page: only the latest search turn is live; earlier turns are read-only. A write replies with its

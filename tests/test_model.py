@@ -171,6 +171,20 @@ class TestChecks(unittest.TestCase):
         self.assertEqual(r["location"], {"value": "Reading", "scope": "city"})
         self.assertEqual(r["ambiguities"], [])
 
+    def test_unsupported_must_quote_the_user_and_use_a_known_kind(self):
+        judged = dict(self.BASE, skills=["Java"], unsupported=[
+            {"text": "named Matin", "kind": "name"},          # kept: written, known kind
+            {"text": "with a PhD", "kind": "other"},          # dropped: not in the request
+            {"text": "Java", "kind": "salary"},               # dropped: unknown kind
+        ])
+        r = interpret.from_model("Java developers named Matin", judged)
+        self.assertEqual(r["unsupported"], [{"text": "named Matin", "kind": "name"}])
+
+    def test_reason_on_screen_is_chosen_by_code(self):
+        self.assertEqual(set(interpret.WHY), {"name", "place", "other"})
+        self.assertEqual(model.SCHEMA["properties"]["unsupported"]["items"]["properties"]["kind"]["enum"],
+                         ["name", "place", "other"])
+
     def test_malformed_reply_falls_back_instead_of_crashing(self):
         os.environ["A2_MODEL"] = "claude"
         saved, model.judge = model.judge, (lambda text: {"skills": ["Java"]})

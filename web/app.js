@@ -70,7 +70,7 @@ function setBusy(on) {
 
 // What a reply is computed from. Saved before a change, so a failed reply can put it back.
 const snapshot = () => JSON.parse(JSON.stringify({ text: state.text, mode: state.mode, choices: state.choices,
-  op: state.op, answered: state.answered, last: state.last }));
+  op: state.op, answered: state.answered, last: state.last, lastCount: state.lastCount, lastNoun: state.lastNoun }));
 
 // prev: the state before the recruiter's change. If the reply fails, the change is undone on the page
 // too, so the live turn still matches what the server would do, and it stays usable for a retry.
@@ -97,9 +97,9 @@ async function runSearch(prev) {
     if (thinking) { thinking.remove(); thinking = null; }
   }
   try {
-    if (data.error && live()) {
-      if (prev) Object.assign(state, prev);
-      addError(data.error);
+    if (data.error && (live() || data.nothing)) {
+      if (prev) Object.assign(state, prev);   // the search on screen, if any, stays the one actions use
+      addError(data.error, data.nothing);
     } else {
       addAssistant(data);
     }
@@ -111,9 +111,10 @@ async function runSearch(prev) {
 }
 
 // A failed reply is reported under the live turn, which stays live so the recruiter can retry.
-function addError(text) {
-  const turn = append(el("section", { class: "turn assistant is-error" }));
-  turn.append(el("p", { class: "error" }, text));
+// "Nothing to search for" uses the same path, worded and coloured as a reply, not a fault.
+function addError(text, calm) {
+  const turn = append(replyTurn(calm ? "is-done" : "is-error"));
+  turn.append(el("p", { class: calm ? "" : "error" }, text));
   announce(turn.textContent);
   turn.scrollIntoView({ block: "start" });
 }
@@ -148,6 +149,16 @@ function keepFocus() {
   const turn = live();
   if (turn) { turn.setAttribute("tabindex", "-1"); turn.focus({ preventScroll: true }); }
   else $("request").focus();
+}
+
+// A short assistant reply that is not a search turn (nothing to search for, an error, a command's
+// answer): the same card and mark as any other reply, without the search's parts.
+function replyTurn(classes) {
+  const turn = el("section", { class: "turn assistant reply " + classes });
+  const mark = el("span", { class: "mark small", "aria-hidden": "true" });
+  mark.append(el("i"), el("i"), el("i"));
+  turn.append(mark);
+  return turn;
 }
 
 // ---- One assistant turn -------------------------------------------------------------------------
@@ -575,7 +586,7 @@ const liveActionButton = () => (live() ? live().querySelector(".count-row button
 // A command turn is not live: the live turn above it keeps its results, chips and buttons, and
 // the command acts on exactly those (the server re-runs that search, never this text).
 function commandTurn(kind) {
-  return append(el("section", { class: "turn assistant command is-" + kind }));
+  return append(replyTurn("command is-" + kind));
 }
 
 // Returns true if the server's answer was handled as a command, false to run the text as a search.
