@@ -86,7 +86,8 @@ def _run(payload):
         # Searching would return every record and call it "nothing was unclear", which is not what
         # "hello" or "candidates named Matin" meant. This holds even if a live model flagged nothing.
         # Reported like an error, so nothing is searched, planned or logged, but worded as a reply.
-        return {"error": _nothing_reply(text, reading.get("unsupported", [])), "nothing": True, "text": text}, []
+        return {"error": _nothing_reply(text, reading.get("unsupported", [])), "nothing": True, "text": text,
+                "interpreter": replies.interpreter_label(reading.get("source", "rules"))}, []
     # What the search could not use is listed under Ignored, never dropped silently.
     reading["dropped"] = reading.get("dropped", []) + [
         "“%s” (%s)" % (u["text"], interpret.WHY[u["kind"]]) for u in reading.get("unsupported", [])]

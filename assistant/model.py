@@ -1,13 +1,16 @@
 """Optional live interpreter: a language model reads the request and judges what is unclear.
 
 To use it (otherwise the rule-based stand-in in interpret.py runs):
-    cp .env.example .env    # then set A2_MODEL=claude + ANTHROPIC_API_KEY, or A2_MODEL=openai + OPENAI_API_KEY
+    cp .env.example .env    # then set one of:
+        A2_MODEL=claude  + ANTHROPIC_API_KEY
+        A2_MODEL=openai  + OPENAI_API_KEY
+        A2_MODEL=ollama  (a local model; needs Ollama running and the model pulled, no key)
 Settings already in the shell environment take priority over .env. .env is ignored by git.
-Privacy: live mode sends the typed request (only that text) to the chosen provider's API. Candidate data
-never leaves this machine; the search runs locally.
+Privacy: Claude and OpenAI receive the typed request (only that text). With Ollama nothing leaves this
+machine. Candidate data never leaves it either way; the search runs locally.
 
-Each provider has a small adapter (request body, HTTPS call, reading the reply). The system prompt,
-the schema and everything after the reply are shared, so both providers are checked the same way.
+Each provider has a small adapter (request body, HTTP call, reading the reply). The system prompt,
+the schema and everything after the reply are shared, so every provider is checked the same way.
 
 The model only *judges*: which skills, place, seniority and availability the request names, which of
 those are unclear, and whether one reading is clearly meant. Structured outputs force the reply into
@@ -31,6 +34,11 @@ EFFORT = "low"  # a short extraction task: low effort keeps it fast and cheap
 # OpenAI (Chat Completions API). The model name depends on what your account offers.
 OPENAI_URL = "https://api.openai.com/v1/chat/completions"
 OPENAI_DEFAULT_MODEL = "gpt-5-mini"
+
+# Ollama (a local model, native chat API). The schema is enforced while the model generates.
+OLLAMA_DEFAULT_URL = "http://localhost:11434/api/chat"
+OLLAMA_DEFAULT_MODEL = "qwen3:14b"  # strong at schema-filling and fits in 16 GB; compare others with tools/compare.py
+OLLAMA_TIMEOUT = 180  # seconds: the first request also loads the model into memory
 
 SYSTEM = """You read a recruiter's search request and report what it asks for.
 Only use words the recruiter actually wrote. Never change their 'and' into OR.
@@ -116,9 +124,9 @@ load_env()
 
 
 def provider():
-    """'claude', 'openai', or None (rule-based stand-in)."""
+    """'claude', 'openai', 'ollama', or None (rule-based stand-in)."""
     choice = os.environ.get("A2_MODEL", "").strip().lower()
-    return choice if choice in ("claude", "openai") else None
+    return choice if choice in ("claude", "openai", "ollama") else None
 
 
 def live():
@@ -130,6 +138,8 @@ def label():
     """Which model produced a live reading, for the page."""
     if provider() == "openai":
         return "OpenAI (%s)" % openai_model()
+    if provider() == "ollama":
+        return "local model (%s, Ollama)" % ollama_model()
     return "Claude (%s)" % MODEL
 
 
@@ -138,8 +148,13 @@ def openai_model():
     return os.environ.get("A2_OPENAI_MODEL", "").strip() or OPENAI_DEFAULT_MODEL
 
 
-def _https_json(url, body, headers, timeout=60):
-    """POST JSON over HTTPS (standard library only) and return the JSON reply."""
+def ollama_model():
+    """The local model to call: A2_OLLAMA_MODEL if set, else the default."""
+    return os.environ.get("A2_OLLAMA_MODEL", "").strip() or OLLAMA_DEFAULT_MODEL
+
+
+def _post_json(url, body, headers, timeout=60):
+    """POST JSON (standard library only) and return the JSON reply."""
     request = urllib.request.Request(url, data=json.dumps(body).encode("utf-8"),
                                      headers=dict(headers, **{"content-type": "application/json"}))
     with urllib.request.urlopen(request, timeout=timeout) as response:
@@ -148,13 +163,19 @@ def _https_json(url, body, headers, timeout=60):
 
 def _post(body):
     """Claude: send one Messages API request."""
-    return _https_json(API_URL, body, {"x-api-key": os.environ["ANTHROPIC_API_KEY"],
+    return _post_json(API_URL, body, {"x-api-key": os.environ["ANTHROPIC_API_KEY"],
                                        "anthropic-version": API_VERSION, "anthropic-beta": FALLBACK_BETA})
 
 
 def _post_openai(body):
     """OpenAI: send one Chat Completions request."""
-    return _https_json(OPENAI_URL, body, {"authorization": "Bearer " + os.environ["OPENAI_API_KEY"]})
+    return _post_json(OPENAI_URL, body, {"authorization": "Bearer " + os.environ["OPENAI_API_KEY"]})
+
+
+def _post_ollama(body):
+    """Ollama: send one chat request to the local server."""
+    url = os.environ.get("A2_OLLAMA_URL", "").strip() or OLLAMA_DEFAULT_URL
+    return _post_json(url, body, {}, timeout=OLLAMA_TIMEOUT)
 
 
 def judge(text, post=None):
@@ -162,6 +183,8 @@ def judge(text, post=None):
     try:
         if provider() == "openai":
             return _judge_openai(text, post or _post_openai)
+        if provider() == "ollama":
+            return _judge_ollama(text, post or _post_ollama)
         return _judge_claude(text, post or _post)
     except (KeyError, IndexError, StopIteration, TypeError, ValueError, OSError, urllib.error.URLError):
         return None  # no key, network or API error, or an unusable reply: fall back to the rules
@@ -192,3 +215,27 @@ def _judge_openai(text, post):
     if choice.get("finish_reason") == "length" or choice["message"].get("refusal"):
         return None
     return json.loads(choice["message"]["content"])
+
+
+def _thinking(name):
+    """Reasoning models think before answering. A one-line extraction gains nothing from it, so turn
+    it off where the model allows (Qwen3) and keep it to the minimum where it can't be off (gpt-oss)."""
+    if name.startswith("gpt-oss"):
+        return {"think": "low"}
+    if name.startswith(("qwen3", "deepseek-r1")):
+        return {"think": False}
+    return {}
+
+
+def _judge_ollama(text, post):
+    name = ollama_model()
+    reply = post(dict({
+        "model": name,
+        "stream": False,
+        "format": SCHEMA,                  # Ollama constrains generation to this JSON schema
+        "options": {"temperature": 0},     # the same reading for the same request
+        "messages": [{"role": "system", "content": SYSTEM}, {"role": "user", "content": text}],
+    }, **_thinking(name)))
+    if reply.get("done_reason") == "length":
+        return None
+    return json.loads(reply["message"]["content"])

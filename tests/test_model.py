@@ -5,10 +5,7 @@ import sys
 import unittest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from assistant import (
-    interpret,  # noqa: E402
-    model,  # noqa: E402
-)
+from assistant import interpret, model  # noqa: E402
 
 SENIOR = {"target": "candidates", "company": None, "status": None, "skills": ["Java"], "skills_op": "AND",
           "location": {"value": "London", "scope": "city"},
@@ -110,6 +107,61 @@ class TestOpenAI(unittest.TestCase):
     def test_unknown_provider_means_rules(self):
         os.environ["A2_MODEL"] = "something-else"
         self.assertFalse(model.live())
+
+
+class FakeOllama:
+    """Stands in for the local Ollama server."""
+    def __init__(self, reply=None, done="stop", error=None):
+        self.reply, self.done, self.error, self.sent = reply, done, error, None
+
+    def __call__(self, body):
+        if self.error:
+            raise self.error
+        self.sent = body
+        return {"done_reason": self.done, "message": {"role": "assistant", "content": json.dumps(self.reply)}}
+
+
+class TestOllama(unittest.TestCase):
+    """A local model: same prompt, schema and checks; no key; nothing leaves the machine."""
+    def setUp(self):
+        os.environ["A2_MODEL"] = "ollama"
+
+    def tearDown(self):
+        for k in ("A2_MODEL", "A2_OLLAMA_MODEL"):
+            os.environ.pop(k, None)
+
+    def test_request_constrains_output_to_the_schema(self):
+        post = FakeOllama(SENIOR)
+        self.assertEqual(model.judge("senior Java developers in London", post), SENIOR)
+        self.assertIs(post.sent["format"], model.SCHEMA)
+        self.assertFalse(post.sent["stream"])
+        self.assertEqual(post.sent["options"]["temperature"], 0)
+        self.assertEqual(post.sent["messages"][0], {"role": "system", "content": model.SYSTEM})
+        self.assertEqual(post.sent["model"], model.OLLAMA_DEFAULT_MODEL)
+
+    def test_thinking_is_off_where_it_can_be(self):
+        post = FakeOllama(SENIOR)
+        model.judge("x", post)
+        self.assertIs(post.sent["think"], False)          # qwen3: off
+        os.environ["A2_OLLAMA_MODEL"] = "gpt-oss:20b"
+        model.judge("x", post)
+        self.assertEqual(post.sent["think"], "low")       # gpt-oss cannot turn it off
+        os.environ["A2_OLLAMA_MODEL"] = "gemma3:12b"
+        model.judge("x", post)
+        self.assertNotIn("think", post.sent)              # not a reasoning model
+        self.assertEqual(model.label(), "local model (gemma3:12b, Ollama)")
+
+    def test_not_running_or_truncated_gives_none(self):
+        self.assertIsNone(model.judge("x", FakeOllama(error=OSError("connection refused"))))
+        self.assertIsNone(model.judge("x", FakeOllama(SENIOR, done="length")))
+
+    def test_ollama_not_running_falls_back_to_the_stand_in_and_says_so(self):
+        saved, model._post_ollama = model._post_ollama, FakeOllama(error=OSError("connection refused"))
+        try:
+            r = interpret.interpret("senior Java developers in London")
+            self.assertIn("unavailable", r["source"])
+        finally:
+            model._post_ollama = saved
 
 
 class TestFromModel(unittest.TestCase):
