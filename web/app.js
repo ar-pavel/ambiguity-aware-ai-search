@@ -6,10 +6,8 @@ const $ = (id) => document.getElementById(id);
 
 // What the recruiter has asked for so far. Edits are re-applied by the server to a fresh reading.
 // last: the control just used (the server says what it changed). focus: the control to refocus after re-render.
-// notice: the result of a write or undo, shown at the top of the next assistant turn.
-// undoable: the latest write that can still be undone; its Undo stays on the live turn until used.
 const state = { text: "", mode: "auto", choices: {}, op: null, lastCount: null, lastNoun: null, answered: null,
-                last: null, focus: null, firstReason: null, firstHint: null, notice: null, undoable: null, busy: false };
+                last: null, focus: null, firstReason: null, firstHint: null, busy: false };
 const chosenMode = () => $("mode").value;          // the strategy picked in the study settings
 const theta = () => Number($("theta").value);       // the rule's overlap threshold
 const live = () => document.querySelector("#chat .turn.live");
@@ -50,17 +48,12 @@ function freezeLive() {
 function addAssistant(data) {
   freezeLive();
   const turn = append(assistantTurn(data, true));
-  // Only the newest notice may undo: undo always reverses the most recent write.
-  document.querySelectorAll("#chat .turn:not(.live) .notice button").forEach((b) => b.remove());
   // A job question from a typed command belonged to the old results: it can no longer be answered.
   document.querySelectorAll("#chat .turn.command .options").forEach((o) => o.remove());
-  const said = data._notice ? data._notice.text + " " : "";
   const label = data._answered ? "Ask, answered" : capital(data.mode);   // the same words as the tag on screen
   const count = results(data.count, data.noun);
   const reason = data.reason.includes(count) ? data.reason : data.reason + (data.mode === "ask" ? "" : " " + count + ".");
-  announce(data.error ? data.error
-    : data._changed ? said + count + " in your search."
-    : said + label + ". " + reason);
+  announce(data.error ? data.error : label + ". " + reason);
   // Keep the recruiter's own turn in view above the reply, so it reads as an exchange.
   const before = turn.previousElementSibling;
   (before && before.classList.contains("user") ? before : turn).scrollIntoView({ block: "start" });
@@ -120,7 +113,6 @@ async function runSearch(prev) {
 // A failed reply is reported under the live turn, which stays live so the recruiter can retry.
 function addError(text) {
   const turn = append(el("section", { class: "turn assistant is-error" }));
-  if (state.notice) { turn.append(noticeLine(state.notice, true)); state.notice = null; }
   turn.append(el("p", { class: "error" }, text));
   announce(turn.textContent);
   turn.scrollIntoView({ block: "start" });
@@ -142,7 +134,7 @@ function restoreFocus() {
   const target = !turn ? null
     : state.focus === "question" ? turn.querySelector("fieldset")
     : state.focus === "reading" ? turn.querySelector("fieldset, .chips button, .chips select")
-    : state.focus === "notice" ? turn.querySelector(".notice")
+    : state.focus === "result" ? document.querySelector("#chat .turn.result:last-of-type .notice")
     : turn.querySelector('[data-slot="' + state.focus + '"]');
   if (target) target.focus(); else keepFocus();
   state.focus = null;
@@ -164,19 +156,14 @@ function assistantTurn(data, isLive) {
   if (isLive && !data.error) remember(data);
   // The mode colours the turn's edge. The reply to an answered question stays an ask turn, so the
   // conversation reads ask -> answered, not ask -> show.
-  // A re-run after a write or undo made no new decision, so it carries no mode colour or tag.
-  const kind = data.error ? "error" : data._changed ? "done" : data._answered ? "ask" : data.mode;
+  const kind = data.error ? "error" : data._answered ? "ask" : data.mode;
   const turn = el("section", { class: "turn assistant " + (isLive ? "live" : "frozen") + " is-" + kind });
   turn.data = data;
   if (data.error) {
     turn.append(el("p", { class: "error" }, data.error));
     return turn;
   }
-  if (data._notice) turn.append(noticeLine(data._notice, isLive));
-  else if (isLive && state.undoable) turn.append(noticeLine({ text: "Last change: " + state.undoable, canUndo: true, quiet: true }, true));
-  const why = whyBox(data.why);
-  if (data._changed) why.querySelector(".why-body").prepend(el("p", {}, capital(data.mode) + ": " + withoutHint(data.reason, data.hint)));
-  turn.append(modeLine(data, isLive), why);
+  turn.append(modeLine(data, isLive), whyBox(data.why));
   if (data.mode === "ask" && data.question) {
     turn.append(isLive ? questionCard(data.question) : askedLine(data.question));
     return turn;   // ask before searching: no results until the question is answered
@@ -213,8 +200,7 @@ function assistantTurn(data, isLive) {
 function remember(data) {
   if (data._seen) return;
   data._seen = true;
-  // A re-run after a write or undo is not a new start: keep the first reason of the request.
-  if (!state.last && !state.notice) { state.firstReason = data.reason; state.firstHint = data.hint; }
+  if (!state.last && !data._refresh) { state.firstReason = data.reason; state.firstHint = data.hint; }
   if (state.last && state.firstReason && state.firstReason !== data.reason) {
     data._first = withoutHint(state.firstReason, state.firstHint);   // its "Tap…" no longer applies
   }
@@ -229,27 +215,19 @@ function remember(data) {
   } else {
     state.lastCount = null;
   }
-  data._notice = state.notice;
-  data._changed = !!(state.notice && !state.notice.failed);   // a write or undo really happened
-  state.notice = null;
 }
 
 const withoutHint = (reason, hint) => (hint && reason.endsWith(" " + hint) ? reason.slice(0, -hint.length - 1) : reason);
 
-// After a write or undo, the turn leads with that result, and the mode line steps back.
 function modeLine(data, isLive) {
-  const p = el("p", { class: "mode-line" + (data._changed ? " quiet" : "") });
+  const p = el("p", { class: "mode-line" });
   // The assistant is signed with the three-mode mark, not a face: it should not look like a person.
   const mark = el("span", { class: "mark small", "aria-hidden": "true" });
   mark.append(el("i"), el("i"), el("i"));
   p.append(mark);
-  if (data._changed) {   // the search's own reason is under Why?
-    p.append(el("span", { class: "reason" }, "Results for “" + data.text + "” with that change applied."));
-  } else {
-    const mode = data._answered ? "ask" : data.mode;
-    p.append(el("strong", { class: "mode mode-" + mode }, data._answered ? "Ask · answered" : capital(mode)),
-             el("span", { class: "reason" }, isLive ? data.reason : withoutHint(data.reason, data.hint)));
-  }
+  const mode = data._answered ? "ask" : data.mode;
+  p.append(el("strong", { class: "mode mode-" + mode }, data._answered ? "Ask · answered" : capital(mode)),
+           el("span", { class: "reason" }, isLive ? data.reason : withoutHint(data.reason, data.hint)));
   if (!isLive) p.append(el("span", { class: "earlier" }, "Earlier · read-only"));
   if (data._first) p.append(el("span", { class: "first-reason" }, "At first: " + data._first));
   return p;
@@ -411,29 +389,60 @@ function actionButton(data) {
   return b;
 }
 
-// The result of a write or undo, at the top of the next turn. Only the latest one can be undone:
-// undo always reverses the most recent write, so an older Undo button would undo the wrong thing.
-function noticeLine(notice, isLive) {
-  const n = el("p", { class: "notice" + (notice.quiet ? " quiet" : ""), tabindex: "-1" });
-  n.append(el("span", {}, notice.text + " "));
-  if (notice.canUndo && isLive) {
-    const u = el("button", { type: "button", class: "link", "aria-label": "Undo: " + notice.text }, "Undo");
-    u.addEventListener("click", async () => {
-      if (state.busy) return;
-      setBusy(true);
-      u.disabled = true;
-      addUser("Undo that");
-      let out;
-      try { out = await post("/api/undo", {}); } catch (e) { out = { ok: false, error: "Could not reach the app." }; }
-      state.notice = { text: out.ok ? out.done + "." : out.error, canUndo: false, failed: !out.ok };
-      state.undoable = null;   // undone, or nothing left to undo
-      state.last = null;
-      state.focus = "notice";
-      runSearch();
-    });
+// ---- The result of a write or undo ------------------------------------------------------------
+// A write does not change the search, so the reply is only what was done, with Undo. The live search
+// above is refreshed where it is (a closed job leaves "open jobs"), not printed again.
+
+function addResult(text, canUndo) {
+  // Undo always reverses the most recent write, so only the newest result may offer it.
+  document.querySelectorAll("#chat .turn.result .notice button").forEach((b) => b.remove());
+  const turn = append(el("section", { class: "turn assistant result" }));
+  const n = el("p", { class: "notice", tabindex: "-1" });
+  n.append(el("span", {}, text + " "));
+  if (canUndo) {
+    const u = el("button", { type: "button", class: "link", "aria-label": "Undo: " + text }, "Undo");
+    u.addEventListener("click", () => undo(u));
     n.append(u);
   }
-  return n;
+  turn.append(n);
+  announce(text);
+  turn.scrollIntoView({ block: "nearest" });
+  return turn;
+}
+
+async function undo(button) {
+  if (state.busy) return;
+  setBusy(true);
+  button.remove();
+  addUser("Undo that");
+  let out;
+  try { out = await post("/api/undo", {}); } catch (e) { out = { ok: false, error: "Could not reach the app, so nothing was undone." }; }
+  addResult(out.ok ? out.done + "." : out.error, false);
+  await refreshLive();
+}
+
+// Re-run the current search and redraw the live turn in place, keeping it live.
+async function refreshLive() {
+  planSeq++;
+  setBusy(true);
+  try {
+    const turn = live();
+    if (turn && state.text) {
+      const res = await fetch("/api/search", { method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: state.text, mode: state.mode, choices: state.choices, op: state.op, theta: theta(), last: state.last }) });
+      const data = await res.json();
+      if (!data.error) {
+        data._refresh = true;   // the same request, so "At first" and the first reason stay as they were
+        turn.replaceWith(assistantTurn(data, true));
+      }
+    }
+  } catch (e) {
+    // the result turn already says what happened; the old results stay on screen
+  } finally {
+    setBusy(false);
+    state.focus = "result";
+    restoreFocus();
+  }
 }
 
 function fillPlan(plan) {
@@ -537,11 +546,8 @@ $("confirm-apply").addEventListener("click", async () => {
   }
   $("confirm").close();
   addUser("Confirmed: " + said);
-  state.notice = { text: out.done + ".", canUndo: true };
-  state.undoable = out.done + ".";
-  state.last = null;
-  state.focus = "notice";
-  runSearch();
+  addResult(out.done + ".", true);
+  await refreshLive();
 });
 
 let applying = false;
@@ -629,7 +635,7 @@ async function send(text) {
   const prev = snapshot();
   addUser(text);
   Object.assign(state, { text, mode: chosenMode(), choices: {}, op: null, lastCount: null,
-                         answered: null, last: null, notice: null, focus: "question" });  // the question is next
+                         answered: null, last: null, focus: "question" });  // the question is next
   $("request").value = "";
   runSearch(prev);
 }
@@ -650,7 +656,7 @@ $("new-chat").addEventListener("click", () => {
   planSeq++;   // a confirmation still loading belongs to the conversation being cleared
   document.querySelectorAll("#chat .turn:not(.welcome)").forEach((t) => t.remove());
   Object.assign(state, { text: "", choices: {}, op: null, lastCount: null, lastNoun: null, answered: null,
-                         last: null, focus: null, firstReason: null, notice: null });
+                         last: null, focus: null, firstReason: null });
   announce("New conversation.");
   $("request").focus();
 });
