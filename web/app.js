@@ -70,7 +70,7 @@ function setBusy(on) {
 
 // What a reply is computed from. Saved before a change, so a failed reply can put it back.
 const snapshot = () => JSON.parse(JSON.stringify({ text: state.text, mode: state.mode, choices: state.choices,
-  op: state.op, answered: state.answered, last: state.last }));
+  op: state.op, answered: state.answered, last: state.last, lastCount: state.lastCount, lastNoun: state.lastNoun }));
 
 // prev: the state before the recruiter's change. If the reply fails, the change is undone on the page
 // too, so the live turn still matches what the server would do, and it stays usable for a retry.
