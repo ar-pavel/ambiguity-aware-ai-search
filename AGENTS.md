@@ -1,31 +1,60 @@
 # AGENTS.md
 
 ## Project overview
-A small web prototype in Python 3 (standard library only, 3.8+). Live mode calls the Claude or OpenAI API over HTTPS with `urllib`. A recruiter types a vague
-search for candidates or jobs. An interpreter turns it into one structured reading plus its ambiguities, and a
-visible rule chooses to **act**, **show** the reading as editable chips, or **ask** one question.
-Search is structured filtering over synthetic data; there is no vector store and no embeddings.
+A small web prototype in Python 3.8+, standard library only. A recruiter types a vague search for
+candidates or jobs in a chat. An interpreter turns it into one structured reading plus its ambiguities,
+and a visible rule chooses to **act**, **show** the reading as editable chips, or **ask** one question.
+Search is structured filtering over synthetic data; there is no vector store and no embeddings. Live
+mode calls Claude or OpenAI over HTTPS with `urllib`; without a key, a rule-based stand-in reads the
+request (labelled *simulated*).
 
 ## Build and test
+```
 python3 run_tests.py      # CI runs this on Python 3.8 and 3.13 for every push and pull request
-python3 app.py            # then open http://127.0.0.1:8770
+ruff check .              # CI runs ruff 0.17.4 (rules in pyproject.toml); the app itself needs nothing installed
+python3 app.py            # then open http://127.0.0.1:8770 (--port to change it, Ctrl+C to stop)
 cp .env.example .env      # live mode: set A2_MODEL=claude or openai, and that provider's key
+```
+
+## Code map
+| File | Job |
+|---|---|
+| `app.py` | HTTP server and the request handlers (`/api/search`, `plan`, `apply`, `undo`, `command`) |
+| `replies.py` | what the page shows: table, chips, the one question, the sentence after an edit, Why? |
+| `interpret.py` | rule-based stand-in, and the checks on a live model's reply |
+| `model.py` | the live Claude or OpenAI call |
+| `strategy.py` | the act / show / ask rule and its reason |
+| `search.py` | filters, and the "Read as" line built from them |
+| `commands.py` | typed follow-ups ("shortlist them for the Java role") |
+| `actions.py` | plan, apply and undo a write; the skills-fit warning |
+| `store.py` | the only module that writes (`state/state.json`) |
+| `log.py` | one line per turn for evaluation (`logs/events.jsonl`) |
+| `web/` | the chat page: `index.html`, `app.js`, `style.css` |
+| `data/generate.py` | builds the synthetic data from a fixed seed |
 
 ## Conventions
-- one interpretation object drives the chips, the question, the "Read as" line and the search
-- the "Read as" line is built from the filters that ran, never from model text
-- status words are exactly: implemented, simulated, planned
-- tuning numbers (such as the threshold θ) live in one named constant with a one-line reason
-- reads follow act / show / ask; every write (shortlist, close) goes plan -> confirm -> apply, can be
-  undone, and is logged. Only `store.py` writes, to `state/state.json`; `data/` is never changed
-- a typed follow-up (`commands.py`, `/api/command`) only names the action and the job; it opens the
-  same confirmation and never writes. When unsure whether text is a command, treat it as a new search
+- One interpretation object drives the chips, the question, the "Read as" line and the search.
+- Every message on screen is built from what ran, never from model text. Why? never credits a setting
+  for something the recruiter did.
+- Status words are exactly: implemented, simulated, planned.
+- Tuning numbers (such as the threshold θ) live in one named constant with a one-line reason.
+- Reads follow act / show / ask. Every write (shortlist, close) goes plan -> confirm -> apply, can be
+  undone, and is logged. Only `store.py` writes; `data/` is never changed.
+- The skills-fit warning is advice: it never blocks a write and is not part of the fingerprint.
+- A typed follow-up only names the action and the job; it opens the same confirmation and never writes.
+  When unsure whether text is a command, treat it as a new search.
+- The page: only the latest search turn is live; earlier turns are read-only. A write replies with its
+  result only and refreshes the live search in place. Server text is set with `textContent`.
+- Python style: ruff's rules in `pyproject.toml`, lines up to 120 characters, a docstring on every
+  public function saying what it returns and why it exists. Comments explain why, not what.
+- Commits: conventional (`feat(scope):`, `fix:`, `refactor:`, `docs:`, `test:`, `chore:`), one logical
+  change each, through a pull request whose body says `Closes #<issue>`.
 
 ## Never
 - commit API keys, `.env` files, logs or `state/`
 - write data without a confirmed plan (`actions.apply` refuses a fingerprint that no longer matches)
 - use code, data, screenshots or branding from any real product
-- add a dependency; the standard library is the whole toolbox
+- add a runtime dependency; the standard library is the whole toolbox (ruff runs in CI only)
 - label something "implemented" that is simulated or planned
 - weaken a test to make a run pass
 
