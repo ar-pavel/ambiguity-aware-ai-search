@@ -6,10 +6,7 @@ import tempfile
 import unittest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from assistant import (
-    server,  # noqa: E402
-    store,  # noqa: E402
-)
+from assistant import server, store  # noqa: E402
 
 CLOSE = {"action": "close", "search": {"text": "open Java roles"}}
 SHORT = {"action": "shortlist", "search": {"text": "Python people at Ironbridge Bank"}}

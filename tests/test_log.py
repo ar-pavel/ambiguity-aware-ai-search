@@ -5,10 +5,7 @@ import tempfile
 import unittest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from assistant import (
-    log,  # noqa: E402
-    server,  # noqa: E402
-)
+from assistant import log, server  # noqa: E402
 
 
 class TestLog(unittest.TestCase):

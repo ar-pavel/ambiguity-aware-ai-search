@@ -3,12 +3,7 @@ import sys
 import unittest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from assistant import (
-    model,  # noqa: E402
-    replies,  # noqa: E402
-    search,  # noqa: E402
-    server,  # noqa: E402
-)
+from assistant import model, replies, search, server  # noqa: E402
 
 
 class TestHandle(unittest.TestCase):
