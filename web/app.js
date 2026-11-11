@@ -167,7 +167,9 @@ function assistantTurn(data, isLive) {
   }
   if (data._notice) turn.append(noticeLine(data._notice, isLive));
   else if (isLive && state.undoable) turn.append(noticeLine({ text: "Last change: " + state.undoable, canUndo: true, quiet: true }, true));
-  turn.append(modeLine(data, isLive), whyBox(data.why));
+  const why = whyBox(data.why);
+  if (data._notice) why.querySelector(".why-body").prepend(el("p", {}, capital(data.mode) + ": " + withoutHint(data.reason, data.hint)));
+  turn.append(modeLine(data, isLive), why);
   if (data.mode === "ask" && data.question) {
     turn.append(isLive ? questionCard(data.question) : askedLine(data.question));
     return turn;   // ask before searching: no results until the question is answered
@@ -231,7 +233,8 @@ function modeLine(data, isLive) {
   const p = el("p", { class: "mode-line" + (data._notice ? " quiet" : "") });
   const mode = data._answered ? "ask" : data.mode;
   p.append(el("strong", { class: "mode mode-" + mode }, data._answered ? "Ask · answered" : capital(mode)),
-           el("span", { class: "reason" }, isLive ? data.reason : withoutHint(data.reason, data.hint)));
+           el("span", { class: "reason" }, data._notice ? "Your search again, after that change."   // the full reason is under Why?
+             : isLive ? data.reason : withoutHint(data.reason, data.hint)));
   if (!isLive) p.append(el("span", { class: "earlier" }, "Earlier · read-only"));
   if (data._first) p.append(el("span", { class: "first-reason" }, "At first: " + data._first));
   return p;
@@ -398,7 +401,7 @@ function noticeLine(notice, isLive) {
       if (state.busy) return;
       setBusy(true);
       u.disabled = true;
-      addUser("Undo: " + notice.text.replace(/^Last change: /, "").replace(/\.$/, ""));
+      addUser("Undo that");
       let out;
       try { out = await post("/api/undo", {}); } catch (e) { out = { ok: false, error: "Could not reach the app." }; }
       state.notice = { text: out.ok ? out.done + "." : out.error, canUndo: false };
