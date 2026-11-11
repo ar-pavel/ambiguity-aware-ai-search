@@ -52,6 +52,8 @@ function addAssistant(data) {
   const turn = append(assistantTurn(data, true));
   // Only the newest notice may undo: undo always reverses the most recent write.
   document.querySelectorAll("#chat .turn:not(.live) .notice button").forEach((b) => b.remove());
+  // A job question from a typed command belonged to the old results: it can no longer be answered.
+  document.querySelectorAll("#chat .turn.command .options").forEach((o) => o.remove());
   const said = data._notice ? data._notice.text + " " : "";
   const label = data._answered ? "Ask, answered" : capital(data.mode);   // the same words as the tag on screen
   const count = results(data.count, data.noun);
@@ -69,7 +71,7 @@ let thinking = null;   // "Reading your request…", shown only for a noticeable
 function setBusy(on) {
   state.busy = on;
   $("chat").setAttribute("aria-busy", on ? "true" : "false");
-  document.querySelectorAll("#ask-form button, .turn.live button, .turn.live select, .suggestion")
+  document.querySelectorAll("#ask-form button, .turn.live button, .turn.live select, .turn.command button, .suggestion")
     .forEach((c) => { c.disabled = on; });
 }
 
@@ -555,9 +557,75 @@ $("confirm").addEventListener("close", () => {
 
 // ---- Sending a request, examples, settings ------------------------------------------------------
 
-function send(text) {
+// ---- Typed follow-up commands ("shortlist them for the Java role", "close these") ---------------
+
+// A command only makes sense on results the recruiter can see and has not been asked about.
+function hasResults() {
+  const t = live();
+  return !!(t && t.data && !t.data.error && t.data.mode !== "ask" && t.data.count > 0);
+}
+const liveActionButton = () => (live() ? live().querySelector(".count-row button") : null);
+
+// A command turn is not live: the live turn above it keeps its results, chips and buttons, and
+// the command acts on exactly those (the server re-runs that search, never this text).
+function commandTurn(kind) {
+  return append(el("section", { class: "turn assistant command is-" + kind }));
+}
+
+// Returns true if the server's answer was handled as a command, false to run the text as a search.
+function runCommand(text, cmd, seq) {
+  const trigger = liveActionButton();
+  if (!cmd || cmd.kind === "search" || (cmd.kind !== "error" && !trigger)) return false;
+  addUser(text);
+  if (cmd.kind === "error") { addError(cmd.error); return true; }
+  if (cmd.kind === "plan") {
+    const turn = commandTurn("done");
+    turn.append(el("p", {}, cmd.reason));
+    announce(cmd.reason);
+    turn.scrollIntoView({ block: "start" });
+    if (seq === planSeq) openPlan(cmd.action, trigger, cmd.job_id);   // Esc while waiting cancels it
+    return true;
+  }
+  // "ask": several jobs match. One button per job; a click is the reply and opens the confirmation.
+  const turn = commandTurn("ask");
+  const card = el("fieldset", { class: "question", tabindex: "-1" });
+  card.append(el("legend", { class: "question-text" }, cmd.text));
+  const options = el("div", { class: "options" });
+  cmd.options.forEach((opt) => {
+    const b = el("button", { type: "button", class: "option" }, opt.label);
+    b.addEventListener("click", () => {
+      const button = liveActionButton();
+      if (state.busy || !button) return;
+      addUser(opt.label);
+      options.remove();
+      openPlan(cmd.action, button, opt.job_id);
+    });
+    options.append(b);
+  });
+  card.append(options);
+  turn.append(el("p", { class: "reason" }, cmd.reason), card);
+  announce(cmd.reason + " " + cmd.text);
+  turn.scrollIntoView({ block: "start" });
+  const first = options.querySelector("button");
+  if (first) first.focus();
+  return true;
+}
+
+async function send(text) {
   text = text.trim();
   if (!text || state.busy) return;
+  if (hasResults()) {   // is it a command on these results, or a new search?
+    $("request").value = "";
+    const seq = planSeq;
+    setBusy(true);
+    let cmd = null;
+    try { cmd = await post("/api/command", { text, search: searchPayload() }); } catch (e) { cmd = null; }  // a new search instead
+    setBusy(false);
+    if (runCommand(text, cmd, seq)) {
+      if (state.settingsChanged) rerunWithSettings();
+      return;
+    }
+  }
   const prev = snapshot();
   addUser(text);
   Object.assign(state, { text, mode: chosenMode(), choices: {}, op: null, lastCount: null,

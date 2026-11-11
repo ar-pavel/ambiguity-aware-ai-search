@@ -18,6 +18,8 @@ cp .env.example .env      # live mode: set A2_MODEL=claude or openai, and that p
 - tuning numbers (such as the threshold θ) live in one named constant with a one-line reason
 - reads follow act / show / ask; every write (shortlist, close) goes plan -> confirm -> apply, can be
   undone, and is logged. Only `store.py` writes, to `state/state.json`; `data/` is never changed
+- a typed follow-up (`commands.py`, `/api/command`) only names the action and the job; it opens the
+  same confirmation and never writes. When unsure whether text is a command, treat it as a new search
 
 ## Never
 - commit API keys, `.env` files, logs or `state/`

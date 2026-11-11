@@ -36,6 +36,13 @@ def _fingerprint(action, job_id, changes, skipped):
     return hashlib.sha256(json.dumps(key).encode("utf-8")).hexdigest()[:16]
 
 
+def wrong_target(action, target):
+    """Why the action cannot run on this kind of record, or None if it can."""
+    if ACTIONS[action] != target:
+        return "This action works on %s; the search found %s." % (ACTIONS[action], target)
+    return None
+
+
 def _fit(changes, job, by_id):
     """Advice, not a rule: which candidates list none of the job's skills. Marks each change with
     "fits" and adds a warning to show before confirming. It never blocks the write, and it is not part
@@ -57,9 +64,8 @@ def plan(action, records, target, job_id=None):
     """What the action would do to these records. Writes nothing."""
     if action not in ACTIONS:
         return {"valid": False, "error": "Unknown action."}
-    if ACTIONS[action] != target:
-        need = "jobs" if ACTIONS[action] == "jobs" else "candidates"
-        return {"valid": False, "error": "This action works on %s; the search found %s." % (need, target)}
+    if wrong_target(action, target):
+        return {"valid": False, "error": wrong_target(action, target)}
     changes, skipped, out = [], [], {"action": action, "job_id": job_id}
     if action == "close":
         for j in records:
