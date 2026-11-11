@@ -91,6 +91,11 @@ class TestClose(Base):
         self.assertEqual(store.read(), before)
         self.assertFalse(app.undo_action(self.tmp.name)["ok"])  # nothing left to undo
 
+    def test_undo_says_what_it_did(self):
+        plan, out = self.confirm(CLOSE)
+        self.assertEqual(app.undo_action(self.tmp.name)["done"],
+                         "Reopened the %d job%s you closed" % (out["changed"], "" if out["changed"] == 1 else "s"))
+
 
 class TestShortlist(Base):
     def test_a_job_must_be_chosen_and_open(self):
@@ -111,8 +116,9 @@ class TestShortlist(Base):
         self.confirm(dict(SHORT, job_id=1))
         first = store.read()["shortlists"]
         self.confirm({"action": "shortlist", "job_id": 1, "search": {"text": "Go people"}})
-        app.undo_action(self.tmp.name)
+        done = app.undo_action(self.tmp.name)["done"]
         self.assertEqual(store.read()["shortlists"], first)
+        self.assertTrue(done.startswith("Took the ") and "off the shortlist for " in done, done)
 
 
 class TestLog(Base):

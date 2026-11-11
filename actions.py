@@ -95,12 +95,14 @@ def apply(current, fingerprint):
         for i in ids:
             state["job_status"][i] = "closed"
         done = "Closed %d job%s" % (len(ids), "" if len(ids) == 1 else "s")
+        undone = "Reopened the %d job%s you closed" % (len(ids), "" if len(ids) == 1 else "s")
     else:
         job = str(current["job_id"])
         previous = {"shortlists": {job: state["shortlists"].get(job)}}
         state["shortlists"][job] = (state["shortlists"].get(job) or []) + [c["id"] for c in current["changes"]]
         done = "Shortlisted %d candidate%s for %s" % (len(ids), "" if len(ids) == 1 else "s", current["job"])
-    state["undo"] = (state["undo"] + [{"summary": done, "previous": previous}])[-store.UNDO_LIMIT:]
+        undone = "Took the %d candidate%s off the shortlist for %s" % (len(ids), "" if len(ids) == 1 else "s", current["job"])
+    state["undo"] = (state["undo"] + [{"summary": done, "undone": undone, "previous": previous}])[-store.UNDO_LIMIT:]
     store.save(state)
     return {"ok": True, "done": done, "changed": len(ids), "skipped": len(current["skipped"])}
 
@@ -119,4 +121,5 @@ def undo():
                 else:
                     state[field][key] = value
         store.save(state)
-    return {"ok": True, "done": "Undone: " + last["summary"]}
+    # Say what undo did in its own words; older state files have only the summary.
+    return {"ok": True, "done": last.get("undone") or "Undone: " + last["summary"]}
