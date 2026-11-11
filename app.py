@@ -150,7 +150,7 @@ def _pct(x, theta):
     return "%d%%" % whole
 
 
-def why(reading, decision, edited, forced):
+def why(reading, decision, edited, forced, anyway=False):
     """The rule's own comparison, row by row, for the collapsible "Why?" section (Amershi G11).
     Every number comes from strategy.decide(), so the explanation cannot drift from the decision."""
     theta = decision["theta"]
@@ -171,7 +171,9 @@ def why(reading, decision, edited, forced):
     else:
         summary = "The rule compares the lists each unclear part could give. It asks only when a part has no clear reading and its lists share less than θ = %d%%." % round(theta * 100)
     notes = []
-    if forced:
+    if anyway:  # the recruiter skipped the question; no setting was involved
+        notes.append("You chose to search without answering; the rule would have asked first.")
+    elif forced:
         notes.append("The strategy setting chose %s; the rule alone would have chosen %s." % (decision["mode"], decision["rule_mode"]))
     if edited:
         notes.append("You changed the reading, so the chips stay in view. The rows describe the reading as it is now.")
@@ -210,7 +212,13 @@ def _run(payload):
     reading = interpret.for_target(reading)  # the target may have just been switched
     decision = strategy.decide(reading, theta=_theta(payload.get("theta", strategy.THETA)),
                                force=payload.get("mode") if payload.get("mode") != "auto" else None)
-    explained = why(reading, decision, edited, forced=decision["mode"] != decision["rule_mode"])
+    # "Search anyway" is the recruiter's own choice to skip the question, not a strategy setting.
+    last = payload.get("last") if isinstance(payload.get("last"), dict) else {}
+    anyway = bool(last.get("anyway")) and decision["rule_mode"] == "ask"
+    explained = why(reading, decision, edited, forced=decision["mode"] != decision["rule_mode"], anyway=anyway)
+    if anyway and not edited:
+        decision = dict(decision, reason="Searched with my best guess, as you asked. Change it with the chip marked ▾.",
+                        hint="Change it with the chip marked ▾.")
     if edited:  # the recruiter has taken control: keep the chips in view and say what happened
         decision = dict(decision, mode="show")
     results = search.search(reading)
@@ -218,11 +226,13 @@ def _run(payload):
     if edited:
         decision["reason"] = change_message(reading, payload.get("last"), len(results),
                                             "job" if target == "jobs" else "candidate")
+        decision["hint"] = None
     return {
         "text": text,
         "reading": reading,
         "mode": decision["mode"],
         "reason": decision["reason"],
+        "hint": decision.get("hint"),  # the "how to change it" sentence at the end of reason, if any
         "read_as": search.describe(reading),
         "chips": chips(reading),
         "question": question(reading, decision["ask_slot"]) if decision["mode"] == "ask" else None,

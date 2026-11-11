@@ -1,97 +1,187 @@
-/* Plain and readable; clarity of the interaction matters, not polish. */
-:root { --ink: #1f2933; --muted: #616e7c; --line: #d9e2ec; --act: #2f6f4e; --show: #2d6ca2; --ask: #a0522d; }
-body { margin: 0; font: 16px/1.5 system-ui, sans-serif; color: var(--ink); background: #fff;
-       display: flex; flex-direction: column; min-height: 100vh; }
-main { flex: 1; width: 100%; max-width: 960px; box-sizing: border-box; margin: 2rem auto; padding: 0 1rem; }
-h1 { margin: 0 0 .25rem; font-size: 1.5rem; }
-.hint { margin: 0 0 1rem; color: var(--muted); }
-#ask-form { display: flex; gap: .5rem; margin-bottom: 1rem; }
-#ask-form input { flex: 1; }
-input { padding: .6rem .75rem; font: inherit; border: 1px solid var(--line); border-radius: 6px; }
-button { padding: .6rem 1rem; font: inherit; border: 1px solid var(--ink); border-radius: 6px; background: var(--ink); color: #fff; cursor: pointer; }
-button:focus-visible, input:focus-visible { outline: 3px solid #f0b429; outline-offset: 2px; }
-#mode-line { padding: .5rem .75rem; border-left: 4px solid var(--line); background: #f5f7fa; margin-bottom: .75rem; }
-.mode { letter-spacing: .05em; }
-.mode-act { color: var(--act); } .mode-show { color: var(--show); } .mode-ask { color: var(--ask); }
-.read-as { margin: 0 0 .75rem; font-weight: 600; }
-#count { margin: .5rem 0; color: var(--muted); }
-table { width: 100%; border-collapse: collapse; font-size: .95rem; }
-th, td { text-align: left; padding: .4rem .5rem; border-bottom: 1px solid var(--line); }
-th { font-weight: 600; color: var(--muted); }
-.scope { margin-top: .75rem; font-size: .875rem; color: var(--muted); }
-#error { color: #b42318; }
-.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+/* A conversation that keeps the reading visible and editable.
+   Colour carries meaning, never decoration: emerald = act, azure = show, amber = ask, violet = guessed.
+   Each assistant turn wears its mode on its left edge, so scrolling the conversation shows the
+   sequence of decisions at a glance. System fonts only: the app runs offline with nothing to install. */
+:root {
+  --ink: #172033;        /* text and the recruiter's turns: deep navy */
+  --ink-2: #26324a;      /* hover on ink */
+  --muted: #5a6579;      /* secondary text; 5.8:1 on white */
+  --page: #edf1f6;       /* the conversation: soft mist, so the white live turn stands out */
+  --bar: #f6f8fb;        /* the header and the composer bar */
+  --side: #e8ecf2;       /* outside the panel, on wide screens */
+  --dots: #c5cdd9;
+  --surface: #ffffff;    /* the live turn */
+  --rule: #e3e7ee;
+  --field: #c9d1dd;      /* input borders */
+  --act: #0e8a62;   --act-text: #0a6b4c;   --act-tint: #e2f5ee;    /* emerald: searched straight away */
+  --show: #2f6bdb;  --show-text: #2457b8;  --show-tint: #e9f0fd;   /* azure: showed its reading */
+  --ask: #d9771f;   --ask-text: #93490a;   --ask-tint: #fdf0e2;    /* amber: asked first */
+  --guess: #7a52c7; --guess-tint: #f1ebfb;                         /* violet: an assumption I made */
+  --danger: #c0262d;
+  --focus: #f5b82e;
+  --shadow: 23, 32, 51;
+  --serif: "Iowan Old Style", "Charter", "Bitstream Charter", Cambria, Georgia, serif;
+  --sans: "Avenir Next", Seravek, "Segoe UI Variable Text", "Segoe UI", Ubuntu, "Noto Sans", system-ui, sans-serif;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body { margin: 0; font: 16px/1.55 var(--sans); color: var(--ink); -webkit-font-smoothing: antialiased;
+       /* a faint dot grid at the sides, like squared paper; the panel itself stays plain */
+       background-color: var(--side); background-image: radial-gradient(var(--dots) 1px, transparent 1.2px); background-size: 18px 18px; }
+/* The app is one panel, set apart from the sides of a wide screen. */
+.app { display: flex; flex-direction: column; height: 100%; width: 100%; max-width: 920px; margin: 0 auto;
+       background: var(--page); box-shadow: 0 0 0 1px var(--rule), 0 10px 50px rgba(var(--shadow), .10); }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+h1, h2 { font-family: var(--serif); font-weight: 600; letter-spacing: -.01em; }
 
-/* Chips: every assumption is visible and, where it was a choice, editable. */
-.chips { display: flex; flex-wrap: wrap; gap: .4rem; align-items: center; margin-bottom: .5rem; }
-.chip { display: inline-flex; align-items: center; gap: .3rem; padding: .25rem .6rem; border: 1px solid var(--line);
-        border-radius: 999px; background: #fff; font: inherit; font-size: .9rem; color: var(--ink); }
-button.chip { cursor: pointer; }
-.chip.op { font-weight: 600; border-color: var(--show); color: var(--show); }
-.chip select { border: 0; background: transparent; font: inherit; color: inherit; cursor: pointer; }
-.chip.guessed { border-style: dashed; border-color: var(--ask); }
-.tag { font-size: .8rem; color: var(--ask); }
-button.link { padding: 0; border: 0; background: none; color: var(--show); text-decoration: underline; cursor: pointer; }
-.chip:focus-within, button.chip:focus-visible, button.link:focus-visible { outline: 3px solid #f0b429; outline-offset: 2px; }
+button { padding: .55rem 1.1rem; font: inherit; font-weight: 600; border: 1px solid var(--ink); border-radius: 10px;
+         background: var(--ink); color: #fff; cursor: pointer; }
+button:hover { background: var(--ink-2); }
+button.secondary { background: var(--surface); color: var(--ink); }
+button.secondary:hover { background: var(--page); }
+button.link { padding: 0; border: 0; background: none; color: var(--show-text); font-weight: 500;
+              text-decoration: underline; text-underline-offset: 3px; }
+button:disabled { opacity: .45; cursor: not-allowed; }
+button[aria-disabled="true"] { opacity: .6; cursor: progress; }
+:focus-visible { outline: 3px solid var(--ink); outline-offset: 2px; box-shadow: 0 0 0 6px var(--focus); }
 
-/* Ask mode: one question before searching, each option with its result count. */
-.question { padding: .75rem; border: 1px solid var(--ask); border-radius: 8px; margin-bottom: .5rem; }
-.question-text { margin: 0 0 .5rem; font-weight: 600; }
-.options { display: flex; flex-wrap: wrap; gap: .5rem; margin-bottom: .5rem; }
-button.option { background: #fff; color: var(--ink); border: 1px solid var(--ask); }
-button.option:hover { background: #fdf3ec; }
-button.option:focus-visible { outline: 3px solid #f0b429; outline-offset: 2px; }
-.chip.answered { border-color: var(--ask); box-shadow: 0 0 0 2px #f6dccb; }
+/* One column for everything, so the eye never has to re-find the edge. */
+.top, #chat, .composer, .study-footer { width: 100%; padding-left: 1.5rem; padding-right: 1.5rem; }
+.top { display: flex; justify-content: space-between; align-items: baseline; padding-top: 1.1rem; padding-bottom: .7rem;
+       border-bottom: 1px solid var(--rule); background: var(--bar); }
+.top h1 { display: flex; align-items: center; gap: .6rem; margin: 0; font-size: 1.3rem; }
+/* The mark is the idea: act, show, ask. */
+.mark { display: inline-flex; gap: 3px; }
+.mark i { width: 9px; height: 9px; border-radius: 50%; }
+.mark i:nth-child(1) { background: var(--act); } .mark i:nth-child(2) { background: var(--show); } .mark i:nth-child(3) { background: var(--ask); }
+#chat { flex: 1; min-height: 0; overflow-y: auto; padding-top: .5rem; padding-bottom: 1.5rem; }
 
-/* Settings bar for comparing strategies. */
-.controls { display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; margin: -.25rem 0 1rem;
-            font-size: .875rem; color: var(--muted); }
-.controls select, .controls input { font: inherit; vertical-align: middle; }
-.controls output { display: inline-block; min-width: 2.5em; font-weight: 600; color: var(--ink); }
+/* The first screen: the question the recruiter answers by typing. */
+.welcome { padding: 2.5rem 0 1.5rem; }
+.welcome-title { margin: 0 0 .4rem; font-size: clamp(1.8rem, 4vw, 2.5rem); line-height: 1.15; }
+.welcome p { margin: 0 0 1.1rem; max-width: 58ch; color: var(--muted); }
+.suggestions { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; }
+button.suggestion { background: var(--surface); color: var(--ink); font-weight: 500; border-color: var(--rule); border-radius: 999px;
+                    padding: .4rem .9rem; }
+button.suggestion:hover { border-color: var(--ink); background: var(--surface); }
 
-/* Write actions and their confirmation. */
-.count-row { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: .5rem; }
-button.secondary { background: #fff; color: var(--ink); }
-button[aria-disabled="true"] { opacity: 0.6; cursor: progress; }
-button:disabled { opacity: .5; cursor: not-allowed; }
-#notice { padding: .4rem .75rem; border-left: 4px solid var(--act); background: #eef6f1; margin: 0 0 .75rem; }
-dialog { max-width: 36rem; width: calc(100% - 2rem); max-height: calc(100vh - 4rem); box-sizing: border-box;
-         overflow: auto; border: 1px solid var(--line); border-radius: 8px; padding: 1.25rem; }
-dialog::backdrop { background: rgba(31, 41, 51, .45); }
-dialog h2 { margin: 0 0 .5rem; font-size: 1.15rem; }
-.confirm-read-as { margin: 0 0 .5rem; color: var(--muted); }
-.confirm-summary { font-weight: 600; margin: .5rem 0; }
-.confirm-changes { max-height: 14rem; overflow: auto; margin: 0 0 .5rem; padding-left: 1.25rem; }
-.confirm-skipped { margin-bottom: .5rem; color: var(--muted); }
-.confirm-error { color: #b42318; margin: .25rem 0; }
-.confirm-buttons { display: flex; justify-content: flex-end; gap: .5rem; }
-.confirm-undo { margin: .5rem 0 0; font-size: .875rem; color: var(--muted); text-align: right; }
-#job-pick { display: block; margin: .5rem 0; font-weight: 600; }
-#job-pick select { display: block; width: 100%; margin-top: .25rem; padding: .4rem; font: inherit; font-weight: normal; }
+/* Turns: the recruiter on the right in ink; the assistant on the left, edged in its mode's colour. */
+.turn { margin: 0 0 1.1rem; }
+.turn.user { display: flex; justify-content: flex-end; }
+.turn.user p { margin: 0; max-width: 72%; padding: .55rem 1rem; border-radius: 18px 18px 4px 18px;
+               background: var(--ink); color: #fff; }
+.turn.assistant { padding: .95rem 1.15rem 1.05rem; border-left: 4px solid var(--rule); border-radius: 4px 16px 16px 4px; }
+.turn.assistant.is-act { border-left-color: var(--act); }
+.turn.assistant.is-show { border-left-color: var(--show); }
+.turn.assistant.is-ask { border-left-color: var(--ask); }
+.turn.assistant.is-error { border-left-color: var(--danger); }
+.turn.assistant.is-done { border-left-color: var(--rule); }
+.turn.assistant.live { background: var(--surface); box-shadow: 0 1px 2px rgba(var(--shadow), .05), 0 8px 24px rgba(var(--shadow), .07); }
+.turn.assistant.frozen { background: transparent; color: #3a4558; padding-top: .4rem; padding-bottom: .4rem; }
+.turn.assistant > p { margin: 0 0 .55rem; }
+.turn.assistant > :last-child { margin-bottom: 0; }
+.turn.note { text-align: center; font-size: .85rem; color: var(--muted); }
+.turn.thinking { padding: .5rem 1.1rem; border-left: 5px dotted var(--rule); color: var(--muted); font-style: italic; }
 
-/* Why? The rule's numbers, collapsed by default. */
-#why { margin: -.25rem 0 .75rem; font-size: .9rem; }
-#why summary { cursor: pointer; color: var(--show); width: max-content; }
-#why summary:focus-visible { outline: 3px solid #f0b429; outline-offset: 2px; }
-.why-body { padding: .5rem .75rem; border-left: 4px solid var(--line); margin-top: .25rem; }
+/* Inside a turn: the mode and its reason lead. */
+.mode-line { display: flex; flex-wrap: wrap; gap: .25rem .6rem; align-items: baseline; }
+.mode { font-size: .9rem; font-weight: 700; padding: .05rem .55rem; border-radius: 6px; }
+.mode-act { color: var(--act-text); background: var(--act-tint); }
+.mode-show { color: var(--show-text); background: var(--show-tint); }
+.mode-ask { color: var(--ask-text); background: var(--ask-tint); }
+.mode-line.quiet { font-size: .875rem; color: var(--muted); }
+.earlier { margin-left: auto; font-size: .78rem; color: var(--muted); }
+.reason { flex: 1 1 20rem; }
+.first-reason { flex-basis: 100%; font-size: .875rem; color: var(--muted); }
+.frozen .mode-line .reason { color: var(--muted); }
+.read-as { font-weight: 600; }
+.notice { padding: .45rem .75rem; border-radius: 8px; background: var(--act-tint); color: var(--act-text); }
+.notice.quiet { padding: .2rem 0; background: none; color: var(--muted); font-size: .875rem; }
+.notice:focus { outline: 3px solid var(--ink); outline-offset: 2px; }
+.error { color: var(--danger); }
+.ignored { font-size: .9rem; color: var(--guess); font-weight: 600; }
+.count-row { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: .5rem; margin: .7rem 0 .2rem; }
+.count { margin: 0; font-weight: 700; font-variant-numeric: tabular-nums; }
+.scope { font-size: .8rem; color: var(--muted); }
+.muted { color: var(--muted); }
+
+/* Tables scroll inside their turn, never the page sideways. */
+.table-wrap { overflow-x: auto; margin-top: .3rem; }
+table { width: 100%; border-collapse: collapse; font-size: .9rem; font-variant-numeric: tabular-nums; }
+th, td { text-align: left; padding: .4rem .55rem; border-bottom: 1px solid var(--rule); vertical-align: top; }
+th { font-weight: 600; font-size: .8rem; color: var(--muted); white-space: nowrap; border-bottom-color: var(--ink); }
+tbody tr:hover { background: var(--page); }
+details > summary { cursor: pointer; color: var(--show-text); width: max-content; font-size: .9rem; font-weight: 500; }
+details.why { margin: .1rem 0 .6rem; }
+.why-body { padding: .5rem .8rem; margin-top: .3rem; border-radius: 8px; background: var(--page); font-size: .9rem; }
 .why-body p { margin: 0 0 .5rem; }
-.why-table { font-size: .875rem; margin-bottom: .5rem; }
 .why-note { color: var(--muted); }
 
-/* UX review fixes. */
-.chip.fixed { border-color: transparent; background: #f0f4f8; }
-.chip.choice { border-color: var(--show); }
-.chip select { appearance: none; -webkit-appearance: none; padding-right: 0; }
-.caret { color: var(--show); pointer-events: none; }
-.first-reason { display: block; margin-top: .2rem; font-size: .875rem; color: var(--muted); }
-fieldset.question { min-width: 0; }
-fieldset.question:focus { outline: 3px solid #f0b429; outline-offset: 2px; }
-legend.question-text { padding: 0 .25rem; }
-.ignored { margin: .25rem 0; font-size: .9rem; color: var(--ask); font-weight: 600; }
-.scope { margin: .25rem 0 .5rem; }
-/* Study settings: a small footer in the bottom-right corner, out of the task path. */
-footer.study-footer { display: flex; justify-content: flex-end; padding: .5rem 1rem 1rem; }
-details.study { font-size: .875rem; color: var(--muted); text-align: right; }
-details.study summary { cursor: pointer; width: max-content; margin-left: auto; }
-details.study summary:focus-visible { outline: 3px solid #f0b429; outline-offset: 2px; }
-details.study .controls { justify-content: flex-end; margin: .5rem 0 0; }
+/* Chips: fixed parts are plain tokens; only choices look like controls (UX review fix 2). */
+.chips { display: flex; flex-wrap: wrap; gap: .4rem; align-items: center; margin-bottom: .45rem; }
+.chip { display: inline-flex; align-items: center; gap: .3rem; padding: .25rem .7rem; border: 1.5px solid var(--rule);
+        border-radius: 999px; background: var(--surface); font: inherit; font-size: .9rem; color: var(--ink); }
+.chip.fixed { border-color: transparent; background: var(--page); }
+.chip.choice { border-color: var(--show); color: var(--show-text); font-weight: 600; }
+button.chip { cursor: pointer; }
+.chip.op { font-weight: 700; border-color: var(--show); color: var(--show-text); background: var(--surface); }
+button.chip.op:hover { background: var(--show-tint); }
+.chip select { appearance: none; -webkit-appearance: none; border: 0; background: transparent; font: inherit;
+               color: inherit; cursor: pointer; padding-right: 0; }
+.chip:focus-within { outline: 3px solid var(--ink); outline-offset: 2px; }
+.chip.guessed { border-style: dashed; border-color: var(--guess); background: var(--guess-tint); }
+.chip.answered { box-shadow: 0 0 0 3px var(--ask-tint); }
+.chip select:focus-visible { outline: none; box-shadow: none; }
+.caret { pointer-events: none; }
+.tag { font-size: .8rem; color: var(--guess); font-weight: 600; }
+
+/* Ask: one question; each option is a one-click reply with its result count. */
+fieldset.question { min-width: 0; margin: .2rem 0 0; padding: .8rem .9rem .9rem; border: 1.5px solid var(--ask); border-radius: 10px; }
+fieldset.question:focus { outline: 3px solid var(--ink); outline-offset: 2px; }
+.turn.live:focus { outline: none; }
+legend.question-text { float: left; width: 100%; margin-bottom: .6rem; padding: 0; font-family: var(--serif); font-size: 1.15rem; font-weight: 600; }
+.options { clear: both; display: flex; flex-wrap: wrap; gap: .5rem; margin-bottom: .6rem; }
+button.option { background: var(--surface); color: var(--ink); font-weight: 600; border: 1.5px solid var(--ask); border-radius: 999px; }
+button.option:hover { background: var(--ask-tint); }
+.asked { color: var(--muted); }
+.asked::first-line { color: #3a4558; }
+
+/* Composer, pinned under the conversation. */
+.composer { display: flex; gap: .5rem; padding-top: .8rem; padding-bottom: .4rem; border-top: 1px solid var(--rule); background: var(--bar); }
+.composer input { flex: 1; min-width: 0; padding: .7rem 1rem; font: inherit; border: 1.5px solid var(--field); border-radius: 14px;
+                  background: var(--surface); color: var(--ink); }
+.composer input:focus-visible { border-color: var(--ink); outline-offset: 1px; }
+
+/* Study settings: small, in the corner, out of the task path. */
+.study-footer { display: flex; justify-content: flex-end; padding-bottom: .6rem; background: var(--bar); }
+details.study { font-size: .8rem; color: var(--muted); text-align: right; }
+details.study summary { margin-left: auto; color: var(--muted); font-size: .8rem; }
+.controls { display: flex; flex-wrap: wrap; gap: 1rem; justify-content: flex-end; align-items: center; margin-top: .4rem; }
+.controls select, .controls input { font: inherit; vertical-align: middle; }
+.controls output { display: inline-block; min-width: 2.5em; font-weight: 700; color: var(--ink); }
+
+/* The confirmation for every write: calm, and the safe choice first. */
+dialog { max-width: 36rem; width: calc(100% - 2rem); max-height: calc(100vh - 4rem); overflow: auto; color: var(--ink);
+         border: 0; border-top: 5px solid var(--ask); border-radius: 12px; padding: 1.3rem 1.4rem;
+         box-shadow: 0 24px 60px rgba(var(--shadow), .28); }
+dialog::backdrop { background: rgba(var(--shadow), .45); backdrop-filter: blur(2px); }
+dialog h2 { margin: 0 0 .5rem; font-size: 1.3rem; }
+.confirm-read-as { margin: 0 0 .5rem; color: var(--muted); }
+#job-pick { display: block; margin: .6rem 0; font-weight: 600; }
+#job-pick select { display: block; width: 100%; margin-top: .3rem; padding: .5rem; font: inherit; font-weight: 500;
+                   border: 1.5px solid var(--field); border-radius: 10px; background: var(--surface); }
+.confirm-summary { font-weight: 700; margin: .6rem 0; }
+.confirm-changes { max-height: 14rem; overflow: auto; margin: 0 0 .6rem; padding: .5rem .5rem .5rem 1.7rem;
+                   border-radius: 8px; background: var(--page); font-size: .92rem; }
+.confirm-skipped { margin-bottom: .5rem; color: var(--muted); }
+.confirm-error { color: var(--danger); margin: .25rem 0; }
+.confirm-buttons { display: flex; justify-content: flex-end; gap: .5rem; }
+.confirm-undo { margin: .6rem 0 0; font-size: .85rem; color: var(--muted); text-align: right; }
+
+@media (max-width: 600px) {
+  .turn.user p { max-width: 88%; }
+  .turn.assistant { padding-left: .8rem; padding-right: .8rem; }
+  .top, #chat, .composer, .study-footer { padding-left: 1rem; padding-right: 1rem; }
+  .welcome { padding-top: 1.5rem; }
+}
+@media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }

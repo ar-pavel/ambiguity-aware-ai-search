@@ -61,11 +61,12 @@ def _compare(reading, amb, candidates):
 
 
 def decide(reading, theta=THETA, force=None, candidates=None):
-    """Return {mode, reason, ask_slot, comparisons}. force = 'act' | 'show' | 'ask' overrides the rule."""
+    """Return {mode, reason, hint, ask_slot, comparisons}. force = 'act' | 'show' | 'ask' overrides the rule."""
     comps = [_compare(reading, a, candidates) for a in reading["ambiguities"]]
     askable = sorted((c for c in comps if not c["dominant"] and c["overlap"] < theta),
                      key=lambda c: c["overlap"])
 
+    hint = None  # how to change the reading, from the screen; a frozen turn drops it
     if not comps:
         mode, reason = "act", "Nothing in your request was unclear, so I searched straight away."
     elif askable:
@@ -96,9 +97,9 @@ def decide(reading, theta=THETA, force=None, candidates=None):
             reason = "Nothing was unclear, so there is nothing to ask. Searched straight away."
             force = "act"
         else:
-            reason = FORCED[force]  # user-facing; the rule's own choice is in rule_mode, the Why? section and the log
+            reason, hint = FORCED[force], None  # user-facing; the rule's own choice is in rule_mode, the Why? section and the log
         mode = force
-    return {"mode": mode, "reason": reason, "ask_slot": ask_slot if mode == "ask" else None,
+    return {"mode": mode, "reason": reason, "hint": hint, "ask_slot": ask_slot if mode == "ask" else None,
             "theta": theta, "comparisons": comps, "rule_mode": rule_mode}
 
 
