@@ -209,6 +209,16 @@ class TestChecks(unittest.TestCase):
         self.assertIsNone(r["location"])
         self.assertIn("location 'Paris' (not in the data)", r["dropped"])
 
+    def test_company_short_name_is_mapped_to_the_data(self):
+        # A model echoes what the user wrote ("Bluefin"); the stand-in accepts the first word, so must the check.
+        for said in ("Bluefin", "bluefin analytics"):
+            r = interpret.from_model("Java developers at Bluefin", dict(self.BASE, skills=["Java"], company=said))
+            self.assertEqual(r["company"], "Bluefin Analytics")
+            self.assertEqual(r["dropped"], [])
+        r = interpret.from_model("Java developers at Acme", dict(self.BASE, skills=["Java"], company="Acme"))
+        self.assertIsNone(r["company"])
+        self.assertIn("company 'Acme' (not in your request or not in the data)", r["dropped"])
+
     def test_evidence_is_kept_only_if_its_quote_is_in_the_request(self):
         judged = dict(SENIOR, ambiguities=[{"slot": "seniority", "dominant": False,
                                             "evidence": "you wrote 'senior'"}])
