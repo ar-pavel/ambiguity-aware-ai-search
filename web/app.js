@@ -53,9 +53,12 @@ function addAssistant(data) {
   // Only the newest notice may undo: undo always reverses the most recent write.
   document.querySelectorAll("#chat .turn:not(.live) .notice button").forEach((b) => b.remove());
   const said = data._notice ? data._notice.text + " " : "";
+  const label = data._answered ? "Ask, answered" : capital(data.mode);   // the same words as the tag on screen
+  const count = results(data.count, data.noun);
+  const reason = data.reason.includes(count) ? data.reason : data.reason + (data.mode === "ask" ? "" : " " + count + ".");
   announce(data.error ? data.error
-    : data._notice ? said + results(data.count, data.noun) + " in your search."
-    : capital(data.mode) + ". " + data.reason + (data.mode === "ask" ? "" : " " + results(data.count, data.noun) + "."));
+    : data._changed ? said + count + " in your search."
+    : said + label + ". " + reason);
   // Keep the recruiter's own turn in view above the reply, so it reads as an exchange.
   const before = turn.previousElementSibling;
   (before && before.classList.contains("user") ? before : turn).scrollIntoView({ block: "start" });
@@ -160,7 +163,7 @@ function assistantTurn(data, isLive) {
   // The mode colours the turn's edge. The reply to an answered question stays an ask turn, so the
   // conversation reads ask -> answered, not ask -> show.
   // A re-run after a write or undo made no new decision, so it carries no mode colour or tag.
-  const kind = data.error ? "error" : data._notice ? "done" : data._answered ? "ask" : data.mode;
+  const kind = data.error ? "error" : data._changed ? "done" : data._answered ? "ask" : data.mode;
   const turn = el("section", { class: "turn assistant " + (isLive ? "live" : "frozen") + " is-" + kind });
   turn.data = data;
   if (data.error) {
@@ -170,7 +173,7 @@ function assistantTurn(data, isLive) {
   if (data._notice) turn.append(noticeLine(data._notice, isLive));
   else if (isLive && state.undoable) turn.append(noticeLine({ text: "Last change: " + state.undoable, canUndo: true, quiet: true }, true));
   const why = whyBox(data.why);
-  if (data._notice) why.querySelector(".why-body").prepend(el("p", {}, capital(data.mode) + ": " + withoutHint(data.reason, data.hint)));
+  if (data._changed) why.querySelector(".why-body").prepend(el("p", {}, capital(data.mode) + ": " + withoutHint(data.reason, data.hint)));
   turn.append(modeLine(data, isLive), why);
   if (data.mode === "ask" && data.question) {
     turn.append(isLive ? questionCard(data.question) : askedLine(data.question));
@@ -225,6 +228,7 @@ function remember(data) {
     state.lastCount = null;
   }
   data._notice = state.notice;
+  data._changed = !!(state.notice && !state.notice.failed);   // a write or undo really happened
   state.notice = null;
 }
 
@@ -232,8 +236,8 @@ const withoutHint = (reason, hint) => (hint && reason.endsWith(" " + hint) ? rea
 
 // After a write or undo, the turn leads with that result, and the mode line steps back.
 function modeLine(data, isLive) {
-  const p = el("p", { class: "mode-line" + (data._notice ? " quiet" : "") });
-  if (data._notice) {   // the search's own reason is under Why?
+  const p = el("p", { class: "mode-line" + (data._changed ? " quiet" : "") });
+  if (data._changed) {   // the search's own reason is under Why?
     p.append(el("span", { class: "reason" }, "Results for “" + data.text + "” with that change applied."));
   } else {
     const mode = data._answered ? "ask" : data.mode;
@@ -409,8 +413,8 @@ function noticeLine(notice, isLive) {
       addUser("Undo that");
       let out;
       try { out = await post("/api/undo", {}); } catch (e) { out = { ok: false, error: "Could not reach the app." }; }
-      state.notice = { text: out.ok ? out.done + "." : out.error, canUndo: false };
-      if (out.ok) state.undoable = null;
+      state.notice = { text: out.ok ? out.done + "." : out.error, canUndo: false, failed: !out.ok };
+      state.undoable = null;   // undone, or nothing left to undo
       state.last = null;
       state.focus = "notice";
       runSearch();
@@ -489,17 +493,23 @@ $("confirm-apply").addEventListener("click", async () => {
   const apply = $("confirm-apply");
   if (apply.disabled) return;
   apply.disabled = true;   // one write per confirmation, however often it is clicked
+  applying = true;         // Esc and Cancel wait until the server has answered
+  $("confirm-cancel").disabled = true;
+  setBusy(true);
   const { plan } = pending;
   const said = apply.textContent + (plan.job ? " for " + plan.job : "");
   let out;
   try {
     out = await post("/api/apply", { action: plan.action, job_id: plan.job_id, fingerprint: plan.fingerprint, search: searchPayload() });
   } catch (e) {
-    $("confirm").querySelector(".confirm-error").textContent = "Could not reach the app, so nothing was changed. Try again.";
-    apply.disabled = false;
-    return;
+    out = { ok: false, error: "Could not reach the app, so nothing was changed. Try again." };
+  } finally {
+    applying = false;
+    $("confirm-cancel").disabled = false;
+    setBusy(false);
   }
-  if (!out.ok) {  // refused: show what is true now, and let the recruiter confirm again
+  if (!out.ok) {
+    if (!out.plan) apply.disabled = false;  // refused: show what is true now, and let the recruiter confirm again
     if (out.plan) { pending.plan = Object.assign({ action: plan.action }, out.plan); fillPlan(pending.plan); }
     $("confirm").querySelector(".confirm-error").textContent = out.error;
     return;
@@ -512,6 +522,9 @@ $("confirm-apply").addEventListener("click", async () => {
   state.focus = "notice";
   runSearch();
 });
+
+let applying = false;
+$("confirm").addEventListener("cancel", (e) => { if (applying) e.preventDefault(); });
 
 // Esc and Cancel close the dialog without writing anything; focus goes back to the button that opened it.
 $("confirm").addEventListener("close", () => {
