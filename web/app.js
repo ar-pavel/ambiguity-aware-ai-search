@@ -16,6 +16,7 @@ function setBusy(on) {
 }
 
 async function runSearch() {
+  planSeq++;  // a confirmation for the old results must not open over the new ones
   setBusy(true);
   const slow = setTimeout(() => {   // only for a noticeable wait, so fast answers don't flicker
     $("mode-line").textContent = "Reading your request…";
@@ -39,9 +40,12 @@ async function runSearch() {
 }
 
 // After a re-render, put focus back on the control the recruiter used (UX review fix 3).
+// "question": a new request was sent, so focus its question if one is asked. Other re-runs (a study
+// setting, an undo) leave focus where the recruiter is working.
 function restoreFocus() {
   if (!state.focus) return;
-  const target = document.querySelector('#interpretation [data-slot="' + state.focus + '"]');
+  const target = state.focus === "question" ? document.querySelector("#interpretation fieldset")
+    : document.querySelector('#interpretation [data-slot="' + state.focus + '"]');
   if (target) target.focus();
   state.focus = null;
 }
@@ -129,14 +133,14 @@ function renderInterpretation(data) {
     const card = renderQuestion(data.question);
     slot.append(card);
     show("interpretation");
-    card.focus();  // the question is the next thing to deal with
     return;
   } else if (data.mode === "show") {
     const row = el("div", { class: "chips", role: "group", "aria-label": "How I read your request" });
     data.chips.forEach((c) => row.append(chipFor(c)));
     const reset = el("button", { type: "button", class: "link" }, "Reset to my words");
     reset.addEventListener("click", () => {
-      Object.assign(state, { choices: {}, op: null, answered: null, last: null, mode: chosenMode() }); runSearch();
+      Object.assign(state, { choices: {}, op: null, answered: null, last: null, mode: chosenMode(), focus: "question" });
+      runSearch();
     });
     slot.append(row, reset);
   } else {
@@ -218,14 +222,36 @@ function fillPlan(plan) {
   apply.disabled = !plan.valid;
 }
 
+// Each plan request gets a number. Esc, a new search or a newer request moves planSeq on, so a reply
+// that arrives late is dropped instead of opening the dialog nobody is waiting for any more.
+let planSeq = 0;
+
 async function openPlan(action, trigger, jobId) {
-  const plan = await post("/api/plan", { action, job_id: jobId, search: searchPayload() });
+  const d = $("confirm");
+  const fromButton = !d.open;
+  if (fromButton && trigger.getAttribute("aria-disabled") === "true") return;  // already preparing
+  const seq = ++planSeq;
+  const label = trigger.textContent;
+  if (fromButton) { trigger.setAttribute("aria-disabled", "true"); trigger.textContent = "Preparing…"; }
+  let plan = null;
+  try {
+    plan = await post("/api/plan", { action, job_id: jobId, search: searchPayload() });
+  } catch (e) {
+    plan = null;
+  } finally {
+    if (fromButton) { trigger.removeAttribute("aria-disabled"); trigger.textContent = label; }
+  }
+  if (seq !== planSeq) return;
+  if (!plan) { setNotice("Could not reach the app. Is python3 app.py still running?", false); return; }
   if (!plan.action) plan.action = action;
   pending = { plan, trigger };
   fillPlan(plan);
-  const d = $("confirm");
   if (!d.open) { d.showModal(); $("confirm-cancel").focus(); }  // the safe choice has focus first
 }
+
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape" && !$("confirm").open) planSeq++;  // cancels a confirmation still loading
+});
 
 $("job").addEventListener("change", () => openPlan("shortlist", pending.trigger, $("job").value || null));
 
@@ -244,6 +270,7 @@ $("confirm-apply").addEventListener("click", async () => {
 
 // Esc and Cancel close the dialog without writing anything; focus goes back to the button that opened it.
 $("confirm").addEventListener("close", () => {
+  planSeq++;  // a job-picker reply still on its way must not reopen it
   const p = pending;
   $("job").innerHTML = '<option value="">Choose a job…</option>';
   if (p && p.trigger && document.body.contains(p.trigger)) p.trigger.focus();
@@ -315,7 +342,7 @@ function render(data) {
 $("ask-form").addEventListener("submit", (e) => {
   e.preventDefault();
   Object.assign(state, { text: $("request").value, mode: chosenMode(), choices: {}, op: null, lastCount: null,
-                         answered: null, last: null, focus: null });
+                         answered: null, last: null, focus: "question" });  // the question is the next thing to deal with
   show("notice", false);
   runSearch();
 });

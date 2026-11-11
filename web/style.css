@@ -52,6 +52,7 @@ button.option:focus-visible { outline: 3px solid #f0b429; outline-offset: 2px; }
 /* Write actions and their confirmation. */
 .count-row { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: .5rem; }
 button.secondary { background: #fff; color: var(--ink); }
+button[aria-disabled="true"] { opacity: 0.6; cursor: progress; }
 button:disabled { opacity: .5; cursor: not-allowed; }
 #notice { padding: .4rem .75rem; border-left: 4px solid var(--act); background: #eef6f1; margin: 0 0 .75rem; }
 dialog { max-width: 36rem; width: calc(100% - 2rem); max-height: calc(100vh - 4rem); box-sizing: border-box;
