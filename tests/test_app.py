@@ -146,7 +146,18 @@ class TestNothingToSearch(unittest.TestCase):
         for text in ["hello", "thanks!", "asdf qwerty", "rockstar ninja"]:
             r = app.handle({"text": text})
             self.assertTrue(r.get("nothing"), text)
-            self.assertIn("I didn't find anything to search for in “%s”" % text, r["error"])
+            self.assertIn("I didn't find anything I can search for in “%s”" % text, r["error"])
+
+    def test_words_it_cannot_search_by_are_named(self):
+        r = app.handle({"text": "candidates named matin"})
+        self.assertTrue(r.get("nothing"))
+        self.assertIn("I can't use “named matin”", r["error"])
+        self.assertTrue(app.handle({"text": "developers"}).get("nothing"))
+
+    def test_a_name_next_to_a_filter_is_reported_as_ignored(self):
+        r = app.handle({"text": "Java developers named Matin"})
+        self.assertEqual(r["count"], app.handle({"text": "Java developers"})["count"])
+        self.assertIn("the name “Matin” (searching by name is not supported)", r["dropped"])
 
     def test_asking_for_everyone_still_searches(self):
         for text in ["candidates", "all candidates", "everyone", "show me people"]:
@@ -157,7 +168,8 @@ class TestNothingToSearch(unittest.TestCase):
     def test_nothing_cannot_be_planned_or_commanded(self):
         plan = app.plan_action({"action": "shortlist", "job_id": 4, "search": {"text": "hello"}})
         self.assertFalse(plan["valid"])
-        self.assertEqual(app.command_action({"text": "shortlist them", "search": {"text": "hello"}}), {"kind": "search"})
+        command = app.command_action({"text": "shortlist them", "search": {"text": "hello"}})
+        self.assertEqual(command, {"kind": "search"})
 
 
 class TestControls(unittest.TestCase):

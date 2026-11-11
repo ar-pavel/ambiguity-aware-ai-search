@@ -204,17 +204,22 @@ def handle(payload):
     return _run(payload)[0]
 
 
-# Words that ask for everyone on purpose ("all candidates", "everyone"), so no filter is not a mistake.
-EVERYONE = r"\b(all|every(?:one|body)|any(?:one|body)|list)\b"
+# Words that carry no filter: asking for everyone ("show me all candidates") uses only these.
+FILLER = set("""
+show me find get give list search look looking for i we need want see who are is be with and or the a an
+of all any every everyone everybody anyone anybody some please our my candidate candidates people person
+someone profile profiles
+""".split())
 
 
-def _nothing_to_search(reading, text):
-    """True when the request named nothing the search knows: no skill, place, company, role or
-    seniority, and no word asking for everyone. Searching would return every record and call it
-    "nothing was unclear", which is not what "hello" meant."""
+def _unused_words(reading, text):
+    """The words of a request with no filter that the search could not use. Empty when the request only
+    asks for everyone ("all candidates"), so that one still searches everyone."""
     if reading["skills"] or search.describe_parts(reading):
-        return False
-    return not (re.search(interpret.PEOPLE_WORDS, text, re.I) or re.search(EVERYONE, text, re.I))
+        return None   # it named something to search for
+    return [w for w in re.findall(r"[A-Za-z0-9][A-Za-z0-9'+#.-]*", text) if w.lower() not in FILLER] or (
+        None if re.search(interpret.PEOPLE_WORDS, text, re.I) or re.search(r"\bevery(?:one|body)\b", text, re.I)
+        else [text])
 
 
 def _run(payload):
@@ -223,11 +228,19 @@ def _run(payload):
     if not text:
         return {"error": "Type a request, for example: senior Java developers in London"}, []
     reading = interpret.interpret(text)
-    if _nothing_to_search(reading, text):
-        # Reported like an error, so nothing is searched, planned or logged, but worded as a reply.
-        return {"error": "I didn't find anything to search for in “%s”. Name a skill, a place, a company "
-                         "or a role, for example “Java developers in London” or “open jobs at Bluefin”." % text,
+    unused = _unused_words(reading, text)
+    if unused:
+        # Searching would return every record and call it "nothing was unclear", which is not what
+        # "hello" or "candidates named Matin" meant. Reported like an error, so nothing is searched,
+        # planned or logged, but worded as a reply.
+        return {"error": "I didn't find anything I can search for in “%s”: I can't use “%s”. I search by skill, "
+                         "place, company, role or seniority, for example “Java developers in London” or "
+                         "“open jobs at Bluefin”." % (text, " ".join(unused)),
                 "nothing": True, "text": text}, []
+    named = re.search(r"\b(?:named|called)\s+([A-Za-z][A-Za-z'-]*)", text, re.I)
+    if named:  # names are not searched: say so instead of quietly searching without it
+        note = "the name “%s” (searching by name is not supported)" % named.group(1)
+        reading["dropped"] = reading.get("dropped", []) + [note]
     edited = _apply_edits(reading, payload.get("choices") or {}, payload.get("op"))
     reading = interpret.for_target(reading)  # the target may have just been switched
     decision = strategy.decide(reading, theta=_theta(payload.get("theta", strategy.THETA)),
