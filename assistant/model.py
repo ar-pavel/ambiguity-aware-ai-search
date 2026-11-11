@@ -19,7 +19,7 @@ import os
 import urllib.error
 import urllib.request
 
-HERE = os.path.dirname(os.path.abspath(__file__))
+from . import ROOT  # data/, web/, state/, logs/ and .env stay at the project root
 
 # Claude (Anthropic Messages API)
 API_URL = "https://api.anthropic.com/v1/messages"
@@ -95,7 +95,7 @@ SCHEMA = {
 }
 
 
-ENV_FILE = os.path.join(HERE, ".env")
+ENV_FILE = os.path.join(ROOT, ".env")
 
 
 def load_env(path=ENV_FILE):

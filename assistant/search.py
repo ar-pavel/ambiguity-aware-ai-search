@@ -1,6 +1,6 @@
 """Structured search over the synthetic candidates and jobs.
 
-    python3 search.py --selftest
+    python3 -m assistant.search --selftest
 
 A reading is a plain dict (see interpret.py). Every filter is explicit, so the page can say exactly
 why each record is in the list. There are no embeddings: matching is by canonical skill name.
@@ -13,10 +13,12 @@ import json
 import os
 import sys
 
-import store
+from . import (
+    ROOT,  # data/, web/, state/, logs/ and .env stay at the project root
+    store,
+)
 
-HERE = os.path.dirname(os.path.abspath(__file__))
-DATA_DIR = os.path.join(HERE, "data")
+DATA_DIR = os.path.join(ROOT, "data")
 TARGETS = ("candidates", "jobs")
 DATA_FILES = TARGETS + ("companies",)
 

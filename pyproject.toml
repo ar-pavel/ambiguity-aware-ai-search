@@ -8,3 +8,6 @@ extend-exclude = [".claude"]
 [tool.ruff.lint]
 # pycodestyle errors and warnings, pyflakes, import order, likely bugs
 select = ["E", "W", "F", "I", "B"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["assistant"]

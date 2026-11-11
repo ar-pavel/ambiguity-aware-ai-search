@@ -1,7 +1,7 @@
 """Turn a plain-language request into one structured reading plus its ambiguities.
 
-    python3 interpret.py "senior Java developers in London"
-    python3 interpret.py --selftest
+    python3 -m assistant.interpret "senior Java developers in London"
+    python3 -m assistant.interpret --selftest
 
 Two routes, same output shape:
   * rules (default, SIMULATED): a small rule-based stand-in for the language model. It follows the
@@ -18,7 +18,7 @@ import json
 import re
 import sys
 
-import search
+from . import search
 
 CITIES = sorted({c["city"] for c in search.load()}, key=len, reverse=True)
 COUNTRIES = {"uk": "UK", "united kingdom": "UK", "ireland": "Ireland"}
@@ -396,7 +396,7 @@ def from_model(text, judged):
 
 def interpret(text):
     """Use the live model when configured, otherwise the rules. Always returns a valid reading."""
-    import model
+    from . import model
     if model.live():
         judged = model.judge(text)
         try:

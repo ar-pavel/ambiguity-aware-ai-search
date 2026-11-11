@@ -4,9 +4,7 @@ the sentence after an edit, and the "Why?" section.
 Nothing here decides anything or calls a model. Every word is built from the reading the search used
 and the numbers strategy.decide() returned, so the screen cannot claim more than the code did.
 """
-import interpret
-import search
-import strategy
+from . import interpret, search, strategy
 
 NOTICE = {"immediate": "now", "2w": "2 weeks", "1m": "1 month", "3m": "3 months"}
 # The results table for each target: (header, how to show one record's cell).

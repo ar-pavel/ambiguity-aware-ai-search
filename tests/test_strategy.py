@@ -3,8 +3,10 @@ import sys
 import unittest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-import interpret  # noqa: E402
-import strategy  # noqa: E402
+from assistant import (
+    interpret,  # noqa: E402
+    strategy,  # noqa: E402
+)
 
 # The scripted requests and the mode the rule should choose for each (design spec, section 8).
 EXPECTED = {

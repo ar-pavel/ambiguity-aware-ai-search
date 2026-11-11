@@ -7,10 +7,12 @@ import tempfile
 import unittest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-import app  # noqa: E402
-import commands  # noqa: E402
-import search  # noqa: E402
-import store  # noqa: E402
+from assistant import (
+    commands,  # noqa: E402
+    search,  # noqa: E402
+    server,  # noqa: E402
+    store,  # noqa: E402
+)
 
 PEOPLE = {"text": "Java developers"}          # acts: 45 candidates, no question
 JOBS = {"text": "open Java roles"}            # acts: 3 jobs
@@ -83,7 +85,7 @@ class Base(unittest.TestCase):
         self.tmp.cleanup()
 
     def command(self, text, search_payload=PEOPLE):
-        return app.command_action({"text": text, "search": search_payload}, self.tmp.name)
+        return server.command_action({"text": text, "search": search_payload}, self.tmp.name)
 
     def log(self):
         path = os.path.join(self.tmp.name, "events.jsonl")
@@ -127,7 +129,7 @@ class TestJobs(Base):
     def test_options_are_capped_and_the_rest_are_mentioned(self):
         out = self.command("shortlist these for a developer role")
         self.assertEqual(out["kind"], "ask")
-        self.assertEqual(len(out["options"]), app.MAX_OPTIONS)
+        self.assertEqual(len(out["options"]), server.MAX_OPTIONS)
         self.assertIn("'developer' matches 10 open jobs.", out["reason"])
         self.assertIn("other 4", out["reason"])
 
@@ -166,15 +168,15 @@ class TestErrors(Base):
         self.assertEqual(out, {"kind": "error", "error": "This action works on candidates; the search found jobs."})
 
     def test_a_command_while_the_search_is_asking(self):
-        self.assertEqual(app.handle(ASKING)["mode"], "ask")
+        self.assertEqual(server.handle(ASKING)["mode"], "ask")
         out = self.command("shortlist these for Bluefin", ASKING)
-        self.assertEqual(out, {"kind": "error", "error": app.ANSWER_FIRST})
-        self.assertEqual(app.plan_action({"action": "shortlist", "search": ASKING})["error"], app.ANSWER_FIRST)
+        self.assertEqual(out, {"kind": "error", "error": server.ANSWER_FIRST})
+        self.assertEqual(server.plan_action({"action": "shortlist", "search": ASKING})["error"], server.ANSWER_FIRST)
 
     def test_not_a_command_or_no_search_is_a_new_search(self):
         self.assertEqual(self.command("close to London"), {"kind": "search"})
         self.assertEqual(self.command("close these", {}), {"kind": "search"})
-        self.assertEqual(app.command_action({"text": "close these"}), {"kind": "search"})
+        self.assertEqual(server.command_action({"text": "close these"}), {"kind": "search"})
         self.assertEqual(self.log(), [])  # a new search is logged by /api/search, not here
 
 
@@ -184,24 +186,24 @@ class TestEndToEnd(Base):
         out = self.command("add them to the Java shortlist at Bluefin")
         self.assertEqual(store.read(), before)
         self.assertFalse(os.path.exists(store.PATH))
-        plan = app.plan_action({"action": out["action"], "job_id": out["job_id"], "search": PEOPLE})
+        plan = server.plan_action({"action": out["action"], "job_id": out["job_id"], "search": PEOPLE})
         self.assertTrue(plan["valid"])
         self.assertEqual(plan["job"], "Senior Backend Engineer at Bluefin Analytics (London)")
-        self.assertEqual(len(plan["changes"]), app.handle(PEOPLE)["count"])
+        self.assertEqual(len(plan["changes"]), server.handle(PEOPLE)["count"])
         self.assertFalse(os.path.exists(store.PATH))
 
     def test_close_command_then_plan(self):
         out = self.command("close them all", JOBS)
         self.assertEqual(out, {"kind": "plan", "action": "close", "job_id": None,
                                "reason": "You asked to close the 3 jobs on screen."})
-        plan = app.plan_action({"action": out["action"], "job_id": out["job_id"], "search": JOBS})
+        plan = server.plan_action({"action": out["action"], "job_id": out["job_id"], "search": JOBS})
         self.assertTrue(plan["valid"])
         self.assertFalse(os.path.exists(store.PATH))
 
     def test_an_asked_option_plans_too(self):
         out = self.command("shortlist them for the Java role")
         for option in out["options"]:
-            plan = app.plan_action({"action": "shortlist", "job_id": option["job_id"], "search": PEOPLE})
+            plan = server.plan_action({"action": "shortlist", "job_id": option["job_id"], "search": PEOPLE})
             with self.subTest(job=option["label"]):
                 self.assertTrue(plan["valid"])
                 self.assertEqual(plan["job"], option["label"])
@@ -215,7 +217,7 @@ class TestEndToEnd(Base):
                          [("command", "plan", "shortlist", 4), ("command", "error", "close", None)])
 
     def test_the_route_is_served(self):
-        self.assertIs(app.Handler.ROUTES["/api/command"], app.command_action)
+        self.assertIs(server.Handler.ROUTES["/api/command"], server.command_action)
 
 
 if __name__ == "__main__":

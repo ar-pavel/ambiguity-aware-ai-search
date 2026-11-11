@@ -1,6 +1,6 @@
 """Choose whether to act, show the reading, or ask one question, and say why.
 
-    python3 strategy.py "senior Java developers in London"
+    python3 -m assistant.strategy "senior Java developers in London"
 
 The rule is a hand-set design choice (Horvitz 1999: thresholds "can be directly assessed by
 designers"), not a learned policy. For each ambiguity it compares the shortlists the first two
@@ -13,8 +13,7 @@ readings would give:
 import json
 import sys
 
-import interpret
-import search
+from . import interpret, search
 
 # Below this overlap, two readings give clearly different shortlists, so a wrong guess is costly
 # enough to ask. 0.5 = the two lists share fewer than half of their candidates.

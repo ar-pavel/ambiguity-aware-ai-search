@@ -2,6 +2,7 @@
 
     python3 app.py            # then open http://127.0.0.1:8770 (Ctrl+C to stop)
     python3 app.py --port 8771
+    python3 -m assistant.server   # the same, run as a module
 
 Standard library only. Each route is a plain function, so it can be tested without a server:
     /api/search   handle()          read the request, choose act / show / ask, search
@@ -16,17 +17,19 @@ import os
 import sys
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
-import actions
-import commands
-import interpret
-import log
-import replies
-import search
-import store
-import strategy
+from . import (
+    ROOT,  # data/, web/, state/, logs/ and .env stay at the project root
+    actions,
+    commands,
+    interpret,
+    log,
+    replies,
+    search,
+    store,
+    strategy,
+)
 
-HERE = os.path.dirname(os.path.abspath(__file__))
-WEB = os.path.join(HERE, "web")
+WEB = os.path.join(ROOT, "web")
 TYPES = {".html": "text/html", ".js": "text/javascript", ".css": "text/css"}
 
 
@@ -287,7 +290,16 @@ class Handler(BaseHTTPRequestHandler):
         pass
 
 
-if __name__ == "__main__":
-    port = int(sys.argv[sys.argv.index("--port") + 1]) if "--port" in sys.argv else 8770
+def main(argv=None):
+    """Serve on 127.0.0.1 only; --port N to change the port (default 8770)."""
+    argv = sys.argv[1:] if argv is None else argv
+    port = int(argv[argv.index("--port") + 1]) if "--port" in argv else 8770
     print("Open http://127.0.0.1:%d  (Ctrl+C to stop)" % port)
-    ThreadingHTTPServer(("127.0.0.1", port), Handler).serve_forever()
+    try:
+        ThreadingHTTPServer(("127.0.0.1", port), Handler).serve_forever()
+    except KeyboardInterrupt:
+        print("\nStopped.")
+
+
+if __name__ == "__main__":
+    main()
