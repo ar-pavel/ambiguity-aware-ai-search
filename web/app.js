@@ -237,6 +237,10 @@ const withoutHint = (reason, hint) => (hint && reason.endsWith(" " + hint) ? rea
 // After a write or undo, the turn leads with that result, and the mode line steps back.
 function modeLine(data, isLive) {
   const p = el("p", { class: "mode-line" + (data._changed ? " quiet" : "") });
+  // The assistant is signed with the three-mode mark, not a face: it should not look like a person.
+  const mark = el("span", { class: "mark small", "aria-hidden": "true" });
+  mark.append(el("i"), el("i"), el("i"));
+  p.append(mark);
   if (data._changed) {   // the search's own reason is under Why?
     p.append(el("span", { class: "reason" }, "Results for “" + data.text + "” with that change applied."));
   } else {
@@ -283,7 +287,10 @@ function questionCard(q) {
   card.append(el("legend", { class: "question-text" }, q.text));
   const options = el("div", { class: "options" });
   q.options.forEach((opt, i) => {
-    const b = el("button", { type: "button", class: "option" }, capital(opt.label) + " → " + results(opt.count, opt.noun));
+    // A keycap per option: pressing its number answers (see the keydown handler below).
+    const b = el("button", { type: "button", class: "option", "aria-keyshortcuts": String(i + 1) });
+    b.append(el("kbd", { class: "key", "aria-hidden": "true" }, String(i + 1)),
+             el("span", {}, capital(opt.label) + " → " + results(opt.count, opt.noun)));
     b.addEventListener("click", () => act(capital(opt.label), () => {
       state.choices[q.slot] = i; state.answered = q.slot;
       state.last = { slot: q.slot, answered: true }; state.focus = q.slot;
@@ -294,6 +301,9 @@ function questionCard(q) {
   const anyway = el("button", { type: "button", class: "link" }, "Search anyway with my best guess (" + best + ")");
   anyway.addEventListener("click", () => act("Search anyway (" + best + ")", () => { state.mode = "show"; state.last = { anyway: true }; }));
   card.append(options, anyway);
+  if (q.options.length <= 9) {
+    card.append(el("p", { class: "key-hint" }, "Press 1–" + q.options.length + " to answer."));
+  }
   return card;
 }
 
@@ -546,6 +556,14 @@ function send(text) {
   $("request").value = "";
   runSearch(prev);
 }
+
+// Number keys answer the live question, unless the recruiter is typing or the dialog is open.
+document.addEventListener("keydown", (e) => {
+  if (!/^[1-9]$/.test(e.key) || e.ctrlKey || e.metaKey || e.altKey || state.busy || $("confirm").open) return;
+  if (e.target.closest && e.target.closest("input, textarea, select, [contenteditable]")) return;
+  const option = document.querySelectorAll("#chat .turn.live fieldset.question button.option")[Number(e.key) - 1];
+  if (option) { e.preventDefault(); option.click(); }
+});
 
 $("ask-form").addEventListener("submit", (e) => { e.preventDefault(); send($("request").value); });
 document.querySelectorAll(".suggestion").forEach((b) => b.addEventListener("click", () => send(b.textContent)));
