@@ -276,14 +276,14 @@ function questionCard(q) {
   q.options.forEach((opt, i) => {
     const b = el("button", { type: "button", class: "option" }, capital(opt.label) + " → " + results(opt.count, opt.noun));
     b.addEventListener("click", () => act(capital(opt.label), () => {
-      state.choices[q.slot] = i; state.mode = "show"; state.answered = q.slot;
+      state.choices[q.slot] = i; state.answered = q.slot;
       state.last = { slot: q.slot, answered: true }; state.focus = q.slot;
     }));
     options.append(b);
   });
   const best = q.options[q.default].label;
   const anyway = el("button", { type: "button", class: "link" }, "Search anyway with my best guess (" + best + ")");
-  anyway.addEventListener("click", () => act("Search anyway (" + best + ")", () => { state.mode = "show"; }));
+  anyway.addEventListener("click", () => act("Search anyway (" + best + ")", () => { state.mode = "show"; state.last = { anyway: true }; }));
   card.append(options, anyway);
   return card;
 }
@@ -317,7 +317,7 @@ function chipFor(chip) {
                              title: chip.evidence, "aria-label": chip.value + " ⇄ " + other + (chip.guessed ? " (guessed)" : "") + ": skills joined by " + chip.value + "; press to switch to " + other + "." },
                  chip.value + " ⇄ " + other + (chip.guessed ? " (guessed)" : ""));
     b.addEventListener("click", () => act("Switch " + chip.value + " to " + other, () => {
-      state.op = other; state.mode = "show"; state.last = { op: true }; state.focus = "op";
+      state.op = other; state.last = { op: true }; state.focus = "op";
     }));
     return b;
   }
@@ -333,7 +333,7 @@ function chipFor(chip) {
   select.addEventListener("change", () => {
     const i = Number(select.value);
     act("Change to: " + chip.options[i], () => {
-      state.choices[chip.slot] = i; state.mode = "show"; state.last = { slot: chip.slot }; state.focus = chip.slot;
+      state.choices[chip.slot] = i; state.last = { slot: chip.slot }; state.focus = chip.slot;
     });
   });
   wrap.append(select, el("span", { class: "caret", "aria-hidden": "true" }, "▾"));

@@ -117,6 +117,28 @@ class TestAskMode(unittest.TestCase):
         self.assertIsInstance(r["question"], dict)
 
 
+class TestHonestNotes(unittest.TestCase):
+    """Why? must never blame the strategy setting for something the recruiter did."""
+
+    def test_answering_with_auto_mentions_no_setting(self):
+        r = app.handle({"text": "senior Java developers", "mode": "auto", "choices": {"seniority": 1},
+                        "last": {"slot": "seniority", "answered": True}})
+        self.assertEqual(r["mode"], "show")
+        self.assertFalse(any("strategy setting" in n for n in r["why"]["notes"]))
+
+    def test_search_anyway_is_the_recruiters_choice(self):
+        r = app.handle({"text": "senior Java developers", "mode": "show", "last": {"anyway": True}})
+        self.assertEqual(r["mode"], "show")
+        self.assertIn("You chose to search without answering; the rule would have asked first.", r["why"]["notes"])
+        self.assertFalse(any("strategy setting" in n for n in r["why"]["notes"]))
+        self.assertTrue(r["reason"].startswith("Searched with my best guess, as you asked."))
+        self.assertTrue(r["reason"].endswith(" " + r["hint"]))
+
+    def test_a_real_setting_is_still_reported(self):
+        r = app.handle({"text": "senior Java developers", "mode": "show"})
+        self.assertTrue(any("strategy setting chose show" in n for n in r["why"]["notes"]))
+
+
 class TestControls(unittest.TestCase):
     def test_every_strategy_can_be_forced_for_comparison(self):
         for mode in ("act", "show", "ask"):
