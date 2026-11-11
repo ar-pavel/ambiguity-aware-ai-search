@@ -4,13 +4,7 @@ import sys
 import unittest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from assistant import (
-    interpret,  # noqa: E402
-    replies,  # noqa: E402
-    search,  # noqa: E402
-    server,  # noqa: E402
-    strategy,  # noqa: E402
-)
+from assistant import interpret, replies, search, server, strategy  # noqa: E402
 
 JOBS = search.load("jobs")
 

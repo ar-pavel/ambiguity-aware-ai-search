@@ -354,7 +354,8 @@ def from_model(text, judged):
             location = {"value": place, "scope": scope}
     company = judged.get("company")
     if company:
-        known = next((n for n in COMPANIES if n.lower() == company.lower()), None)
+        # Full name or its first word ("Bluefin"), as the stand-in accepts; first words are unique in the data.
+        known = next((n for n in COMPANIES if company.lower() in (n.lower(), n.split()[0].lower())), None)
         if known is None or not (_written(known, text) or _written(known.split()[0], text)):
             dropped.append("company '%s' (not in your request or not in the data)" % company)
             known = None

@@ -7,12 +7,7 @@ import tempfile
 import unittest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from assistant import (
-    commands,  # noqa: E402
-    search,  # noqa: E402
-    server,  # noqa: E402
-    store,  # noqa: E402
-)
+from assistant import commands, search, server, store  # noqa: E402
 
 PEOPLE = {"text": "Java developers"}          # acts: 45 candidates, no question
 JOBS = {"text": "open Java roles"}            # acts: 3 jobs
