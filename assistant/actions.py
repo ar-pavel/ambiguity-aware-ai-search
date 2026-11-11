@@ -15,8 +15,7 @@ The records always come from the server's own search, never from a list of ids s
 import hashlib
 import json
 
-import search
-import store
+from . import search, store
 
 ACTIONS = {"close": "jobs", "shortlist": "candidates"}  # the target each action works on
 

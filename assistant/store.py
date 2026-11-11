@@ -13,8 +13,9 @@ import json
 import os
 import threading
 
-HERE = os.path.dirname(os.path.abspath(__file__))
-PATH = os.environ.get("A2_STATE") or os.path.join(HERE, "state", "state.json")
+from . import ROOT  # data/, web/, state/, logs/ and .env stay at the project root
+
+PATH = os.environ.get("A2_STATE") or os.path.join(ROOT, "state", "state.json")
 LOCK = threading.RLock()  # the server answers requests on several threads
 EMPTY = {"job_status": {}, "shortlists": {}, "undo": []}
 UNDO_LIMIT = 20

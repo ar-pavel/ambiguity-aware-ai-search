@@ -4,11 +4,13 @@ import sys
 import unittest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-import app  # noqa: E402
-import interpret  # noqa: E402
-import replies  # noqa: E402
-import search  # noqa: E402
-import strategy  # noqa: E402
+from assistant import (
+    interpret,  # noqa: E402
+    replies,  # noqa: E402
+    search,  # noqa: E402
+    server,  # noqa: E402
+    strategy,  # noqa: E402
+)
 
 JOBS = search.load("jobs")
 
@@ -66,7 +68,7 @@ class TestJobSearch(unittest.TestCase):
         self.assertNotIn("availability", [a["slot"] for a in r["ambiguities"]])
 
     def test_page_gets_a_jobs_table_and_scope(self):
-        r = app.handle({"text": "open Python jobs"})
+        r = server.handle({"text": "open Python jobs"})
         self.assertEqual((r["target"], r["noun"]), ("jobs", "job"))
         self.assertEqual(r["table"]["headers"][:2], ["Job", "Company"])
         self.assertEqual(len(r["table"]["rows"]), r["count"])
@@ -78,13 +80,13 @@ class TestNothingChangesSilently(unittest.TestCase):
     """Review of #30: switching the target, or mixed wording, must not hide a change."""
 
     def test_switching_to_jobs_lists_availability_as_ignored(self):
-        r = app.handle({"text": "React developers at Bluefin available now", "choices": {"target": 1}})
+        r = server.handle({"text": "React developers at Bluefin available now", "choices": {"target": 1}})
         self.assertEqual(r["target"], "jobs")
         self.assertEqual(r["dropped"], ["availability (jobs have no notice period)"])
         self.assertNotIn("availability", [c.get("slot") for c in r["chips"]])
 
     def test_switching_to_jobs_keeps_open(self):
-        r = app.handle({"text": "open Java developers at Bluefin", "choices": {"target": 1}})
+        r = server.handle({"text": "open Java developers at Bluefin", "choices": {"target": 1}})
         self.assertEqual(r["read_as"].split(" · ")[0], "open jobs")
         status = r["table"]["headers"].index("Status")
         self.assertTrue(all(row[status] == "open" for row in r["table"]["rows"]))
@@ -92,14 +94,14 @@ class TestNothingChangesSilently(unittest.TestCase):
     def test_people_and_job_words_search_people_with_a_chip(self):
         for text in ("candidates for the Python role at Moorgate", "people who held lead roles in Python"):
             with self.subTest(text=text):
-                r = app.handle({"text": text})
+                r = server.handle({"text": text})
                 self.assertEqual(r["target"], "candidates")
                 self.assertNotEqual(r["mode"], "act")
                 chip = next(c for c in r["chips"] if c.get("slot") == "target")
                 self.assertIn("jobs", " ".join(chip["options"]))
 
     def test_reason_quotes_the_word_the_user_wrote(self):
-        r = app.handle({"text": "people who held lead roles in Python"})
+        r = server.handle({"text": "people who held lead roles in Python"})
         self.assertIn("'lead'", r["reason"])
         self.assertNotIn("'senior'", r["reason"])
 
@@ -114,7 +116,7 @@ class TestCompany(unittest.TestCase):
         self.assertTrue(all(c["company"] == "Ironbridge Bank" for c in found))
 
     def test_answering_the_question_switches_the_table(self):
-        r = app.handle({"text": "Java developers at Bluefin", "choices": {"target": 1}})
+        r = server.handle({"text": "Java developers at Bluefin", "choices": {"target": 1}})
         self.assertEqual((r["mode"], r["target"], r["count"]), ("show", "jobs", 1))
         self.assertIn("jobs at Bluefin Analytics", [o for c in r["chips"] for o in c.get("options", [])])
 

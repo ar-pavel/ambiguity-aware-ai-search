@@ -9,8 +9,9 @@ import datetime
 import json
 import os
 
-HERE = os.path.dirname(os.path.abspath(__file__))
-LOG_DIR = os.path.join(HERE, "logs")
+from . import ROOT  # data/, web/, state/, logs/ and .env stay at the project root
+
+LOG_DIR = os.path.join(ROOT, "logs")
 
 
 def enabled():

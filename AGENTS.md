@@ -17,20 +17,24 @@ cp .env.example .env      # live mode: set A2_MODEL=claude or openai, and that p
 ```
 
 ## Code map
+`app.py` starts the server; the code is in the `assistant/` package. Files the app reads or writes
+(`data/`, `web/`, `state/`, `logs/`, `.env`) stay at the project root.
+
 | File | Job |
 |---|---|
-| `app.py` | HTTP server and the request handlers (`/api/search`, `plan`, `apply`, `undo`, `command`) |
-| `replies.py` | what the page shows: table, chips, the one question, the sentence after an edit, Why? |
-| `interpret.py` | rule-based stand-in, and the checks on a live model's reply |
-| `model.py` | the live Claude or OpenAI call |
-| `strategy.py` | the act / show / ask rule and its reason |
-| `search.py` | filters, and the "Read as" line built from them |
-| `commands.py` | typed follow-ups ("shortlist them for the Java role") |
-| `actions.py` | plan, apply and undo a write; the skills-fit warning |
-| `store.py` | the only module that writes (`state/state.json`) |
-| `log.py` | one line per turn for evaluation (`logs/events.jsonl`) |
+| `assistant/server.py` | HTTP server and the request handlers (`/api/search`, `plan`, `apply`, `undo`, `command`) |
+| `assistant/replies.py` | what the page shows: table, chips, the one question, the sentence after an edit, Why? |
+| `assistant/interpret.py` | rule-based stand-in, the checks on a live model's reply, and what cannot be searched |
+| `assistant/model.py` | the live Claude or OpenAI call |
+| `assistant/strategy.py` | the act / show / ask rule and its reason (`python3 -m assistant.strategy "<request>"`) |
+| `assistant/search.py` | filters, and the "Read as" line built from them |
+| `assistant/commands.py` | typed follow-ups ("shortlist them for the Java role") |
+| `assistant/actions.py` | plan, apply and undo a write; the skills-fit warning |
+| `assistant/store.py` | the only module that writes (`state/state.json`) |
+| `assistant/log.py` | one line per turn for evaluation (`logs/events.jsonl`) |
 | `web/` | the chat page: `index.html`, `app.js`, `style.css` |
 | `data/generate.py` | builds the synthetic data from a fixed seed |
+| `tests/` | one test file per module, run by `run_tests.py` |
 
 ## Conventions
 - One interpretation object drives the chips, the question, the "Read as" line and the search.

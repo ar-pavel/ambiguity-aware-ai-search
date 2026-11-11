@@ -10,7 +10,7 @@ The scripted requests are the fixed examples used for testing now and as evaluat
 Add one when a new kind of ambiguity is supported, or when a real phrasing gives a surprising mode.
 
 ## Steps
-1. Run `python3 strategy.py "<the request>"` and read the mode, the reason and the comparisons.
+1. Run `python3 -m assistant.strategy "<the request>"` and read the mode, the reason and the comparisons.
 2. Decide the mode the rule *should* choose, using the detection rules in the design:
    - capital AND/OR is stated; a lower-case 'and', 'with' or 'or' is dominant evidence;
    - 'senior' or 'lead' without a number is open between years and title;

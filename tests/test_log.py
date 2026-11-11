@@ -5,8 +5,10 @@ import tempfile
 import unittest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-import app  # noqa: E402
-import log  # noqa: E402
+from assistant import (
+    log,  # noqa: E402
+    server,  # noqa: E402
+)
 
 
 class TestLog(unittest.TestCase):
@@ -23,9 +25,9 @@ class TestLog(unittest.TestCase):
 
     def test_one_line_per_turn_with_the_strategy_and_outcome(self):
         payload = {"text": "senior Java developers"}
-        log.write(payload, app.handle(payload), self.tmp.name)
+        log.write(payload, server.handle(payload), self.tmp.name)
         edit = {"text": "senior Java developers", "choices": {"seniority": 1}, "mode": "show"}
-        log.write(edit, app.handle(edit), self.tmp.name)
+        log.write(edit, server.handle(edit), self.tmp.name)
         first, second = self.lines()
         self.assertEqual((first["event"], first["mode"], first["asked"]), ("search", "ask", "seniority"))
         self.assertEqual(first["ambiguities"], ["seniority"])
@@ -34,12 +36,12 @@ class TestLog(unittest.TestCase):
         self.assertEqual(second["target"], "candidates")
 
     def test_errors_are_not_logged(self):
-        self.assertIsNone(log.write({"text": ""}, app.handle({"text": ""}), self.tmp.name))
+        self.assertIsNone(log.write({"text": ""}, server.handle({"text": ""}), self.tmp.name))
 
     def test_logging_can_be_turned_off(self):
         os.environ["A2_LOG"] = "off"
         payload = {"text": "Java developers"}
-        self.assertIsNone(log.write(payload, app.handle(payload), self.tmp.name))
+        self.assertIsNone(log.write(payload, server.handle(payload), self.tmp.name))
         self.assertFalse(os.path.exists(os.path.join(self.tmp.name, "events.jsonl")))
 
 

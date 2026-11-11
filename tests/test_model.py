@@ -5,8 +5,10 @@ import sys
 import unittest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-import interpret  # noqa: E402
-import model  # noqa: E402
+from assistant import (
+    interpret,  # noqa: E402
+    model,  # noqa: E402
+)
 
 SENIOR = {"target": "candidates", "company": None, "status": None, "skills": ["Java"], "skills_op": "AND",
           "location": {"value": "London", "scope": "city"},

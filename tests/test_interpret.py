@@ -3,7 +3,7 @@ import sys
 import unittest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-import interpret  # noqa: E402
+from assistant import interpret  # noqa: E402
 
 read = interpret.interpret_rules
 
