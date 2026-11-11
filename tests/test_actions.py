@@ -121,6 +121,35 @@ class TestShortlist(Base):
         self.assertTrue(done.startswith("Took the ") and "off the shortlist for " in done, done)
 
 
+class TestFit(Base):
+    """The dialog warns when shortlisted people don't have the job's skills; it never blocks."""
+
+    def test_mismatch_is_warned_but_still_valid(self):
+        plan = app.plan_action({"action": "shortlist", "job_id": 11, "search": {"text": "Java developers in London"}})
+        self.assertTrue(plan["valid"])
+        self.assertEqual(plan["misfits"], len(plan["changes"]))
+        self.assertEqual(plan["warning"], "None of them list any of this job's skills (SAP SD). Shortlist them anyway?")
+        self.assertFalse(any(c["fits"] for c in plan["changes"]))
+
+    def test_partial_fit_counts_only_the_misfits(self):
+        plan = app.plan_action({"action": "shortlist", "job_id": 4, "search": {"text": "Java or Python people in London"}})
+        fits = [c["fits"] for c in plan["changes"]]
+        self.assertTrue(any(fits) and not all(fits))
+        self.assertEqual(plan["misfits"], fits.count(False))
+        self.assertTrue(plan["warning"].startswith("%d of these %d don't list" % (fits.count(False), len(fits))))
+
+    def test_a_good_fit_has_no_warning(self):
+        plan = app.plan_action({"action": "shortlist", "job_id": 4, "search": {"text": "Java developers in London"}})
+        self.assertNotIn("warning", plan)
+        self.assertTrue(all(c["fits"] for c in plan["changes"]))
+
+    def test_the_warning_does_not_change_the_fingerprint(self):
+        plan = app.plan_action({"action": "shortlist", "job_id": 11, "search": {"text": "Java developers in London"}})
+        out = app.apply_action({"action": "shortlist", "job_id": 11, "fingerprint": plan["fingerprint"],
+                                "search": {"text": "Java developers in London"}}, self.tmp.name)
+        self.assertTrue(out["ok"])
+
+
 class TestLog(Base):
     def test_every_write_and_undo_is_logged(self):
         self.confirm(CLOSE)

@@ -36,6 +36,23 @@ def _fingerprint(action, job_id, changes, skipped):
     return hashlib.sha256(json.dumps(key).encode("utf-8")).hexdigest()[:16]
 
 
+def _fit(changes, job, by_id):
+    """Advice, not a rule: which candidates list none of the job's skills. Marks each change with
+    "fits" and adds a warning to show before confirming. It never blocks the write, and it is not part
+    of the fingerprint, which describes the records, not the advice about them."""
+    wanted = {s.lower() for s in job["skills"]}
+    misfits = 0
+    for c in changes:
+        c["fits"] = bool(wanted & {s.lower() for s in by_id[c["id"]]["skills"]})
+        misfits += not c["fits"]
+    if not misfits:
+        return {}
+    n = len(changes)
+    lead = "None of them list" if misfits == n else "%d of these %d don't list" % (misfits, n)
+    return {"warning": "%s any of this job's skills (%s). Shortlist them anyway?" % (lead, ", ".join(job["skills"])),
+            "misfits": misfits}
+
+
 def plan(action, records, target, job_id=None):
     """What the action would do to these records. Writes nothing."""
     if action not in ACTIONS:
@@ -74,6 +91,7 @@ def plan(action, records, target, job_id=None):
             return out
         out["job"] = _job_label(job)
         out["summary"] = "Add %d candidate%s to the shortlist for %s." % (n, "" if n == 1 else "s", _job_label(job))
+        out.update(_fit(changes, job, {c["id"]: c for c in records}))
         out["confirm_label"] = "Shortlist %d candidate%s" % (n, "" if n == 1 else "s")
     out.update(changes=changes, skipped=skipped, valid=bool(changes),
                fingerprint=_fingerprint(action, job_id, changes, skipped))

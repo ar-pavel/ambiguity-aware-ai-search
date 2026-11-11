@@ -440,7 +440,16 @@ function fillPlan(plan) {
   d.querySelector(".confirm-summary").textContent = plan.summary || "";
   const list = d.querySelector(".confirm-changes");
   list.innerHTML = "";
-  (plan.changes || []).forEach((c) => list.append(el("li", {}, c.label + (c.before ? "  (" + c.before + " → " + c.after + ")" : ""))));
+  // Advice, not a block: say who doesn't list the job's skills, and mark them in the list.
+  const warn = d.querySelector(".confirm-warning");
+  warn.textContent = plan.warning ? "⚠ " + plan.warning : "";
+  warn.hidden = !plan.warning;
+  // Those who don't fit come first, where they will be seen.
+  [...(plan.changes || [])].sort((x, y) => (x.fits === false ? 0 : 1) - (y.fits === false ? 0 : 1)).forEach((c) => {
+    const item = el("li", c.fits === false ? { class: "misfit" } : {}, c.label + (c.before ? "  (" + c.before + " → " + c.after + ")" : ""));
+    if (c.fits === false) item.append(el("span", { class: "misfit-tag" }, " · no matching skills"));
+    list.append(item);
+  });
   const skipped = d.querySelector(".confirm-skipped");
   skipped.querySelector("ul").innerHTML = "";
   (plan.skipped || []).forEach((s) => skipped.querySelector("ul").append(el("li", {}, s.label + ": " + s.why)));
