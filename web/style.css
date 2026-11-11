@@ -1,11 +1,13 @@
 /* Plain and readable; clarity of the interaction matters, not polish. */
 :root { --ink: #1f2933; --muted: #616e7c; --line: #d9e2ec; --act: #2f6f4e; --show: #2d6ca2; --ask: #a0522d; }
-body { margin: 0; font: 16px/1.5 system-ui, sans-serif; color: var(--ink); background: #fff; }
-main { max-width: 960px; margin: 2rem auto; padding: 0 1rem; }
+body { margin: 0; font: 16px/1.5 system-ui, sans-serif; color: var(--ink); background: #fff;
+       display: flex; flex-direction: column; min-height: 100vh; }
+main { flex: 1; width: 100%; max-width: 960px; box-sizing: border-box; margin: 2rem auto; padding: 0 1rem; }
 h1 { margin: 0 0 .25rem; font-size: 1.5rem; }
 .hint { margin: 0 0 1rem; color: var(--muted); }
-form { display: flex; gap: .5rem; margin-bottom: 1rem; }
-input { flex: 1; padding: .6rem .75rem; font: inherit; border: 1px solid var(--line); border-radius: 6px; }
+#ask-form { display: flex; gap: .5rem; margin-bottom: 1rem; }
+#ask-form input { flex: 1; }
+input { padding: .6rem .75rem; font: inherit; border: 1px solid var(--line); border-radius: 6px; }
 button { padding: .6rem 1rem; font: inherit; border: 1px solid var(--ink); border-radius: 6px; background: var(--ink); color: #fff; cursor: pointer; }
 button:focus-visible, input:focus-visible { outline: 3px solid #f0b429; outline-offset: 2px; }
 #mode-line { padding: .5rem .75rem; border-left: 4px solid var(--line); background: #f5f7fa; margin-bottom: .75rem; }
@@ -52,7 +54,8 @@ button.option:focus-visible { outline: 3px solid #f0b429; outline-offset: 2px; }
 button.secondary { background: #fff; color: var(--ink); }
 button:disabled { opacity: .5; cursor: not-allowed; }
 #notice { padding: .4rem .75rem; border-left: 4px solid var(--act); background: #eef6f1; margin: 0 0 .75rem; }
-dialog { max-width: 36rem; width: calc(100% - 2rem); border: 1px solid var(--line); border-radius: 8px; padding: 1.25rem; }
+dialog { max-width: 36rem; width: calc(100% - 2rem); max-height: calc(100vh - 4rem); box-sizing: border-box;
+         overflow: auto; border: 1px solid var(--line); border-radius: 8px; padding: 1.25rem; }
 dialog::backdrop { background: rgba(31, 41, 51, .45); }
 dialog h2 { margin: 0 0 .5rem; font-size: 1.15rem; }
 .confirm-read-as { margin: 0 0 .5rem; color: var(--muted); }
@@ -62,7 +65,8 @@ dialog h2 { margin: 0 0 .5rem; font-size: 1.15rem; }
 .confirm-error { color: #b42318; margin: .25rem 0; }
 .confirm-buttons { display: flex; justify-content: flex-end; gap: .5rem; }
 .confirm-undo { margin: .5rem 0 0; font-size: .875rem; color: var(--muted); text-align: right; }
-#job-pick select { font: inherit; max-width: 100%; }
+#job-pick { display: block; margin: .5rem 0; font-weight: 600; }
+#job-pick select { display: block; width: 100%; margin-top: .25rem; padding: .4rem; font: inherit; font-weight: normal; }
 
 /* Why? The rule's numbers, collapsed by default. */
 #why { margin: -.25rem 0 .75rem; font-size: .9rem; }
@@ -84,7 +88,9 @@ fieldset.question:focus { outline: 3px solid #f0b429; outline-offset: 2px; }
 legend.question-text { padding: 0 .25rem; }
 .ignored { margin: .25rem 0; font-size: .9rem; color: var(--ask); font-weight: 600; }
 .scope { margin: .25rem 0 .5rem; }
-details.study { margin-top: 2rem; font-size: .875rem; color: var(--muted); }
-details.study summary { cursor: pointer; width: max-content; }
+/* Study settings: a small footer in the bottom-right corner, out of the task path. */
+footer.study-footer { display: flex; justify-content: flex-end; padding: .5rem 1rem 1rem; }
+details.study { font-size: .875rem; color: var(--muted); text-align: right; }
+details.study summary { cursor: pointer; width: max-content; margin-left: auto; }
 details.study summary:focus-visible { outline: 3px solid #f0b429; outline-offset: 2px; }
-details.study .controls { margin: .5rem 0 0; }
+details.study .controls { justify-content: flex-end; margin: .5rem 0 0; }
