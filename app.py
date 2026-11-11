@@ -8,6 +8,7 @@ can be tested without a server.
 """
 import json
 import os
+import re
 import sys
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
@@ -203,12 +204,30 @@ def handle(payload):
     return _run(payload)[0]
 
 
+# Words that ask for everyone on purpose ("all candidates", "everyone"), so no filter is not a mistake.
+EVERYONE = r"\b(all|every(?:one|body)|any(?:one|body)|list)\b"
+
+
+def _nothing_to_search(reading, text):
+    """True when the request named nothing the search knows: no skill, place, company, role or
+    seniority, and no word asking for everyone. Searching would return every record and call it
+    "nothing was unclear", which is not what "hello" meant."""
+    if reading["skills"] or search.describe_parts(reading):
+        return False
+    return not (re.search(interpret.PEOPLE_WORDS, text, re.I) or re.search(EVERYONE, text, re.I))
+
+
 def _run(payload):
     """handle(), plus the records themselves (the write actions work on exactly these)."""
     text = (payload.get("text") or "").strip()
     if not text:
         return {"error": "Type a request, for example: senior Java developers in London"}, []
     reading = interpret.interpret(text)
+    if _nothing_to_search(reading, text):
+        # Reported like an error, so nothing is searched, planned or logged, but worded as a reply.
+        return {"error": "I didn't find anything to search for in “%s”. Name a skill, a place, a company "
+                         "or a role, for example “Java developers in London” or “open jobs at Bluefin”." % text,
+                "nothing": True, "text": text}, []
     edited = _apply_edits(reading, payload.get("choices") or {}, payload.get("op"))
     reading = interpret.for_target(reading)  # the target may have just been switched
     decision = strategy.decide(reading, theta=_theta(payload.get("theta", strategy.THETA)),

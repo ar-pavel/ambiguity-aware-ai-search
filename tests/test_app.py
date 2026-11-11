@@ -139,6 +139,27 @@ class TestHonestNotes(unittest.TestCase):
         self.assertTrue(any("strategy setting chose show" in n for n in r["why"]["notes"]))
 
 
+class TestNothingToSearch(unittest.TestCase):
+    """A request that names nothing is not a search of everyone."""
+
+    def test_greeting_or_noise_is_not_searched(self):
+        for text in ["hello", "thanks!", "asdf qwerty", "rockstar ninja"]:
+            r = app.handle({"text": text})
+            self.assertTrue(r.get("nothing"), text)
+            self.assertIn("I didn't find anything to search for in “%s”" % text, r["error"])
+
+    def test_asking_for_everyone_still_searches(self):
+        for text in ["candidates", "all candidates", "everyone", "show me people"]:
+            self.assertEqual(app.handle({"text": text})["count"], 200, text)
+        self.assertEqual(app.handle({"text": "jobs"})["count"], 30)
+        self.assertEqual(app.handle({"text": "Java"})["mode"], "act")
+
+    def test_nothing_cannot_be_planned_or_commanded(self):
+        plan = app.plan_action({"action": "shortlist", "job_id": 4, "search": {"text": "hello"}})
+        self.assertFalse(plan["valid"])
+        self.assertEqual(app.command_action({"text": "shortlist them", "search": {"text": "hello"}}), {"kind": "search"})
+
+
 class TestControls(unittest.TestCase):
     def test_every_strategy_can_be_forced_for_comparison(self):
         for mode in ("act", "show", "ask"):

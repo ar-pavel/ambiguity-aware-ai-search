@@ -104,9 +104,9 @@ async function runSearch(prev) {
     if (thinking) { thinking.remove(); thinking = null; }
   }
   try {
-    if (data.error && live()) {
-      if (prev) Object.assign(state, prev);
-      addError(data.error);
+    if (data.error && (live() || data.nothing)) {
+      if (prev) Object.assign(state, prev);   // the search on screen, if any, stays the one actions use
+      addError(data.error, data.nothing);
     } else {
       addAssistant(data);
     }
@@ -118,10 +118,11 @@ async function runSearch(prev) {
 }
 
 // A failed reply is reported under the live turn, which stays live so the recruiter can retry.
-function addError(text) {
-  const turn = append(el("section", { class: "turn assistant is-error" }));
+// "Nothing to search for" uses the same path, worded and coloured as a reply, not a fault.
+function addError(text, calm) {
+  const turn = append(el("section", { class: "turn assistant " + (calm ? "is-done" : "is-error") }));
   if (state.notice) { turn.append(noticeLine(state.notice, true)); state.notice = null; }
-  turn.append(el("p", { class: "error" }, text));
+  turn.append(el("p", { class: calm ? "" : "error" }, text));
   announce(turn.textContent);
   turn.scrollIntoView({ block: "start" });
 }
