@@ -5,8 +5,8 @@ import unittest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import app  # noqa: E402
-import replies  # noqa: E402
 import interpret  # noqa: E402
+import replies  # noqa: E402
 import search  # noqa: E402
 import strategy  # noqa: E402
 

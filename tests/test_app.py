@@ -4,8 +4,8 @@ import unittest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import app  # noqa: E402
-import replies  # noqa: E402
 import model  # noqa: E402
+import replies  # noqa: E402
 import search  # noqa: E402
 
 
@@ -239,7 +239,8 @@ class TestChangeMessages(unittest.TestCase):
     def test_answer_echoes_the_question(self):
         r = app.handle({"text": "senior Java developers", "choices": {"seniority": 1},
                         "last": {"slot": "seniority", "answered": True}})
-        self.assertTrue(r["reason"].startswith("I asked what you meant by 'senior'; you chose 'Senior' in their job title"))
+        self.assertTrue(r["reason"].startswith(
+            "I asked what you meant by 'senior'; you chose 'Senior' in their job title"))
 
     def test_chip_edit(self):
         r = app.handle({"text": "Python devs near London", "choices": {"location": 1}, "last": {"slot": "location"}})

@@ -20,6 +20,7 @@ COLUMNS = {
 
 
 def cell(rec, key):
+    """One table cell as plain text: lists joined, shortlists as a count, notice in words."""
     value = rec[key]
     if key == "skills":
         return ", ".join(value)
@@ -136,16 +137,19 @@ def why(reading, decision, edited, forced, anyway=False):
         rows.append({"part": strategy.slot_words(reading, c["slot"]).replace("phrase:", ""),
                      "readings": [{"label": c["chosen_label"], "count": c["chosen"], "used": True},
                                   {"label": c["other_label"], "count": c["other"], "used": False}],
-                     "overlap": round(c["overlap"], 2), "share": pct(c["overlap"], theta), "dominant": c["dominant"], "verdict": verdict})
+                     "overlap": round(c["overlap"], 2), "share": pct(c["overlap"], theta),
+                     "dominant": c["dominant"], "verdict": verdict})
     if not rows:
         summary = "Nothing in the request was unclear, so there was nothing to compare: act."
     else:
-        summary = "The rule compares the lists each unclear part could give. It asks only when a part has no clear reading and its lists share less than θ = %d%%." % round(theta * 100)
+        summary = ("The rule compares the lists each unclear part could give. It asks only when a part has no "
+                   "clear reading and its lists share less than θ = %d%%." % round(theta * 100))
     notes = []
     if anyway:  # the recruiter skipped the question; no setting was involved
         notes.append("You chose to search without answering; the rule would have asked first.")
     elif forced:
-        notes.append("The strategy setting chose %s; the rule alone would have chosen %s." % (decision["mode"], decision["rule_mode"]))
+        notes.append("The strategy setting chose %s; the rule alone would have chosen %s."
+                     % (decision["mode"], decision["rule_mode"]))
     if edited:
         notes.append("You changed the reading, so the chips stay in view. The rows describe the reading as it is now.")
     return {"summary": summary, "rows": rows, "theta": theta, "rule_mode": decision["rule_mode"], "notes": notes}

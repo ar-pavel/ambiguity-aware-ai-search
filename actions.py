@@ -22,6 +22,7 @@ ACTIONS = {"close": "jobs", "shortlist": "candidates"}  # the target each action
 
 
 def job_label(job):
+    """How a job is named everywhere on screen: "Senior Backend Engineer at Bluefin Analytics (London)"."""
     return "%s at %s (%s)" % (job["title"], job["company"], job["city"])
 
 
@@ -125,7 +126,8 @@ def apply(current, fingerprint):
         previous = {"shortlists": {job: state["shortlists"].get(job)}}
         state["shortlists"][job] = (state["shortlists"].get(job) or []) + [c["id"] for c in current["changes"]]
         done = "Shortlisted %d candidate%s for %s" % (len(ids), "" if len(ids) == 1 else "s", current["job"])
-        undone = "Took the %d candidate%s off the shortlist for %s" % (len(ids), "" if len(ids) == 1 else "s", current["job"])
+        undone = "Took the %d candidate%s off the shortlist for %s" % (
+            len(ids), "" if len(ids) == 1 else "s", current["job"])
     state["undo"] = (state["undo"] + [{"summary": done, "undone": undone, "previous": previous}])[-store.UNDO_LIMIT:]
     store.save(state)
     return {"ok": True, "done": done, "changed": len(ids), "skipped": len(current["skipped"])}

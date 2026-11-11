@@ -204,6 +204,7 @@ def command_action(payload, log_dir=None):
 
 
 def undo_action(log_dir=None):
+    """Put back the last write, and log it."""
     out = actions.undo()
     if out["ok"]:
         log.write_event({"event": "undo", "done": out["done"]}, log_dir)
@@ -211,6 +212,8 @@ def undo_action(log_dir=None):
 
 
 class Handler(BaseHTTPRequestHandler):
+    """Serves web/ and the JSON routes, to this machine only."""
+
     def _local(self):
         """Only answer requests addressed to this machine (blocks DNS-rebinding pages)."""
         port = self.server.server_port

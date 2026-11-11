@@ -87,7 +87,10 @@ SCHEMA = {
 }
 
 
-def load_env(path=os.path.join(HERE, ".env")):
+ENV_FILE = os.path.join(HERE, ".env")
+
+
+def load_env(path=ENV_FILE):
     """Read KEY=VALUE lines from a local .env file into the environment (without overriding)."""
     if not os.path.isfile(path):
         return
@@ -111,6 +114,7 @@ def provider():
 
 
 def live():
+    """True when a live provider is configured (A2_MODEL and its key)."""
     return provider() is not None
 
 
@@ -122,6 +126,7 @@ def label():
 
 
 def openai_model():
+    """The OpenAI model to call: A2_OPENAI_MODEL if set, else the default."""
     return os.environ.get("A2_OPENAI_MODEL", "").strip() or OPENAI_DEFAULT_MODEL
 
 

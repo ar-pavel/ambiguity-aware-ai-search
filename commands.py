@@ -18,7 +18,8 @@ results on screen:
 """
 import re
 
-REFERENT = r"(?:all\s+(?:of\s+)?(?:them|these|those|the\s+results)|them|these|those|all|everyone|everybody|the\s+results)"
+REFERENT = (r"(?:all\s+(?:of\s+)?(?:them|these|those|the\s+results)"
+            r"|them|these|those|all|everyone|everybody|the\s+results)")
 _START = r"^\s*(?:(?:please|ok(?:ay)?|now|then|and|so|can\s+you|could\s+you|would\s+you)[\s,]+)*"
 _TO_JOB = r"\s+(?:for|to|on|onto)\b"  # the verb goes straight on to name the job
 

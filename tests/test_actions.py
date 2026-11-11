@@ -132,7 +132,8 @@ class TestFit(Base):
         self.assertFalse(any(c["fits"] for c in plan["changes"]))
 
     def test_partial_fit_counts_only_the_misfits(self):
-        plan = app.plan_action({"action": "shortlist", "job_id": 4, "search": {"text": "Java or Python people in London"}})
+        search_payload = {"text": "Java or Python people in London"}
+        plan = app.plan_action({"action": "shortlist", "job_id": 4, "search": search_payload})
         fits = [c["fits"] for c in plan["changes"]]
         self.assertTrue(any(fits) and not all(fits))
         self.assertEqual(plan["misfits"], fits.count(False))

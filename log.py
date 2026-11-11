@@ -14,6 +14,7 @@ LOG_DIR = os.path.join(HERE, "logs")
 
 
 def enabled():
+    """Logging is on unless A2_LOG=off (the tests and CI turn it off)."""
     return os.environ.get("A2_LOG", "on").strip().lower() != "off"
 
 
