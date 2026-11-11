@@ -76,6 +76,9 @@ button.suggestion:hover { border-color: var(--ink); background: var(--surface); 
 .turn.assistant.is-ask { border-left-color: var(--ask); }
 .turn.assistant.is-error { border-left-color: var(--danger); }
 .turn.assistant.is-done { border-left-color: var(--rule); }
+/* The reply to a write or undo: only what was done, compact. */
+.turn.assistant.result { padding: 0; border-left: 0; background: none; box-shadow: none; }
+.turn.result .notice { display: inline-block; margin: 0; }
 .turn.assistant.live { background: var(--surface); box-shadow: 0 1px 2px rgba(var(--shadow), .05), 0 8px 24px rgba(var(--shadow), .07); }
 .turn.assistant.frozen { background: transparent; color: #3a4558; padding-top: .4rem; padding-bottom: .4rem; }
 .turn.assistant > p { margin: 0 0 .55rem; }
@@ -89,14 +92,12 @@ button.suggestion:hover { border-color: var(--ink); background: var(--surface); 
 .mode-act { color: var(--act-text); background: var(--act-tint); }
 .mode-show { color: var(--show-text); background: var(--show-tint); }
 .mode-ask { color: var(--ask-text); background: var(--ask-tint); }
-.mode-line.quiet { font-size: .875rem; color: var(--muted); }
 .earlier { margin-left: auto; font-size: .78rem; color: var(--muted); }
 .reason { flex: 1 1 20rem; }
 .first-reason { flex-basis: 100%; font-size: .875rem; color: var(--muted); }
 .frozen .mode-line .reason { color: var(--muted); }
 .read-as { font-weight: 600; }
 .notice { padding: .45rem .75rem; border-radius: 8px; background: var(--act-tint); color: var(--act-text); }
-.notice.quiet { padding: .2rem 0; background: none; color: var(--muted); font-size: .875rem; }
 .notice:focus { outline: 3px solid var(--ink); outline-offset: 2px; }
 .error { color: var(--danger); }
 .ignored { font-size: .9rem; color: var(--guess); font-weight: 600; }
