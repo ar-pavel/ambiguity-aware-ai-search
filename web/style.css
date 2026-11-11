@@ -1,21 +1,24 @@
 /* A conversation that keeps the reading visible and editable.
-   Colour carries meaning, never decoration: pine = act, cobalt = show, ochre = ask and anything guessed.
+   Colour carries meaning, never decoration: emerald = act, azure = show, amber = ask, violet = guessed.
    Each assistant turn wears its mode on its left edge, so scrolling the conversation shows the
    sequence of decisions at a glance. System fonts only: the app runs offline with nothing to install. */
 :root {
-  --ink: #1f2b38;        /* text, the recruiter's turns */
-  --muted: #5b6878;      /* secondary text; 5.6:1 on white */
-  --page: #f3f5f8;       /* the conversation panel */
-  --side: #dde3ea;       /* outside the panel, on wide screens */
+  --ink: #172033;        /* text and the recruiter's turns: deep navy */
+  --ink-2: #26324a;      /* hover on ink */
+  --muted: #5a6579;      /* secondary text; 5.8:1 on white */
+  --page: #f7f8fb;       /* the conversation panel */
+  --side: #e8ecf2;       /* outside the panel, on wide screens */
+  --dots: #c5cdd9;
   --surface: #ffffff;    /* the live turn */
-  --rule: #d5dce4;
-  --act: #2e6b4f;        /* pine: searched straight away */
-  --show: #2f5fa7;       /* cobalt: showed its reading */
-  --ask: #b0650c;        /* ochre: asked first, or guessed */
-  --act-tint: #e6f1eb; --show-tint: #e8eef8; --ask-tint: #fbefe1;
-  --ask-text: #7f4706;   /* ask on its tint: 6.9:1 */
-  --guess: #6b4c9a;      /* plum: an assumption I made, not a question I asked */
-  --focus: #f0b429;
+  --rule: #e3e7ee;
+  --field: #c9d1dd;      /* input borders */
+  --act: #0e8a62;   --act-text: #0a6b4c;   --act-tint: #e2f5ee;    /* emerald: searched straight away */
+  --show: #2f6bdb;  --show-text: #2457b8;  --show-tint: #e9f0fd;   /* azure: showed its reading */
+  --ask: #d9771f;   --ask-text: #93490a;   --ask-tint: #fdf0e2;    /* amber: asked first */
+  --guess: #7a52c7; --guess-tint: #f1ebfb;                         /* violet: an assumption I made */
+  --danger: #c0262d;
+  --focus: #f5b82e;
+  --shadow: 23, 32, 51;
   --serif: "Iowan Old Style", "Charter", "Bitstream Charter", Cambria, Georgia, serif;
   --sans: "Avenir Next", Seravek, "Segoe UI Variable Text", "Segoe UI", Ubuntu, "Noto Sans", system-ui, sans-serif;
 }
@@ -23,19 +26,19 @@
 html, body { height: 100%; }
 body { margin: 0; font: 16px/1.55 var(--sans); color: var(--ink); -webkit-font-smoothing: antialiased;
        /* a faint dot grid at the sides, like squared paper; the panel itself stays plain */
-       background-color: var(--side); background-image: radial-gradient(#b9c4d0 1px, transparent 1.2px); background-size: 18px 18px; }
+       background-color: var(--side); background-image: radial-gradient(var(--dots) 1px, transparent 1.2px); background-size: 18px 18px; }
 /* The app is one panel, set apart from the sides of a wide screen. */
 .app { display: flex; flex-direction: column; height: 100%; width: 100%; max-width: 920px; margin: 0 auto;
-       background: var(--page); box-shadow: 0 0 0 1px #cfd7e0, 0 0 40px rgba(31, 43, 56, .08); }
+       background: var(--page); box-shadow: 0 0 0 1px var(--rule), 0 10px 50px rgba(var(--shadow), .10); }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 h1, h2 { font-family: var(--serif); font-weight: 600; letter-spacing: -.01em; }
 
-button { padding: .55rem 1.05rem; font: inherit; font-weight: 600; border: 1px solid var(--ink); border-radius: 8px;
+button { padding: .55rem 1.1rem; font: inherit; font-weight: 600; border: 1px solid var(--ink); border-radius: 10px;
          background: var(--ink); color: #fff; cursor: pointer; }
-button:hover { background: #2c3c4e; }
+button:hover { background: var(--ink-2); }
 button.secondary { background: var(--surface); color: var(--ink); }
 button.secondary:hover { background: var(--page); }
-button.link { padding: 0; border: 0; background: none; color: var(--show); font-weight: 500;
+button.link { padding: 0; border: 0; background: none; color: var(--show-text); font-weight: 500;
               text-decoration: underline; text-underline-offset: 3px; }
 button:disabled { opacity: .45; cursor: not-allowed; }
 button[aria-disabled="true"] { opacity: .6; cursor: progress; }
@@ -45,7 +48,11 @@ button[aria-disabled="true"] { opacity: .6; cursor: progress; }
 .top, #chat, .composer, .study-footer { width: 100%; padding-left: 1.5rem; padding-right: 1.5rem; }
 .top { display: flex; justify-content: space-between; align-items: baseline; padding-top: 1.1rem; padding-bottom: .7rem;
        border-bottom: 1px solid var(--rule); }
-.top h1 { margin: 0; font-size: 1.3rem; }
+.top h1 { display: flex; align-items: center; gap: .6rem; margin: 0; font-size: 1.3rem; }
+/* The mark is the idea: act, show, ask. */
+.mark { display: inline-flex; gap: 3px; }
+.mark i { width: 9px; height: 9px; border-radius: 50%; }
+.mark i:nth-child(1) { background: var(--act); } .mark i:nth-child(2) { background: var(--show); } .mark i:nth-child(3) { background: var(--ask); }
 #chat { flex: 1; min-height: 0; overflow-y: auto; padding-top: .5rem; padding-bottom: 1.5rem; }
 
 /* The first screen: the question the recruiter answers by typing. */
@@ -60,15 +67,15 @@ button.suggestion:hover { border-color: var(--ink); background: var(--surface); 
 /* Turns: the recruiter on the right in ink; the assistant on the left, edged in its mode's colour. */
 .turn { margin: 0 0 1.1rem; }
 .turn.user { display: flex; justify-content: flex-end; }
-.turn.user p { margin: 0; max-width: 72%; padding: .5rem .95rem; border-radius: 16px 16px 4px 16px;
+.turn.user p { margin: 0; max-width: 72%; padding: .55rem 1rem; border-radius: 18px 18px 4px 18px;
                background: var(--ink); color: #fff; }
-.turn.assistant { padding: .9rem 1.1rem 1rem; border-left: 5px solid var(--rule); border-radius: 0 12px 12px 0; }
+.turn.assistant { padding: .95rem 1.15rem 1.05rem; border-left: 4px solid var(--rule); border-radius: 4px 16px 16px 4px; }
 .turn.assistant.is-act { border-left-color: var(--act); }
 .turn.assistant.is-show { border-left-color: var(--show); }
 .turn.assistant.is-ask { border-left-color: var(--ask); }
-.turn.assistant.is-error { border-left-color: #b42318; }
-.turn.assistant.live { background: var(--surface); box-shadow: 0 1px 2px rgba(31, 43, 56, .06), 0 6px 20px rgba(31, 43, 56, .06); }
-.turn.assistant.frozen { background: transparent; color: #3d4a59; padding-top: .4rem; padding-bottom: .4rem; }
+.turn.assistant.is-error { border-left-color: var(--danger); }
+.turn.assistant.live { background: var(--surface); box-shadow: 0 1px 2px rgba(var(--shadow), .05), 0 8px 24px rgba(var(--shadow), .07); }
+.turn.assistant.frozen { background: transparent; color: #3a4558; padding-top: .4rem; padding-bottom: .4rem; }
 .turn.assistant > p { margin: 0 0 .55rem; }
 .turn.assistant > :last-child { margin-bottom: 0; }
 .turn.note { text-align: center; font-size: .85rem; color: var(--muted); }
@@ -77,8 +84,8 @@ button.suggestion:hover { border-color: var(--ink); background: var(--surface); 
 /* Inside a turn: the mode and its reason lead. */
 .mode-line { display: flex; flex-wrap: wrap; gap: .25rem .6rem; align-items: baseline; }
 .mode { font-size: .9rem; font-weight: 700; padding: .05rem .55rem; border-radius: 6px; }
-.mode-act { color: var(--act); background: var(--act-tint); }
-.mode-show { color: var(--show); background: var(--show-tint); }
+.mode-act { color: var(--act-text); background: var(--act-tint); }
+.mode-show { color: var(--show-text); background: var(--show-tint); }
 .mode-ask { color: var(--ask-text); background: var(--ask-tint); }
 .mode-line.quiet { font-size: .875rem; color: var(--muted); }
 .earlier { margin-left: auto; font-size: .78rem; color: var(--muted); }
@@ -86,10 +93,10 @@ button.suggestion:hover { border-color: var(--ink); background: var(--surface); 
 .first-reason { flex-basis: 100%; font-size: .875rem; color: var(--muted); }
 .frozen .mode-line .reason { color: var(--muted); }
 .read-as { font-weight: 600; }
-.notice { padding: .45rem .75rem; border-radius: 8px; background: var(--act-tint); color: #1d4a35; }
+.notice { padding: .45rem .75rem; border-radius: 8px; background: var(--act-tint); color: var(--act-text); }
 .notice.quiet { padding: .2rem 0; background: none; color: var(--muted); font-size: .875rem; }
 .notice:focus { outline: 3px solid var(--ink); outline-offset: 2px; }
-.error { color: #b42318; }
+.error { color: var(--danger); }
 .ignored { font-size: .9rem; color: var(--guess); font-weight: 600; }
 .count-row { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: .5rem; margin: .7rem 0 .2rem; }
 .count { margin: 0; font-weight: 700; font-variant-numeric: tabular-nums; }
@@ -101,8 +108,8 @@ button.suggestion:hover { border-color: var(--ink); background: var(--surface); 
 table { width: 100%; border-collapse: collapse; font-size: .9rem; font-variant-numeric: tabular-nums; }
 th, td { text-align: left; padding: .4rem .55rem; border-bottom: 1px solid var(--rule); vertical-align: top; }
 th { font-weight: 600; font-size: .8rem; color: var(--muted); white-space: nowrap; border-bottom-color: var(--ink); }
-tbody tr:hover { background: #f6f8fa; }
-details > summary { cursor: pointer; color: var(--show); width: max-content; font-size: .9rem; font-weight: 500; }
+tbody tr:hover { background: var(--page); }
+details > summary { cursor: pointer; color: var(--show-text); width: max-content; font-size: .9rem; font-weight: 500; }
 details.why { margin: .1rem 0 .6rem; }
 .why-body { padding: .5rem .8rem; margin-top: .3rem; border-radius: 8px; background: var(--page); font-size: .9rem; }
 .why-body p { margin: 0 0 .5rem; }
@@ -113,14 +120,14 @@ details.why { margin: .1rem 0 .6rem; }
 .chip { display: inline-flex; align-items: center; gap: .3rem; padding: .25rem .7rem; border: 1.5px solid var(--rule);
         border-radius: 999px; background: var(--surface); font: inherit; font-size: .9rem; color: var(--ink); }
 .chip.fixed { border-color: transparent; background: var(--page); }
-.chip.choice { border-color: var(--show); color: var(--show); font-weight: 600; }
+.chip.choice { border-color: var(--show); color: var(--show-text); font-weight: 600; }
 button.chip { cursor: pointer; }
-.chip.op { font-weight: 700; border-color: var(--show); color: var(--show); background: var(--surface); }
+.chip.op { font-weight: 700; border-color: var(--show); color: var(--show-text); background: var(--surface); }
 button.chip.op:hover { background: var(--show-tint); }
 .chip select { appearance: none; -webkit-appearance: none; border: 0; background: transparent; font: inherit;
                color: inherit; cursor: pointer; padding-right: 0; }
 .chip:focus-within { outline: 3px solid var(--ink); outline-offset: 2px; }
-.chip.guessed { border-style: dashed; border-color: var(--guess); }
+.chip.guessed { border-style: dashed; border-color: var(--guess); background: var(--guess-tint); }
 .chip.answered { box-shadow: 0 0 0 3px var(--ask-tint); }
 .chip select:focus-visible { outline: none; box-shadow: none; }
 .caret { pointer-events: none; }
@@ -133,13 +140,13 @@ fieldset.question:focus { outline: 3px solid var(--ink); outline-offset: 2px; }
 legend.question-text { float: left; width: 100%; margin-bottom: .6rem; padding: 0; font-family: var(--serif); font-size: 1.15rem; font-weight: 600; }
 .options { clear: both; display: flex; flex-wrap: wrap; gap: .5rem; margin-bottom: .6rem; }
 button.option { background: var(--surface); color: var(--ink); font-weight: 600; border: 1.5px solid var(--ask); border-radius: 999px; }
-button.option:hover { background: #fff7ee; }
+button.option:hover { background: var(--ask-tint); }
 .asked { color: var(--muted); }
-.asked::first-line { color: #3d4a59; }
+.asked::first-line { color: #3a4558; }
 
 /* Composer, pinned under the conversation. */
 .composer { display: flex; gap: .5rem; padding-top: .8rem; padding-bottom: .4rem; border-top: 1px solid var(--rule); }
-.composer input { flex: 1; min-width: 0; padding: .7rem 1rem; font: inherit; border: 1.5px solid #b9c4d0; border-radius: 10px;
+.composer input { flex: 1; min-width: 0; padding: .7rem 1rem; font: inherit; border: 1.5px solid var(--field); border-radius: 14px;
                   background: var(--surface); color: var(--ink); }
 .composer input:focus-visible { border-color: var(--ink); outline-offset: 1px; }
 
@@ -154,18 +161,18 @@ details.study summary { margin-left: auto; color: var(--muted); font-size: .8rem
 /* The confirmation for every write: calm, and the safe choice first. */
 dialog { max-width: 36rem; width: calc(100% - 2rem); max-height: calc(100vh - 4rem); overflow: auto; color: var(--ink);
          border: 0; border-top: 5px solid var(--ask); border-radius: 12px; padding: 1.3rem 1.4rem;
-         box-shadow: 0 20px 50px rgba(31, 43, 56, .25); }
-dialog::backdrop { background: rgba(31, 43, 56, .5); }
+         box-shadow: 0 24px 60px rgba(var(--shadow), .28); }
+dialog::backdrop { background: rgba(var(--shadow), .45); backdrop-filter: blur(2px); }
 dialog h2 { margin: 0 0 .5rem; font-size: 1.3rem; }
 .confirm-read-as { margin: 0 0 .5rem; color: var(--muted); }
 #job-pick { display: block; margin: .6rem 0; font-weight: 600; }
 #job-pick select { display: block; width: 100%; margin-top: .3rem; padding: .5rem; font: inherit; font-weight: 500;
-                   border: 1.5px solid #b9c4d0; border-radius: 8px; background: var(--surface); }
+                   border: 1.5px solid var(--field); border-radius: 10px; background: var(--surface); }
 .confirm-summary { font-weight: 700; margin: .6rem 0; }
 .confirm-changes { max-height: 14rem; overflow: auto; margin: 0 0 .6rem; padding: .5rem .5rem .5rem 1.7rem;
                    border-radius: 8px; background: var(--page); font-size: .92rem; }
 .confirm-skipped { margin-bottom: .5rem; color: var(--muted); }
-.confirm-error { color: #b42318; margin: .25rem 0; }
+.confirm-error { color: var(--danger); margin: .25rem 0; }
 .confirm-buttons { display: flex; justify-content: flex-end; gap: .5rem; }
 .confirm-undo { margin: .6rem 0 0; font-size: .85rem; color: var(--muted); text-align: right; }
 
