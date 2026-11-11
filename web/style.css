@@ -200,6 +200,11 @@ kbd.key { display: inline-grid; place-items: center; min-width: 1.45em; height: 
 button[type=submit] kbd.key { margin: 0 0 0 .45em; color: #fff; background: rgba(255, 255, 255, .14); border-color: rgba(255, 255, 255, .35); }
 button.option { display: inline-flex; align-items: center; }
 .key-hint { margin: .1rem 0 0; font-size: .8rem; color: var(--muted); }
-.mark.small { gap: 2px; margin-right: .1rem; align-self: center; }
+/* The assistant's sign sits on the top-left corner of each of its turns, like a badge on a card. */
+.turn.assistant { position: relative; }
+.turn.assistant .mark.small { position: absolute; top: -9px; left: 14px; gap: 3px; padding: 4px 7px;
+                              background: var(--surface); border: 1px solid var(--rule); border-radius: 999px;
+                              box-shadow: 0 1px 2px rgba(var(--shadow), .08); }
 .mark.small i { width: 6px; height: 6px; }
-.frozen .mark.small { opacity: .55; }
+.frozen .mark.small { opacity: .6; }
+.turn.assistant + .turn.assistant, .turn.user + .turn.assistant { margin-top: 1.4rem; }
