@@ -24,7 +24,7 @@ def entry(payload, result):
     edited = bool(payload.get("choices") or payload.get("op"))
     return {
         "t": datetime.datetime.now().isoformat(timespec="seconds"),
-        "event": "edit" if edited else "search",
+        "event": "nothing" if result.get("nothing") else "edit" if edited else "search",
         "text": result.get("text"),
         "interpreter": result.get("interpreter"),
         "strategy_setting": payload.get("mode", "auto"),
@@ -57,8 +57,8 @@ def write_event(line, log_dir=None):
 
 
 def write(payload, result, log_dir=None):
-    """Append one line. Errors and empty requests are not logged."""
-    if not enabled() or "error" in result:
+    """Append one line. Errors and empty requests are not logged; a "nothing to search" reply is."""
+    if not enabled() or ("error" in result and not result.get("nothing")):
         return None
     log_dir = log_dir or LOG_DIR
     os.makedirs(log_dir, exist_ok=True)
