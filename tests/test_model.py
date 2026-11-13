@@ -219,6 +219,23 @@ class TestChecks(unittest.TestCase):
         self.assertIsNone(r["company"])
         self.assertIn("company 'Acme' (not in your request or not in the data)", r["dropped"])
 
+    def test_and_written_by_the_user_is_never_widened_to_or(self):
+        # The failure this project starts from: "Python and AWS" silently searched as OR.
+        for text, word in (("Python and AWS people", "and"), ("Python with AWS", "with"),
+                           ("Python & AWS", "&"), ("Python AND AWS", "AND")):
+            r = interpret.from_model(text, dict(self.BASE, skills=["Python", "AWS"], skills_op="OR"))
+            self.assertEqual(r["skills_op"], "AND", text)
+            self.assertIn("OR between the skills (you wrote '%s')" % word, r["dropped"])
+        # The model may still flag "and" as ambiguous; the chip then offers OR, with AND chosen.
+        judged = dict(self.BASE, skills=["Python", "AWS"], skills_op="OR",
+                      ambiguities=[{"slot": "skills_op", "dominant": True, "evidence": "you wrote 'and'"}])
+        r = interpret.from_model("Python and AWS people", judged)
+        self.assertEqual(r["ambiguities"][0]["chosen"], 0)
+        # Where the user wrote "or", or no word at all, the model's OR stands.
+        for text in ("Python or AWS people", "Python AWS people"):
+            r = interpret.from_model(text, dict(self.BASE, skills=["Python", "AWS"], skills_op="OR"))
+            self.assertEqual((r["skills_op"], r["dropped"]), ("OR", []), text)
+
     def test_evidence_is_kept_only_if_its_quote_is_in_the_request(self):
         judged = dict(SENIOR, ambiguities=[{"slot": "seniority", "dominant": False,
                                             "evidence": "you wrote 'senior'"}])

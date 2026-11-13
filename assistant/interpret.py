@@ -6,9 +6,9 @@
 Two routes, same output shape:
   * rules (default, SIMULATED): a small rule-based stand-in for the language model. It follows the
     detection rules in the design spec, so it works with no key and no network.
-  * live (IMPLEMENTED, needs your own key): model.py asks Claude to judge the request with
-    structured outputs; from_model() checks the reply and builds the same shape. If anything fails,
-    the rules route is used and the page says so.
+  * live (IMPLEMENTED): model.py asks a local model (Ollama) or Claude or OpenAI (your own key) to
+    judge the request with structured output; from_model() checks the reply and builds the same
+    shape. If anything fails, the rules route is used and the page says so.
 
 The reading is the single object the page uses for the chips, the question, the "Read as" line and
 the search. Each ambiguity lists its options as small patches to the reading, the option chosen by
@@ -367,9 +367,15 @@ def from_model(text, judged):
     if status not in (None, "open", "closed"):
         dropped.append("status '%s' (jobs are only open or closed)" % status)
         status = None
+    op = judged["skills_op"]
+    written_op, op_amb = _operator(text, _find_skills(text))
+    if len(skills) > 1 and op == "OR" and written_op == "AND" and (op_amb is None or op_amb[0]):
+        # The user wrote "and", "with" or "&": the model may flag it as ambiguous, but may not widen it to OR.
+        dropped.append("OR between the skills (you wrote '%s')" % (op_amb[1].split("'")[1] if op_amb else "AND"))
+        op = "AND"
     reading = {"target": target, "company": company,
                "status": status,
-               "skills": skills, "skills_op": judged["skills_op"], "location": location,
+               "skills": skills, "skills_op": op, "location": location,
                "seniority": judged["seniority"], "work_mode": judged["work_mode"],
                "availability": {"max_notice": judged["availability"]} if judged["availability"] else None}
     if reading["seniority"]:
