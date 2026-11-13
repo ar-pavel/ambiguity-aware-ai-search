@@ -139,7 +139,7 @@ in the browser.
 12. **Structure** ([#54](https://github.com/ar-pavel/ambiguity-aware-ai-search/pull/54), [#56](https://github.com/ar-pavel/ambiguity-aware-ai-search/pull/56)): `ruff` in CI and the code moved into the `assistant/` package, with no behaviour change and file history kept; all tests and ruff pass.
 13. **A local model** ([#58](https://github.com/ar-pavel/ambiguity-aware-ai-search/pull/58))
     - Ollama lets the live path run with no key or cost. `tools/compare.py` runs 15 scripted requests through each interpreter.
-    - One run (temperature 0): `qwen3:14b` gave the expected mode for 10 of 15, never fell back, about 4 s per request. Of the five misses, four acted where show or ask was expected and one asked where show was expected: the model under-reports what is unclear, which is why code, not the model, decides.
+    - One run (temperature 0): `qwen3:14b` gave the expected mode for 10 of 15, never fell back, about 4–5 s per request. Of the five misses, four acted where show or ask was expected and one asked where show was expected: the model under-reports what is unclear, which is why code, not the model, decides.
     - It also exposed a bug (a correct "Bluefin" dropped by the company check), fixed with a test.
     - The full table is in [`docs/compare-qwen3-14b.md`](docs/compare-qwen3-14b.md), re-run after stage 14 with the same result.
 14. **Pre-submission review** ([#61](https://github.com/ar-pavel/ambiguity-aware-ai-search/issues/61))
