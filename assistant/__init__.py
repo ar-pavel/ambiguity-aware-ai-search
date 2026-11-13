@@ -3,7 +3,7 @@
     server.py     HTTP server and the request handlers
     replies.py    what the page shows, built from what ran
     interpret.py  rule-based stand-in, and the checks on a live model's reply
-    model.py      the live Claude or OpenAI call
+    model.py      the live model call (Ollama, Claude or OpenAI)
     strategy.py   the act / show / ask rule
     search.py     filters, and the "Read as" line
     commands.py   typed follow-ups ("shortlist them for the Java role")
