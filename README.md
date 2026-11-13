@@ -23,7 +23,7 @@ confirmed first, and can be undone. Built as an MSc project at the University of
 python3 app.py    # Python 3.8+, nothing to install; open http://127.0.0.1:8770
 ```
 
-![System diagram: reading a request on the top row, changing records on the bottom row; each part marked implemented, simulated or planned](docs/system.png)
+![System diagram: reading a request from top to bottom, then changing records on the right; each part marked implemented, simulated or planned](docs/system.png)
 
 ### How it works
 

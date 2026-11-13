@@ -1,88 +1,92 @@
-// System diagram. Render: dot -Tpng -Gdpi=150 docs/system.dot -o docs/system.png && dot -Tsvg docs/system.dot -o docs/system.svg
-// Top row: reading a request (left to right). Bottom row: changing records (right to left).
-// Border marks status: solid = implemented, orange dashed = simulated, grey dashed = planned.
-// Blue fill = on the chat page (web/); white = server (assistant/); cylinders = files on disk.
+// System diagram. Render: dot -Tpng -Gdpi=200 docs/system.dot -o docs/system.png && dot -Tsvg docs/system.dot -o docs/system.svg
+// Left column: reading a request (top to bottom). Right column: changing records.
+// Border marks status: solid = implemented, orange dashed = simulated, grey dashed = planned,
+// blue = a live language model. Blue fill = on the chat page (web/); white = server (assistant/);
+// cylinders = files on disk.
 digraph system {
-  rankdir=LR; nodesep=0.35; ranksep=0.38; newrank=true;
-  node [shape=box, style="rounded,filled", fillcolor="#ffffff", color="#172033", fontname="Helvetica", fontsize=11];
-  edge [fontname="Helvetica", fontsize=9, color="#5b6578"];
+  rankdir=TB; nodesep=0.3; ranksep=0.32; newrank=true;
+  node [shape=box, style="rounded,filled", fillcolor="#ffffff", color="#172033", fontname="Helvetica", fontsize=13];
+  edge [fontname="Helvetica", fontsize=11, color="#5b6578"];
 
   recruiter [label="Recruiter", shape=ellipse, fillcolor="#edf1f6"];
-
-  // reading a request
   request [label="Chat page\nrequest or follow-up", fillcolor="#e8effb"];
-  cmd [label="Follow-up?\ncommands.py\n(names a job → Plan)"];
-  route [label="live model\nset?", shape=diamond, fontsize=10];
-  subgraph cluster_interp {
-    label="Interpreter (the AI step)"; labelloc=t; fontname="Helvetica-Bold"; fontsize=10; color="#c4ccd8"; style="rounded,dashed";
-    ollama [label="Local model\nOllama · qwen3:14b", fillcolor="#f3f6fc", color="#2f6bdb"];
-    cloud [label="Claude or OpenAI\n(not yet run with a key)", fillcolor="#f3f6fc", color="#2f6bdb"];
-    rules [label="Rule-based stand-in\n[simulated]", style="rounded,filled,dashed", fillcolor="#fdf1e6", color="#d9771f"];
-    checks [label="Code checks\nonly words the user wrote\nknown places, companies"];
-  }
-  reading [label="Reading\n+ ambiguities\n+ unsupported", shape=note, fillcolor="#edf1f6"];
-  rule [label="Strategy rule\nstrategy.py\nlist overlap vs θ = 0.5"];
-  search [label="Search\nsearch.py\n(data + state/)"];
-  reply [label="Latest reply (live)\nact / show / ask + reason\nchips · one question\nresults · Ignored · Why?\nedit a chip → runs again", fillcolor="#e8effb"];
+  settings [label="Study settings\nforce a strategy · θ", fillcolor="#e8effb"];
+  cmd [label="Follow-up?  commands.py\n(names a job → Plan)"];
+  route [label="live model\nset?", shape=diamond, fontsize=12];
 
-  // changing records
-  plan [label="Plan\nactions.py\nwhich records"];
+  subgraph cluster_interp {
+    label="Interpreter: the AI step"; labelloc=t; fontname="Helvetica-Bold"; fontsize=12;
+    color="#c4ccd8"; style="rounded,dashed";
+    ollama [label="Local model\nOllama · qwen3:14b", fillcolor="#f3f6fc", color="#2f6bdb", penwidth=1.6];
+    cloud [label="Claude or OpenAI\n(not yet run with a key)", fillcolor="#f3f6fc", color="#2f6bdb", penwidth=1.6];
+    rules [label="Rule-based stand-in\n[simulated]", style="rounded,filled,dashed", fillcolor="#fdf1e6", color="#d9771f", penwidth=1.6];
+    checks [label="Code checks\nskills, operator, places,\ncompanies the user wrote"];
+  }
+
+  reading [label="Reading\n+ ambiguities + unsupported", shape=note, fillcolor="#edf1f6"];
+  rule [label="Strategy rule  strategy.py\nlist overlap vs θ = 0.5"];
+  search [label="Search  search.py"];
+  reply [label="Latest reply (live)\nact / show / ask + reason\nchips · one question · Why?\nresults · Ignored", fillcolor="#e8effb"];
+
+  plan [label="Plan  actions.py\nwhich records change"];
   confirm [label="Confirmation\nevery change listed\nfit warning", fillcolor="#e8effb"];
   apply [label="Apply · Undo\nfingerprint must match"];
-  store [label="store.py\nonly writer"];
+  store [label="store.py\nthe only writer"];
   result [label="Result + Undo", fillcolor="#e8effb"];
 
-  data [label="Synthetic data\n200 candidates\n30 jobs · 18 companies", shape=cylinder, fillcolor="#edf1f6"];
-  state [label="state/\nshortlists\nclosed jobs", shape=cylinder, fillcolor="#edf1f6"];
-  log [label="Event log\nlogs/", shape=cylinder, fillcolor="#edf1f6"];
+  data [label="Synthetic data\n200 candidates · 30 jobs\n18 companies", shape=cylinder, fillcolor="#edf1f6"];
+  state [label="state/\nshortlists · closed jobs", shape=cylinder, fillcolor="#edf1f6"];
+  log [label="Event log  logs/", shape=cylinder, fillcolor="#edf1f6"];
 
-  learn [label="Learn θ from\ncorrections\n[planned]", style="rounded,dashed", color="#9aa5b8", fontcolor="#7b8597"];
-  semantic [label="Semantic skill\nmatching\n[planned]", style="rounded,dashed", color="#9aa5b8", fontcolor="#7b8597"];
+  learn [label="Learn θ from\ncorrections [planned]", style="rounded,dashed", color="#9aa5b8", fontcolor="#7b8597"];
+  semantic [label="Semantic skill\nmatching [planned]", style="rounded,dashed", color="#9aa5b8", fontcolor="#7b8597"];
 
-  {rank=same; plan; search}
-  {rank=same; confirm; rule}
-  {rank=same; apply; reading}
-  {rank=same; store; checks}
-  {rank=same; result; rules}
+  {rank=same; reading; settings}
+  {rank=same; ollama; cloud; rules}
+  {rank=same; search; data}
+  {rank=same; reply; plan}
+  {rank=same; store; state}
 
-  // top row
-  recruiter -> request [label="types"];
+  // reading a request
+  recruiter -> request [label=" types"];
   request -> cmd;
-  cmd -> route [label="a search"];
+  cmd -> route [label=" a search"];
   route -> ollama [label="ollama"];
   route -> cloud [label="claude / openai"];
   route -> rules [label="no (default)"];
-  ollama -> checks [label="JSON"];
-  cloud -> checks [label="JSON"];
-  checks -> reading [label="ok"];
-  checks -> rules [label="fails", style=dashed, constraint=false];
-  rules -> reading [constraint=false];
+  ollama -> checks [label=" JSON"];
+  cloud -> checks [label=" JSON"];
+  checks:e -> rules:sw [label=" fails", style=dashed, constraint=false];
+  checks -> reading [label=" ok"];
+  rules:se -> reading;
   reading -> rule;
-  rule -> search [label="a list per\nreading"];
-  search -> reply [label="results,\ncounts"];
-  rule -> reply [label="mode +\nreason", constraint=false];
-  search -> data [dir=both];
-
-  // bottom row (drawn right to left)
-  reply -> plan [label="Shortlist… /\nClose…"];
-  plan -> confirm [label="plan"];
-  confirm -> apply [label="Confirm", style=bold];
-  apply -> store;
-  store -> state;
-  apply -> result [label="result"];
-
-  // evaluation and planned work
-  rule -> log [label="one line per turn", style=dotted];
-  log -> learn [style=dashed, color="#9aa5b8"];
+  settings -> rule [style=dashed, label=" study only"];
+  rule -> search [label=" a list per reading"];
+  search -> data [dir=both, constraint=false];
+  search -> reply [label=" mode, reason,\n results, counts"];
   semantic -> search [style=dashed, color="#9aa5b8"];
 
-  labelloc=b; labeljust=l; fontname="Helvetica"; fontsize=10;
-  label=<<table border="0" cellborder="0" cellspacing="6">
-    <tr><td align="left"><b>Status</b></td>
+  // changing records
+  reply -> plan [label=" Shortlist… / Close…"];
+  plan -> confirm;
+  confirm -> apply [label=" Confirm", style=bold];
+  apply -> store;
+  store -> state;
+  apply -> result;
+
+  // evaluation
+  rule -> log [style=dotted, label=" every turn"];
+  apply -> log [style=dotted, label=" every change"];
+  log -> learn [style=dashed, color="#9aa5b8"];
+
+  labelloc=b; labeljust=l; fontname="Helvetica"; fontsize=12;
+  label=<<table border="0" cellborder="0" cellspacing="5">
+    <tr><td align="left"><b>Key</b></td>
         <td border="1" style="rounded" color="#172033">implemented</td>
         <td border="1" style="rounded" color="#d9771f" bgcolor="#fdf1e6">simulated</td>
         <td border="1" style="rounded" color="#9aa5b8"><font color="#7b8597">planned</font></td>
-        <td border="1" style="rounded" bgcolor="#e8effb">on the chat page</td>
-        <td align="left"><font color="#7b8597">Also planned: free-text 'Other…' answers · a view of each job's shortlist</font></td></tr>
+        <td border="1" style="rounded" color="#2f6bdb" bgcolor="#f3f6fc">live language model</td>
+        <td border="1" style="rounded" bgcolor="#e8effb">on the chat page</td></tr>
+    <tr><td></td><td colspan="5" align="left"><font color="#7b8597">Also planned: free-text 'Other…' answers · a view of each job's shortlist</font></td></tr>
   </table>>;
 }
