@@ -105,19 +105,19 @@ instruction, never candidate data.
 
 ### Code map
 
-`app.py` starts the server; the code is in `assistant/`.
+[`app.py`](app.py) starts the server; the code is in [`assistant/`](assistant).
 
 | File | Job |
 |---|---|
-| `server.py` | HTTP server and request handlers |
-| `interpret.py` | the stand-in; the checks on a live model's reply |
-| `model.py` | the call to Ollama, Claude or OpenAI |
-| `strategy.py` | the act / show / ask rule (`THETA`) |
-| `search.py` | filters and the "Read as" line |
-| `replies.py` | what the page shows: results, chips, question, Why? |
-| `commands.py` · `actions.py` · `store.py` | typed follow-ups · plan, apply, undo · the only module that writes |
-| `log.py` | event log |
-| `web/` · `data/` · `tests/` · `tools/compare.py` | the page · synthetic data · tests · interpreter comparison |
+| [`server.py`](assistant/server.py) | HTTP server and request handlers |
+| [`interpret.py`](assistant/interpret.py) | the stand-in; the checks on a live model's reply |
+| [`model.py`](assistant/model.py) | the call to Ollama, Claude or OpenAI |
+| [`strategy.py`](assistant/strategy.py) | the act / show / ask rule (`THETA`) |
+| [`search.py`](assistant/search.py) | filters and the "Read as" line |
+| [`replies.py`](assistant/replies.py) | what the page shows: results, chips, question, Why? |
+| [`commands.py`](assistant/commands.py) · [`actions.py`](assistant/actions.py) · [`store.py`](assistant/store.py) | typed follow-ups · plan, apply, undo · the only module that writes |
+| [`log.py`](assistant/log.py) | event log |
+| [`web/`](web) · [`data/`](data) · [`tests/`](tests) · [`tools/compare.py`](tools/compare.py) | the page · synthetic data · tests · interpreter comparison |
 
 ## Development record
 
@@ -166,11 +166,11 @@ checked. "Review" means a Claude Code pass with the
 
 | Path | What it is |
 |---|---|
-| `docs/system.png` (source `system.dot`) | the system diagram |
-| `docs/storyboards/` | three storyboards (show, ask, a confirmed change), five frames each from real screenshots; `make_storyboards.py` rebuilds them |
-| `docs/compare-qwen3-14b.md` | the stand-in and `qwen3:14b` on the 15 scripted requests |
-| `AGENTS.md`, `skills/` | working rules and two task procedures for coding agents and people |
-| `.env.example` | live-interpreter and logging settings |
-| `.github/workflows/tests.yml`, `pyproject.toml` | CI and ruff's rules |
+| [`docs/system.png`](docs/system.png) (source [`system.dot`](docs/system.dot)) | the system diagram |
+| [`docs/storyboards/`](docs/storyboards) | three storyboards: [show](docs/storyboards/storyboard-show.png), [ask](docs/storyboards/storyboard-ask.png), [a confirmed change](docs/storyboards/storyboard-write.png); five frames each from real screenshots; [`make_storyboards.py`](docs/storyboards/make_storyboards.py) rebuilds them |
+| [`docs/compare-qwen3-14b.md`](docs/compare-qwen3-14b.md) | the stand-in and `qwen3:14b` on the 15 scripted requests |
+| [`AGENTS.md`](AGENTS.md), [`skills/`](skills) | working rules and two task procedures for coding agents and people |
+| [`.env.example`](.env.example) | live-interpreter and logging settings |
+| [`.github/workflows/tests.yml`](.github/workflows/tests.yml), [`pyproject.toml`](pyproject.toml) | CI and ruff's rules |
 
 Created locally and ignored by git: `state/state.json`, `logs/events.jsonl`, `.env`.
