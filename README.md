@@ -9,7 +9,7 @@ what is unclear and decides whether to **act** (just search), **show** how it re
 editable chips (small labelled controls), or **ask** one question, and it always says why. Changes to records are never guessed:
 each one is confirmed first and can be undone. Built as an MSc project at the University of Birmingham.
 
-*README prose: about 1,255 words (code, commands, tables and headings not counted).*
+*README prose: about 1,380 words (code, commands, tables and headings not counted).*
 
 ```bash
 python3 app.py          # needs Python 3.8+, nothing to install; open http://127.0.0.1:8770
@@ -38,7 +38,7 @@ count and message from the search that ran. **Why?** under each reply shows the 
 | Event log for evaluation (`logs/events.jsonl`) | implemented |
 | Interpreter, default: a rule-based *stand-in* for a language model | **simulated** |
 | Interpreter, local model through Ollama (`qwen3:14b`), checked by code | implemented |
-| Interpreter, Claude or OpenAI, same prompt, schema and checks | implemented (not yet run with a real key) |
+| Interpreter, Claude or OpenAI, same prompt, schema and checks (not yet run with a key) | implemented |
 | Free-text "Other…" answers; a view of each job's shortlist; learning when to ask from corrections; semantic skill matching | planned |
 
 ## Technology stack
@@ -51,11 +51,12 @@ count and message from the search that ran. **Why?** under each reply shows the 
   **Claude** (`claude-opus-5-5`); **OpenAI** (default `gpt-5-mini`). If one can't be used, the
   stand-in reads the request and the page says so.
 - **CI:** GitHub Actions runs the tests on Python 3.8 and 3.13, and `ruff` (CI only).
+- **Undecided:** which live model, if any, the Phase 3 study uses. The stand-in gives every participant the same readings; a live model is closer to a real product.
 
 ## Running or inspecting the work
 
 ```bash
-python3 run_tests.py                                  # 172 tests; no key, network or install needed
+python3 run_tests.py                                  # 174 tests; no key, network or install needed
 python3 app.py                                        # http://127.0.0.1:8770; --port 8771 if busy; Ctrl+C stops
 python3 -m assistant.strategy "senior Java developers"  # the rule's decision as JSON, no server
 ```
@@ -140,6 +141,10 @@ in the browser.
     - Ollama lets the live path run with no key or cost. `tools/compare.py` runs 15 scripted requests through each interpreter.
     - One run (temperature 0): `qwen3:14b` gave the expected mode for 10 of 15, never fell back, about 4 s per request. Of the five misses, four acted where show or ask was expected and one asked where show was expected: the model under-reports what is unclear, which is why code, not the model, decides.
     - It also exposed a bug (a correct "Bluefin" dropped by the company check), fixed with a test.
+    - The full table is in [`docs/compare-qwen3-14b.md`](docs/compare-qwen3-14b.md), re-run after stage 14 with the same result.
+14. **Pre-submission review** ([#61](https://github.com/ar-pavel/ambiguity-aware-ai-search/issues/61))
+    - A full review found the code checks did not cover the operator: a live model could still turn the user's "and" into OR, the failure this project starts from. Code now keeps AND when the user wrote and, with or &, and lists the override under Ignored; tested for each word.
+    - Replies with nothing to search ("hello") were missing from the evaluation log; they are now logged.
 
 ## AI assistance
 
@@ -158,6 +163,7 @@ in the browser.
 - `AGENTS.md`: working rules for coding agents and people. `skills/`: two task procedures.
 - `.env.example`: live-interpreter and logging settings. `.github/workflows/tests.yml`: CI. `pyproject.toml`: ruff's rules.
 - `docs/system.png` (source `docs/system.dot`): the system diagram.
+- `docs/compare-qwen3-14b.md`: the stand-in and `qwen3:14b` on the 15 scripted requests (`tools/compare.py`).
 - `docs/storyboards/`: `storyboard-show.png`, `storyboard-ask.png`, `storyboard-write.png`, five frames each
   from real screenshots; `make_storyboards.py` rebuilds the pages.
 - Created locally, ignored by git: `state/state.json`, `logs/events.jsonl`, `.env`.
