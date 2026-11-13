@@ -6,9 +6,9 @@
 Two routes, same output shape:
   * rules (default, SIMULATED): a small rule-based stand-in for the language model. It follows the
     detection rules in the design spec, so it works with no key and no network.
-  * live (IMPLEMENTED, needs your own key): model.py asks Claude to judge the request with
-    structured outputs; from_model() checks the reply and builds the same shape. If anything fails,
-    the rules route is used and the page says so.
+  * live (IMPLEMENTED): model.py asks a local model (Ollama) or Claude or OpenAI (your own key) to
+    judge the request with structured output; from_model() checks the reply and builds the same
+    shape. If anything fails, the rules route is used and the page says so.
 
 The reading is the single object the page uses for the chips, the question, the "Read as" line and
 the search. Each ambiguity lists its options as small patches to the reading, the option chosen by
@@ -301,8 +301,20 @@ def apply_option(reading, option):
 
 
 def _written(term, text):
-    """True if the term appears in the text as a whole word (so 'Go' is not found in 'good')."""
-    return re.search(r"(?<![\w.])" + re.escape(term) + r"(?![\w.])", text, re.IGNORECASE) is not None
+    """The match if the term appears in the text as a whole word (so 'Go' is not found in 'good'), else None."""
+    return re.search(r"(?<![\w.])" + re.escape(term) + r"(?![\w.])", text, re.IGNORECASE)
+
+
+def _joiner(text, where):
+    """The 'and', 'with' or '&' the user wrote between the skills, or None if they wrote 'or' or no word.
+
+    Read from the words between the first and last skill the model found, so skills the stand-in
+    doesn't know ("Python or Rust") are covered too."""
+    between = text[min(m.end() for m in where):max(m.start() for m in where)]
+    if re.search(r"\bor\b", between, re.IGNORECASE):
+        return None
+    word = re.search(r"\b(and|with)\b|&", between, re.IGNORECASE)
+    return word.group(0) if word else None
 
 
 def _checked_evidence(evidence, text):
@@ -331,11 +343,13 @@ def from_model(text, judged):
     The model judges; code checks. A skill the user never wrote is dropped (the model may not add
     requirements), a place the data doesn't know is dropped rather than silently matching nobody,
     and every option is built by make_ambiguity(), exactly as for the rules route."""
-    skills, dropped = [], []
+    skills, dropped, where = [], [], []
     for s in judged.get("skills", []):
         name = search.canonical(s)
         aliases = [s, name] + [k for k, v in search.SYNONYMS.items() if v == name]
-        if any(_written(a, text) for a in aliases):
+        found = [m for m in (_written(a, text) for a in aliases) if m]
+        if found:
+            where.append(min(found, key=lambda m: m.start()))
             if name not in skills:
                 skills.append(name)
         else:
@@ -367,9 +381,15 @@ def from_model(text, judged):
     if status not in (None, "open", "closed"):
         dropped.append("status '%s' (jobs are only open or closed)" % status)
         status = None
+    op = judged["skills_op"]
+    joiner = _joiner(text, where) if len(skills) > 1 else None
+    if op == "OR" and joiner:
+        # The user wrote "and", "with" or "&": the model may flag it as ambiguous, but may not widen it to OR.
+        dropped.append("OR between the skills (you wrote '%s')" % joiner)
+        op = "AND"
     reading = {"target": target, "company": company,
                "status": status,
-               "skills": skills, "skills_op": judged["skills_op"], "location": location,
+               "skills": skills, "skills_op": op, "location": location,
                "seniority": judged["seniority"], "work_mode": judged["work_mode"],
                "availability": {"max_notice": judged["availability"]} if judged["availability"] else None}
     if reading["seniority"]:

@@ -11,10 +11,11 @@ from assistant import log, server  # noqa: E402
 class TestLog(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
+        os.environ["A2_LOG"] = "on"
 
     def tearDown(self):
         self.tmp.cleanup()
-        os.environ.pop("A2_LOG", None)
+        os.environ["A2_LOG"] = "off"  # the suite's default (tests/__init__.py)
 
     def lines(self):
         with open(os.path.join(self.tmp.name, "events.jsonl"), encoding="utf-8") as f:
@@ -34,6 +35,13 @@ class TestLog(unittest.TestCase):
 
     def test_errors_are_not_logged(self):
         self.assertIsNone(log.write({"text": ""}, server.handle({"text": ""}), self.tmp.name))
+
+    def test_a_request_with_nothing_to_search_is_logged(self):
+        # "hello" gets a reply, not an error, so the evaluation log must keep the turn.
+        payload = {"text": "hello"}
+        log.write(payload, server.handle(payload), self.tmp.name)
+        (line,) = self.lines()
+        self.assertEqual((line["event"], line["text"], line["count"]), ("nothing", "hello", None))
 
     def test_logging_can_be_turned_off(self):
         os.environ["A2_LOG"] = "off"

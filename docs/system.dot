@@ -16,7 +16,7 @@ digraph system {
   subgraph cluster_interp {
     label="Interpreter (the AI step)"; labelloc=t; fontname="Helvetica-Bold"; fontsize=10; color="#c4ccd8"; style="rounded,dashed";
     ollama [label="Local model\nOllama · qwen3:14b", fillcolor="#f3f6fc", color="#2f6bdb"];
-    cloud [label="Claude or OpenAI\n(not run with a key)", fillcolor="#f3f6fc", color="#2f6bdb"];
+    cloud [label="Claude or OpenAI\n(not yet run with a key)", fillcolor="#f3f6fc", color="#2f6bdb"];
     rules [label="Rule-based stand-in\n[simulated]", style="rounded,filled,dashed", fillcolor="#fdf1e6", color="#d9771f"];
     checks [label="Code checks\nonly words the user wrote\nknown places, companies"];
   }
