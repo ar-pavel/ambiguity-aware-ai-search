@@ -1,6 +1,7 @@
 """Tests for the live interpreter, using a fake HTTPS call: no key, no network, no cost."""
 import json
 import os
+import re
 import sys
 import unittest
 
@@ -231,10 +232,17 @@ class TestChecks(unittest.TestCase):
                       ambiguities=[{"slot": "skills_op", "dominant": True, "evidence": "you wrote 'and'"}])
         r = interpret.from_model("Python and AWS people", judged)
         self.assertEqual(r["ambiguities"][0]["chosen"], 0)
-        # Where the user wrote "or", or no word at all, the model's OR stands.
-        for text in ("Python or AWS people", "Python AWS people"):
-            r = interpret.from_model(text, dict(self.BASE, skills=["Python", "AWS"], skills_op="OR"))
+        # Where the user wrote "or", or no word at all, the model's OR stands, including for skills
+        # the stand-in doesn't know, and where "or" sits next to "with".
+        for text in ("Python or AWS people", "Python AWS people", "Python or Rust developers",
+                     "Rust or Haskell developers", "Python with Java or Go"):
+            skills = [w for w in re.findall(r"[A-Za-z]+", text) if w not in ("or", "with", "people", "developers")]
+            r = interpret.from_model(text, dict(self.BASE, skills=skills, skills_op="OR"))
             self.assertEqual((r["skills_op"], r["dropped"]), ("OR", []), text)
+        # A skill the stand-in doesn't know, joined with "and", is still kept as AND.
+        judged = dict(self.BASE, skills=["Rust", "Haskell"], skills_op="OR")
+        r = interpret.from_model("Rust and Haskell developers", judged)
+        self.assertEqual(r["skills_op"], "AND")
 
     def test_evidence_is_kept_only_if_its_quote_is_in_the_request(self):
         judged = dict(SENIOR, ambiguities=[{"slot": "seniority", "dominant": False,
