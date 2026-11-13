@@ -1,7 +1,7 @@
 // System diagram. Render: dot -Tpng -Gdpi=200 docs/system.dot -o docs/system.png && dot -Tsvg docs/system.dot -o docs/system.svg
 // Left column: reading a request (top to bottom). Right column: changing records.
 // Border marks status: solid = implemented, orange dashed = simulated, grey dashed = planned,
-// blue = a live language model. Blue fill = on the chat page (web/); white = server (assistant/);
+// blue = a live language model (implemented). Blue fill = on the chat page (web/); white = server (assistant/);
 // cylinders = files on disk.
 digraph system {
   rankdir=TB; nodesep=0.3; ranksep=0.32; newrank=true;
@@ -85,7 +85,7 @@ digraph system {
         <td border="1" style="rounded" color="#172033">implemented</td>
         <td border="1" style="rounded" color="#d9771f" bgcolor="#fdf1e6">simulated</td>
         <td border="1" style="rounded" color="#9aa5b8"><font color="#7b8597">planned</font></td>
-        <td border="1" style="rounded" color="#2f6bdb" bgcolor="#f3f6fc">live language model</td>
+        <td border="1" style="rounded" color="#2f6bdb" bgcolor="#f3f6fc">live language model (implemented)</td>
         <td border="1" style="rounded" bgcolor="#e8effb">on the chat page</td></tr>
     <tr><td></td><td colspan="5" align="left"><font color="#7b8597">Also planned: free-text 'Other…' answers · a view of each job's shortlist</font></td></tr>
   </table>>;
