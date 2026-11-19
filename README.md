@@ -17,7 +17,7 @@ unclear and chooses one of three responses, always with its reason:
 Changes to records (shortlisting candidates, closing jobs) are never guessed: each is listed and
 confirmed first, and can be undone. Built as an MSc project at the University of Birmingham.
 
-*README prose: about 1,010 words (code, commands, tables and headings not counted).*
+*README prose: about 1,090 words (code, commands, tables and headings not counted).*
 
 ```bash
 python3 app.py    # Python 3.8+, nothing to install; open http://127.0.0.1:8770
@@ -149,13 +149,16 @@ checked. "Review" means a Claude Code pass with the `review-change` checklist
    - With Ollama, `qwen3:14b` gave the expected mode for 10 of 15 scripted requests, never fell back, about 4–5 s each ([table](docs/compare-qwen3-14b.md)). Four of the five misses acted where show or ask was expected: the model under-reports what is unclear, which is why code, not the model, decides. The run also exposed a bug (a correct "Bluefin" dropped by the company check), fixed with a test.
 8. **Pre-submission review** ([#61](https://github.com/ar-pavel/ambiguity-aware-ai-search/issues/61), [#62](https://github.com/ar-pavel/ambiguity-aware-ai-search/pull/62))
    - The code checks did not cover the operator, so a live model could still turn "and" into OR. Code now keeps AND when the user wrote *and*, *with* or *&*; tested for each word, including "Python or Rust", a case review of the fix itself found. Replies with nothing to search ("hello") are now in the evaluation log. The comparison was re-run with the same result.
+   - A review of the report ([#69](https://github.com/ar-pavel/ambiguity-aware-ai-search/issues/69)) found the diagram had no arrow for a typed follow-up that changes records, and that figure text was too small in print. The arrow is added, and the storyboards are re-laid out from the same screenshots.
 
 ## AI assistance
 
-- **Tool:** Claude Code (Claude Opus 5.5), for drafting code, tests and documents, and for reviews.
+- **Tool:** Claude Code (Claude Opus 5.5), for drafting code, tests and documents (this README, the
+  project report, the system diagram and the storyboard layout), and for reviews.
 - **My part:** the research question, the design decisions and scope, and accepting, changing or
   rejecting each change. Every change went through a pull request, the review above, the tests and a
-  check in the browser.
+  check in the browser. The report's claims were checked against the code, the cited papers and the
+  lecture slides; the storyboard frames are unedited screenshots of the running prototype.
 - **Examples:**
   - The first live interpreter used the Claude SDK; I replaced it with plain HTTPS so the project still needs nothing installed ([#16](https://github.com/ar-pavel/ambiguity-aware-ai-search/pull/16)).
   - The UX review and the assistant advised against a chat transcript ([#35](https://github.com/ar-pavel/ambiguity-aware-ai-search/pull/35)); I chose chat, keeping the reading editable ([#43](https://github.com/ar-pavel/ambiguity-aware-ai-search/pull/43)).
@@ -167,7 +170,7 @@ checked. "Review" means a Claude Code pass with the `review-change` checklist
 | Path | What it is |
 |---|---|
 | [`docs/system.png`](docs/system.png) (source [`system.dot`](docs/system.dot)) | the system diagram |
-| [`docs/storyboards/`](docs/storyboards) | three storyboards: [show](docs/storyboards/storyboard-show.png), [ask](docs/storyboards/storyboard-ask.png), [a confirmed change](docs/storyboards/storyboard-write.png); five frames each from real screenshots; [`make_storyboards.py`](docs/storyboards/make_storyboards.py) rebuilds them |
+| [`docs/storyboards/`](docs/storyboards) | three storyboards: [show](docs/storyboards/storyboard-show.png), [ask](docs/storyboards/storyboard-ask.png), [a confirmed change](docs/storyboards/storyboard-write.png); five frames each from real screenshots, stacked in one column so they read on a portrait page; [`make_storyboards.py`](docs/storyboards/make_storyboards.py) rebuilds them |
 | [`docs/compare-qwen3-14b.md`](docs/compare-qwen3-14b.md) | the stand-in and `qwen3:14b` on the 15 scripted requests |
 | [`AGENTS.md`](AGENTS.md) · [`skills/`](skills) | working rules for coding agents and people · two task procedures |
 | [`.env.example`](.env.example) | live-interpreter and logging settings |
