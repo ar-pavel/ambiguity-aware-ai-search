@@ -5,8 +5,9 @@
 Each storyboard has five frames (W2 L06): the goal, the person's action, the system's inference and
 action, the result, and recovery. Each frame is labelled with who acts (P = person, S = system), the
 gulf involved, and the signifier on screen. The frames are real screenshots of the running prototype
-(stand-in interpreter, θ = 0.5, fresh state). Open each HTML file and save it as PNG; the PNGs in this
-folder were captured that way.
+(stand-in interpreter, θ = 0.5, fresh state). The frames are stacked in one column so that the text
+stays readable when a storyboard is printed on a portrait A4 page. Open each HTML file and save it as
+PNG; the PNGs in this folder were captured that way, at twice the pixel density.
 """
 import html
 import os
@@ -45,34 +46,33 @@ STORYBOARDS = {
 }
 
 PAGE = """<!doctype html><html lang="en"><head><meta charset="utf-8"><title>{title}</title><style>
-body {{ margin: 0; padding: 24px; font: 15px/1.4 system-ui, sans-serif; color: #172033; background: #fff;
-       width: 1560px; display: inline-block; }}
-h1 {{ margin: 0 0 4px; font-size: 22px; }} .req {{ margin: 0 0 16px; color: #5b6578; }}
-.grid {{ display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }}
-.frame {{ border: 1px solid #d5dce6; border-radius: 8px; overflow: hidden; display: flex; flex-direction: column; }}
-.head {{ padding: 6px 10px; background: #edf1f6; font-weight: 600; }}
-.shot {{ flex: 1; display: flex; align-items: center; justify-content: center; background: #f6f8fb; padding: 10px;
-        border-top: 1px solid #d5dce6; border-bottom: 1px solid #d5dce6; min-height: 120px; }}
-img {{ display: block; max-width: 100%; max-height: 430px; border-radius: 4px; }}
-.key {{ background: #edf1f6; }}
-.key .goal {{ font-size: 14px; align-items: flex-start; flex-direction: column; gap: 6px; }}
-.goal {{ flex: 1; display: flex; align-items: center; padding: 18px; font-size: 18px; min-height: 120px; }}
-.tags {{ padding: 6px 10px; font-size: 13px; color: #3b4558; }} .tags b {{ color: #172033; }}
-</style></head><body><h1>{title}</h1><p class="req">Request: <em>{request}</em> · real screenshots of the prototype</p>
-<div class="grid">{frames}<div class="frame key"><div class="head">Key</div><div class="goal">
-<div><b>P</b> = person acts · <b>S</b> = system acts</div>
-<div><b>Gulf of execution</b>: can I say what I want?</div>
-<div><b>Gulf of evaluation</b>: can I tell what it did?</div>
-<div><b>Signifier</b>: what on screen shows what is possible</div></div></div></div></body></html>"""
+body {{ margin: 0; padding: 20px; font: 16px/1.4 system-ui, sans-serif; color: #172033; background: #fff;
+       width: 940px; display: inline-block; }}
+h1 {{ margin: 0 0 2px; font-size: 22px; }} .req {{ margin: 0 0 12px; color: #3b4558; }}
+.grid {{ display: grid; grid-template-columns: 1fr; gap: 10px; }}
+.frame {{ border: 1px solid #c4ccd8; border-radius: 8px; overflow: hidden; }}
+.head {{ display: flex; justify-content: space-between; gap: 16px; padding: 6px 10px; background: #edf1f6; }}
+.head b {{ white-space: nowrap; }} .tags {{ font-size: 14px; color: #3b4558; text-align: right; }}
+.tags b {{ color: #172033; }}
+.shot {{ display: flex; justify-content: center; background: #f6f8fb; padding: 8px; border-top: 1px solid #c4ccd8; }}
+img {{ display: block; max-width: 100%; border-radius: 4px; }}
+.goal {{ padding: 12px 14px; font-size: 17px; border-top: 1px solid #c4ccd8; }}
+.key {{ margin: 10px 0 0; font-size: 14px; color: #3b4558; }} .key b {{ color: #172033; }}
+</style></head><body><h1>{title}</h1>
+<p class="req">Request: <em>{request}</em> · real screenshots of the prototype · interpreter: rule-based stand-in (simulated)</p>
+<div class="grid">{frames}</div>
+<p class="key"><b>Key.</b> <b>P</b> = the person acts, <b>S</b> = the system acts. <b>Gulf of execution</b>: can I say
+what I want? <b>Gulf of evaluation</b>: can I tell what it did? <b>Signifier</b>: what on screen shows what is
+possible.</p></body></html>"""
 
 
 def frame(i, step, content, who, gulf, signifier):
     """One labelled cell: a screenshot (or the goal in words) with who acts, the gulf and the signifier."""
     body = ('<div class="shot"><img src="%s" alt="%s"></div>' % (content, html.escape(step)) if content.endswith(".png")
             else '<div class="goal">%s</div>' % html.escape(content))
-    return ('<div class="frame"><div class="head">%d · %s</div>%s<div class="tags"><b>Who:</b> %s · '
-            '<b>Gulf:</b> %s · <b>Signifier:</b> %s</div></div>'
-            % (i, html.escape(step), body, who, gulf, html.escape(signifier)))
+    return ('<div class="frame"><div class="head"><b>%d · %s</b><span class="tags"><b>Who:</b> %s · '
+            '<b>Gulf:</b> %s · <b>Signifier:</b> %s</span></div>%s</div>'
+            % (i, html.escape(step), who, gulf, html.escape(signifier), body))
 
 
 if __name__ == "__main__":
