@@ -59,7 +59,8 @@ img {{ display: block; max-width: 100%; border-radius: 4px; }}
 .goal {{ padding: 12px 14px; font-size: 17px; border-top: 1px solid #c4ccd8; }}
 .key {{ margin: 10px 0 0; font-size: 14px; color: #3b4558; }} .key b {{ color: #172033; }}
 </style></head><body><h1>{title}</h1>
-<p class="req">Request: <em>{request}</em> · real screenshots of the prototype · interpreter: rule-based stand-in (simulated)</p>
+<p class="req">Request: <em>{request}</em> · real screenshots of the prototype ·
+interpreter: rule-based stand-in (simulated)</p>
 <div class="grid">{frames}</div>
 <p class="key"><b>Key.</b> <b>P</b> = the person acts, <b>S</b> = the system acts. <b>Gulf of execution</b>: can I say
 what I want? <b>Gulf of evaluation</b>: can I tell what it did? <b>Signifier</b>: what on screen shows what is
