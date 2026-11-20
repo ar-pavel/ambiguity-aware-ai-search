@@ -43,6 +43,13 @@ class TestRule(unittest.TestCase):
         # With a very low threshold, nothing differs "enough" to ask.
         self.assertEqual(decide("senior Java developers", theta=0.0)["mode"], "show")
 
+    def test_the_outcomes_are_stable_across_thresholds(self):
+        # The report's claim: any threshold from 0.3 to 0.9 changes at most one of the scripted outcomes.
+        for theta in (0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9):
+            changed = [text for text, mode in EXPECTED.items() if decide(text, theta=theta)["mode"] != mode]
+            with self.subTest(theta=theta):
+                self.assertLessEqual(len(changed), 1, changed)
+
     def test_manual_override_is_reported(self):
         d = decide("senior Java developers", force="act")
         self.assertEqual(d["mode"], "act")

@@ -56,14 +56,16 @@ digraph system {
   route -> rules [label="no (default)"];
   ollama -> checks [label=" JSON"];
   cloud -> checks [label=" JSON"];
-  checks:e -> rules:sw [label=" fails", style=dashed, constraint=false];
+  checks:e -> rules:sw [label=" no usable\n reply", style=dashed, constraint=false];
   checks -> reading [label=" ok"];
   rules:se -> reading;
   reading -> rule;
   settings -> rule [style=dashed, label=" study only"];
   rule -> search [label=" a list per reading"];
   search -> data [dir=both, constraint=false];
-  search -> reply [label=" mode, reason,\n results, counts"];
+  search -> reply [label=" results, counts"];
+  rule -> reply [label=" mode, reason"];
+  reply -> reading [label=" chip edit / answer:\n re-run with that choice", constraint=false];
   semantic -> search [style=dashed, color="#9aa5b8"];
 
   // changing records
