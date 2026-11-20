@@ -73,7 +73,7 @@ the same readings; a live model is closer to a real product.
 ## Running or inspecting the work
 
 ```bash
-python3 run_tests.py                                     # 174 tests; no key, network or install
+python3 run_tests.py                                     # 175 tests; no key, network or install
 python3 app.py                                           # http://127.0.0.1:8770 (--port 8771 if busy)
 python3 -m assistant.strategy "senior Java developers"   # the rule's decision as JSON, no server
 ```
@@ -149,7 +149,7 @@ checked. "Review" means a Claude Code pass with the `review-change` checklist
    - With Ollama, `qwen3:14b` gave the expected mode for 10 of 15 scripted requests, never fell back, about 4–5 s each ([table](docs/compare-qwen3-14b.md)). Four of the five misses acted where show or ask was expected: the model under-reports what is unclear, which is why code, not the model, decides. The run also exposed a bug (a correct "Bluefin" dropped by the company check), fixed with a test.
 8. **Pre-submission review** ([#61](https://github.com/ar-pavel/ambiguity-aware-ai-search/issues/61), [#62](https://github.com/ar-pavel/ambiguity-aware-ai-search/pull/62))
    - The code checks did not cover the operator, so a live model could still turn "and" into OR. Code now keeps AND when the user wrote *and*, *with* or *&*; tested for each word, including "Python or Rust", a case review of the fix itself found. Replies with nothing to search ("hello") are now in the evaluation log. The comparison was re-run with the same result.
-   - A review of the report ([#69](https://github.com/ar-pavel/ambiguity-aware-ai-search/issues/69)) found the diagram had no arrow for a typed follow-up that changes records, and that figure text was too small in print. The arrow is added, and the storyboards are re-laid out from the same screenshots. A second pass ([#71](https://github.com/ar-pavel/ambiguity-aware-ai-search/issues/71)) added the path the first two storyboards show: a chip edit or an answer goes back to the reading and re-runs the rule.
+   - A review of the report ([#69](https://github.com/ar-pavel/ambiguity-aware-ai-search/issues/69)) found the diagram had no arrow for a typed follow-up that changes records, and that figure text was too small in print. The arrow is added, and the storyboards are re-laid out from the same screenshots. A second pass ([#71](https://github.com/ar-pavel/ambiguity-aware-ai-search/issues/71)) added the path the first two storyboards show: a chip edit or an answer goes back to the reading and re-runs the rule. A test now checks that any θ from 0.3 to 0.9 changes at most one of the ten scripted outcomes.
 
 ## AI assistance
 
