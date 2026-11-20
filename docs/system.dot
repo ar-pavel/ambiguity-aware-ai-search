@@ -5,17 +5,17 @@
 // cylinders = files on disk.
 digraph system {
   rankdir=TB; nodesep=0.3; ranksep=0.32; newrank=true;
-  node [shape=box, style="rounded,filled", fillcolor="#ffffff", color="#172033", fontname="Helvetica", fontsize=13];
-  edge [fontname="Helvetica", fontsize=11, color="#5b6578"];
+  node [shape=box, style="rounded,filled", fillcolor="#ffffff", color="#172033", fontname="Helvetica", fontsize=15];
+  edge [fontname="Helvetica", fontsize=13, color="#5b6578"];
 
   recruiter [label="Recruiter", shape=ellipse, fillcolor="#edf1f6"];
   request [label="Chat page\nrequest or follow-up", fillcolor="#e8effb"];
   settings [label="Study settings\nforce a strategy · θ", fillcolor="#e8effb"];
-  cmd [label="Follow-up?  commands.py\n(names a job → Plan)"];
-  route [label="live model\nset?", shape=diamond, fontsize=12];
+  cmd [label="Follow-up?  commands.py"];
+  route [label="live model\nset?", shape=diamond, fontsize=14];
 
   subgraph cluster_interp {
-    label="Interpreter: the AI step"; labelloc=t; fontname="Helvetica-Bold"; fontsize=12;
+    label="Interpreter: the AI step"; labelloc=t; fontname="Helvetica-Bold"; fontsize=14;
     color="#c4ccd8"; style="rounded,dashed";
     ollama [label="Local model\nOllama · qwen3:14b", fillcolor="#f3f6fc", color="#2f6bdb", penwidth=1.6];
     cloud [label="Claude or OpenAI\n(not yet run with a key)", fillcolor="#f3f6fc", color="#2f6bdb", penwidth=1.6];
@@ -67,7 +67,8 @@ digraph system {
   semantic -> search [style=dashed, color="#9aa5b8"];
 
   // changing records
-  reply -> plan [label=" Shortlist… / Close…"];
+  reply -> plan [label=" Shortlist… / Close…\n buttons"];
+  cmd -> plan [label=" typed: shortlist… / close…"];
   plan -> confirm;
   confirm -> apply [label=" Confirm", style=bold];
   apply -> store;
@@ -79,7 +80,7 @@ digraph system {
   apply -> log [style=dotted, label=" every change"];
   log -> learn [style=dashed, color="#9aa5b8"];
 
-  labelloc=b; labeljust=l; fontname="Helvetica"; fontsize=12;
+  labelloc=b; labeljust=l; fontname="Helvetica"; fontsize=14;
   label=<<table border="0" cellborder="0" cellspacing="5">
     <tr><td align="left"><b>Key</b></td>
         <td border="1" style="rounded" color="#172033">implemented</td>
