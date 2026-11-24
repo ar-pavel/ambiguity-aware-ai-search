@@ -66,7 +66,9 @@ button.suggestion { background: var(--surface); color: var(--ink); font-weight: 
 button.suggestion:hover { border-color: var(--ink); background: var(--surface); }
 
 /* Turns: the recruiter on the right in ink; the assistant on the left, edged in its mode's colour. */
-.turn { margin: 0 0 1.1rem; }
+.turn { margin: 0 0 1.1rem; animation: turn-in .32s ease-out both; }
+/* A new turn eases in, so the eye is led to what just changed. No delay is added: the reply is already there. */
+@keyframes turn-in { from { opacity: 0; transform: translateY(10px); } }
 .turn.user { display: flex; justify-content: flex-end; }
 .turn.user p { margin: 0; max-width: 72%; padding: .55rem 1rem; border-radius: 18px 18px 4px 18px;
                background: var(--ink); color: #fff; }
@@ -191,7 +193,7 @@ dialog h2 { margin: 0 0 .5rem; font-size: 1.3rem; }
   .top, #chat, .composer, .study-footer { padding-left: 1rem; padding-right: 1rem; }
   .welcome { padding-top: 1.5rem; }
 }
-@media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
+@media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } .turn { animation: none; } }
 
 /* Keycaps: the keyboard path, made visible. */
 kbd.key { display: inline-grid; place-items: center; min-width: 1.45em; height: 1.45em; padding: 0 .3em; margin-right: .45em;
