@@ -1,0 +1,3296 @@
+{
+ "interpreter": "bedrock",
+ "date": "2026-11-24",
+ "frozen_at": "v1.2-a2",
+ "code_and_data_unchanged_since_freeze": true,
+ "theta": 0.5,
+ "requests": 42,
+ "cases": 80,
+ "clear_requests": 12,
+ "high_impact_requests": 13.25,
+ "wrong_if_acted_on": 17.25,
+ "fell_back_to_stand_in": [],
+ "summary": {
+  "always act": {
+   "1.0": {
+    "interruptions": 0.0,
+    "needless_questions": 0.0,
+    "questions_on_clear": 0.0,
+    "wrong": 17.25,
+    "wrong_high_impact": 13.25,
+    "wrong_on_clear": 0.0,
+    "refused": 0.0,
+    "edits": 0.0
+   },
+   "0.75": {
+    "interruptions": 0.0,
+    "needless_questions": 0.0,
+    "questions_on_clear": 0.0,
+    "wrong": 17.25,
+    "wrong_high_impact": 13.25,
+    "wrong_on_clear": 0.0,
+    "refused": 0.0,
+    "edits": 0.0
+   },
+   "0.5": {
+    "interruptions": 0.0,
+    "needless_questions": 0.0,
+    "questions_on_clear": 0.0,
+    "wrong": 17.25,
+    "wrong_high_impact": 13.25,
+    "wrong_on_clear": 0.0,
+    "refused": 0.0,
+    "edits": 0.0
+   },
+   "0.25": {
+    "interruptions": 0.0,
+    "needless_questions": 0.0,
+    "questions_on_clear": 0.0,
+    "wrong": 17.25,
+    "wrong_high_impact": 13.25,
+    "wrong_on_clear": 0.0,
+    "refused": 0.0,
+    "edits": 0.0
+   }
+  },
+  "always show": {
+   "1.0": {
+    "interruptions": 0.0,
+    "needless_questions": 0.0,
+    "questions_on_clear": 0.0,
+    "wrong": 7.0,
+    "wrong_high_impact": 3.5,
+    "wrong_on_clear": 0.0,
+    "refused": 0.0,
+    "edits": 11.0
+   },
+   "0.75": {
+    "interruptions": 0.0,
+    "needless_questions": 0.0,
+    "questions_on_clear": 0.0,
+    "wrong": 9.609,
+    "wrong_high_impact": 5.984,
+    "wrong_on_clear": 0.0,
+    "refused": 0.0,
+    "edits": 8.25
+   },
+   "0.5": {
+    "interruptions": 0.0,
+    "needless_questions": 0.0,
+    "questions_on_clear": 0.0,
+    "wrong": 12.188,
+    "wrong_high_impact": 8.438,
+    "wrong_on_clear": 0.0,
+    "refused": 0.0,
+    "edits": 5.5
+   },
+   "0.25": {
+    "interruptions": 0.0,
+    "needless_questions": 0.0,
+    "questions_on_clear": 0.0,
+    "wrong": 14.734,
+    "wrong_high_impact": 10.859,
+    "wrong_on_clear": 0.0,
+    "refused": 0.0,
+    "edits": 2.75
+   }
+  },
+  "always ask": {
+   "1.0": {
+    "interruptions": 20.0,
+    "needless_questions": 9.5,
+    "questions_on_clear": 0.0,
+    "wrong": 7.25,
+    "wrong_high_impact": 3.75,
+    "wrong_on_clear": 0.0,
+    "refused": 0.0,
+    "edits": 0.5
+   },
+   "0.75": {
+    "interruptions": 20.0,
+    "needless_questions": 9.5,
+    "questions_on_clear": 0.0,
+    "wrong": 7.375,
+    "wrong_high_impact": 3.875,
+    "wrong_on_clear": 0.0,
+    "refused": 0.0,
+    "edits": 0.375
+   },
+   "0.5": {
+    "interruptions": 20.0,
+    "needless_questions": 9.5,
+    "questions_on_clear": 0.0,
+    "wrong": 7.5,
+    "wrong_high_impact": 4.0,
+    "wrong_on_clear": 0.0,
+    "refused": 0.0,
+    "edits": 0.25
+   },
+   "0.25": {
+    "interruptions": 20.0,
+    "needless_questions": 9.5,
+    "questions_on_clear": 0.0,
+    "wrong": 7.625,
+    "wrong_high_impact": 4.125,
+    "wrong_on_clear": 0.0,
+    "refused": 0.0,
+    "edits": 0.125
+   }
+  },
+  "adaptive": {
+   "1.0": {
+    "interruptions": 12.0,
+    "needless_questions": 5.5,
+    "questions_on_clear": 0.0,
+    "wrong": 7.25,
+    "wrong_high_impact": 3.75,
+    "wrong_on_clear": 0.0,
+    "refused": 0.0,
+    "edits": 4.5
+   },
+   "0.75": {
+    "interruptions": 12.0,
+    "needless_questions": 5.5,
+    "questions_on_clear": 0.0,
+    "wrong": 8.375,
+    "wrong_high_impact": 4.75,
+    "wrong_on_clear": 0.0,
+    "refused": 0.0,
+    "edits": 3.375
+   },
+   "0.5": {
+    "interruptions": 12.0,
+    "needless_questions": 5.5,
+    "questions_on_clear": 0.0,
+    "wrong": 9.5,
+    "wrong_high_impact": 5.75,
+    "wrong_on_clear": 0.0,
+    "refused": 0.0,
+    "edits": 2.25
+   },
+   "0.25": {
+    "interruptions": 12.0,
+    "needless_questions": 5.5,
+    "questions_on_clear": 0.0,
+    "wrong": 10.625,
+    "wrong_high_impact": 6.75,
+    "wrong_on_clear": 0.0,
+    "refused": 0.0,
+    "edits": 1.125
+   }
+  }
+ },
+ "theta_sweep_adaptive": {
+  "0.1": {
+   "1.0": {
+    "interruptions": 6.0,
+    "needless_questions": 3.0,
+    "questions_on_clear": 0.0,
+    "wrong": 7.25,
+    "wrong_high_impact": 3.75,
+    "wrong_on_clear": 0.0,
+    "refused": 0.0,
+    "edits": 7.5
+   },
+   "0.75": {
+    "interruptions": 6.0,
+    "needless_questions": 3.0,
+    "questions_on_clear": 0.0,
+    "wrong": 9.047,
+    "wrong_high_impact": 5.422,
+    "wrong_on_clear": 0.0,
+    "refused": 0.0,
+    "edits": 5.625
+   },
+   "0.5": {
+    "interruptions": 6.0,
+    "needless_questions": 3.0,
+    "questions_on_clear": 0.0,
+    "wrong": 10.812,
+    "wrong_high_impact": 7.062,
+    "wrong_on_clear": 0.0,
+    "refused": 0.0,
+    "edits": 3.75
+   },
+   "0.25": {
+    "interruptions": 6.0,
+    "needless_questions": 3.0,
+    "questions_on_clear": 0.0,
+    "wrong": 12.547,
+    "wrong_high_impact": 8.672,
+    "wrong_on_clear": 0.0,
+    "refused": 0.0,
+    "edits": 1.875
+   }
+  },
+  "0.2": {
+   "1.0": {
+    "interruptions": 10.0,
+    "needless_questions": 4.5,
+    "questions_on_clear": 0.0,
+    "wrong": 7.25,
+    "wrong_high_impact": 3.75,
+    "wrong_on_clear": 0.0,
+    "refused": 0.0,
+    "edits": 5.5
+   },
+   "0.75": {
+    "interruptions": 10.0,
+    "needless_questions": 4.5,
+    "questions_on_clear": 0.0,
+    "wrong": 8.625,
+    "wrong_high_impact": 5.0,
+    "wrong_on_clear": 0.0,
+    "refused": 0.0,
+    "edits": 4.125
+   },
+   "0.5": {
+    "interruptions": 10.0,
+    "needless_questions": 4.5,
+    "questions_on_clear": 0.0,
+    "wrong": 10.0,
+    "wrong_high_impact": 6.25,
+    "wrong_on_clear": 0.0,
+    "refused": 0.0,
+    "edits": 2.75
+   },
+   "0.25": {
+    "interruptions": 10.0,
+    "needless_questions": 4.5,
+    "questions_on_clear": 0.0,
+    "wrong": 11.375,
+    "wrong_high_impact": 7.5,
+    "wrong_on_clear": 0.0,
+    "refused": 0.0,
+    "edits": 1.375
+   }
+  },
+  "0.3": {
+   "1.0": {
+    "interruptions": 12.0,
+    "needless_questions": 5.5,
+    "questions_on_clear": 0.0,
+    "wrong": 7.25,
+    "wrong_high_impact": 3.75,
+    "wrong_on_clear": 0.0,
+    "refused": 0.0,
+    "edits": 4.5
+   },
+   "0.75": {
+    "interruptions": 12.0,
+    "needless_questions": 5.5,
+    "questions_on_clear": 0.0,
+    "wrong": 8.375,
+    "wrong_high_impact": 4.75,
+    "wrong_on_clear": 0.0,
+    "refused": 0.0,
+    "edits": 3.375
+   },
+   "0.5": {
+    "interruptions": 12.0,
+    "needless_questions": 5.5,
+    "questions_on_clear": 0.0,
+    "wrong": 9.5,
+    "wrong_high_impact": 5.75,
+    "wrong_on_clear": 0.0,
+    "refused": 0.0,
+    "edits": 2.25
+   },
+   "0.25": {
+    "interruptions": 12.0,
+    "needless_questions": 5.5,
+    "questions_on_clear": 0.0,
+    "wrong": 10.625,
+    "wrong_high_impact": 6.75,
+    "wrong_on_clear": 0.0,
+    "refused": 0.0,
+    "edits": 1.125
+   }
+  },
+  "0.4": {
+   "1.0": {
+    "interruptions": 12.0,
+    "needless_questions": 5.5,
+    "questions_on_clear": 0.0,
+    "wrong": 7.25,
+    "wrong_high_impact": 3.75,
+    "wrong_on_clear": 0.0,
+    "refused": 0.0,
+    "edits": 4.5
+   },
+   "0.75": {
+    "interruptions": 12.0,
+    "needless_questions": 5.5,
+    "questions_on_clear": 0.0,
+    "wrong": 8.375,
+    "wrong_high_impact": 4.75,
+    "wrong_on_clear": 0.0,
+    "refused": 0.0,
+    "edits": 3.375
+   },
+   "0.5": {
+    "interruptions": 12.0,
+    "needless_questions": 5.5,
+    "questions_on_clear": 0.0,
+    "wrong": 9.5,
+    "wrong_high_impact": 5.75,
+    "wrong_on_clear": 0.0,
+    "refused": 0.0,
+    "edits": 2.25
+   },
+   "0.25": {
+    "interruptions": 12.0,
+    "needless_questions": 5.5,
+    "questions_on_clear": 0.0,
+    "wrong": 10.625,
+    "wrong_high_impact": 6.75,
+    "wrong_on_clear": 0.0,
+    "refused": 0.0,
+    "edits": 1.125
+   }
+  },
+  "0.5": {
+   "1.0": {
+    "interruptions": 12.0,
+    "needless_questions": 5.5,
+    "questions_on_clear": 0.0,
+    "wrong": 7.25,
+    "wrong_high_impact": 3.75,
+    "wrong_on_clear": 0.0,
+    "refused": 0.0,
+    "edits": 4.5
+   },
+   "0.75": {
+    "interruptions": 12.0,
+    "needless_questions": 5.5,
+    "questions_on_clear": 0.0,
+    "wrong": 8.375,
+    "wrong_high_impact": 4.75,
+    "wrong_on_clear": 0.0,
+    "refused": 0.0,
+    "edits": 3.375
+   },
+   "0.5": {
+    "interruptions": 12.0,
+    "needless_questions": 5.5,
+    "questions_on_clear": 0.0,
+    "wrong": 9.5,
+    "wrong_high_impact": 5.75,
+    "wrong_on_clear": 0.0,
+    "refused": 0.0,
+    "edits": 2.25
+   },
+   "0.25": {
+    "interruptions": 12.0,
+    "needless_questions": 5.5,
+    "questions_on_clear": 0.0,
+    "wrong": 10.625,
+    "wrong_high_impact": 6.75,
+    "wrong_on_clear": 0.0,
+    "refused": 0.0,
+    "edits": 1.125
+   }
+  },
+  "0.6": {
+   "1.0": {
+    "interruptions": 12.0,
+    "needless_questions": 5.5,
+    "questions_on_clear": 0.0,
+    "wrong": 7.25,
+    "wrong_high_impact": 3.75,
+    "wrong_on_clear": 0.0,
+    "refused": 0.0,
+    "edits": 4.5
+   },
+   "0.75": {
+    "interruptions": 12.0,
+    "needless_questions": 5.5,
+    "questions_on_clear": 0.0,
+    "wrong": 8.375,
+    "wrong_high_impact": 4.75,
+    "wrong_on_clear": 0.0,
+    "refused": 0.0,
+    "edits": 3.375
+   },
+   "0.5": {
+    "interruptions": 12.0,
+    "needless_questions": 5.5,
+    "questions_on_clear": 0.0,
+    "wrong": 9.5,
+    "wrong_high_impact": 5.75,
+    "wrong_on_clear": 0.0,
+    "refused": 0.0,
+    "edits": 2.25
+   },
+   "0.25": {
+    "interruptions": 12.0,
+    "needless_questions": 5.5,
+    "questions_on_clear": 0.0,
+    "wrong": 10.625,
+    "wrong_high_impact": 6.75,
+    "wrong_on_clear": 0.0,
+    "refused": 0.0,
+    "edits": 1.125
+   }
+  },
+  "0.7": {
+   "1.0": {
+    "interruptions": 12.0,
+    "needless_questions": 5.5,
+    "questions_on_clear": 0.0,
+    "wrong": 7.25,
+    "wrong_high_impact": 3.75,
+    "wrong_on_clear": 0.0,
+    "refused": 0.0,
+    "edits": 4.5
+   },
+   "0.75": {
+    "interruptions": 12.0,
+    "needless_questions": 5.5,
+    "questions_on_clear": 0.0,
+    "wrong": 8.375,
+    "wrong_high_impact": 4.75,
+    "wrong_on_clear": 0.0,
+    "refused": 0.0,
+    "edits": 3.375
+   },
+   "0.5": {
+    "interruptions": 12.0,
+    "needless_questions": 5.5,
+    "questions_on_clear": 0.0,
+    "wrong": 9.5,
+    "wrong_high_impact": 5.75,
+    "wrong_on_clear": 0.0,
+    "refused": 0.0,
+    "edits": 2.25
+   },
+   "0.25": {
+    "interruptions": 12.0,
+    "needless_questions": 5.5,
+    "questions_on_clear": 0.0,
+    "wrong": 10.625,
+    "wrong_high_impact": 6.75,
+    "wrong_on_clear": 0.0,
+    "refused": 0.0,
+    "edits": 1.125
+   }
+  },
+  "0.8": {
+   "1.0": {
+    "interruptions": 12.0,
+    "needless_questions": 5.5,
+    "questions_on_clear": 0.0,
+    "wrong": 7.25,
+    "wrong_high_impact": 3.75,
+    "wrong_on_clear": 0.0,
+    "refused": 0.0,
+    "edits": 4.5
+   },
+   "0.75": {
+    "interruptions": 12.0,
+    "needless_questions": 5.5,
+    "questions_on_clear": 0.0,
+    "wrong": 8.375,
+    "wrong_high_impact": 4.75,
+    "wrong_on_clear": 0.0,
+    "refused": 0.0,
+    "edits": 3.375
+   },
+   "0.5": {
+    "interruptions": 12.0,
+    "needless_questions": 5.5,
+    "questions_on_clear": 0.0,
+    "wrong": 9.5,
+    "wrong_high_impact": 5.75,
+    "wrong_on_clear": 0.0,
+    "refused": 0.0,
+    "edits": 2.25
+   },
+   "0.25": {
+    "interruptions": 12.0,
+    "needless_questions": 5.5,
+    "questions_on_clear": 0.0,
+    "wrong": 10.625,
+    "wrong_high_impact": 6.75,
+    "wrong_on_clear": 0.0,
+    "refused": 0.0,
+    "edits": 1.125
+   }
+  },
+  "0.9": {
+   "1.0": {
+    "interruptions": 12.0,
+    "needless_questions": 5.5,
+    "questions_on_clear": 0.0,
+    "wrong": 7.25,
+    "wrong_high_impact": 3.75,
+    "wrong_on_clear": 0.0,
+    "refused": 0.0,
+    "edits": 4.5
+   },
+   "0.75": {
+    "interruptions": 12.0,
+    "needless_questions": 5.5,
+    "questions_on_clear": 0.0,
+    "wrong": 8.375,
+    "wrong_high_impact": 4.75,
+    "wrong_on_clear": 0.0,
+    "refused": 0.0,
+    "edits": 3.375
+   },
+   "0.5": {
+    "interruptions": 12.0,
+    "needless_questions": 5.5,
+    "questions_on_clear": 0.0,
+    "wrong": 9.5,
+    "wrong_high_impact": 5.75,
+    "wrong_on_clear": 0.0,
+    "refused": 0.0,
+    "edits": 2.25
+   },
+   "0.25": {
+    "interruptions": 12.0,
+    "needless_questions": 5.5,
+    "questions_on_clear": 0.0,
+    "wrong": 10.625,
+    "wrong_high_impact": 6.75,
+    "wrong_on_clear": 0.0,
+    "refused": 0.0,
+    "edits": 1.125
+   }
+  }
+ },
+ "rows": [
+  {
+   "id": "c01",
+   "text": "Go developers in Manchester",
+   "category": "clear",
+   "phrasing": "",
+   "intended": "Go · Manchester",
+   "wanted": 4,
+   "lost": 0,
+   "unwanted": 0,
+   "high_impact": false,
+   "ignored": [],
+   "modes": {
+    "always act": "act",
+    "always show": "show",
+    "always ask": "act",
+    "adaptive": "act"
+   },
+   "wrong_if_all_noticed": {
+    "always act": 0.0,
+    "always show": 0.0,
+    "always ask": 0.0,
+    "adaptive": 0.0
+   }
+  },
+  {
+   "id": "c02",
+   "text": "Go AND Kubernetes engineers",
+   "category": "clear",
+   "phrasing": "",
+   "intended": "Go AND Kubernetes",
+   "wanted": 9,
+   "lost": 0,
+   "unwanted": 0,
+   "high_impact": false,
+   "ignored": [],
+   "modes": {
+    "always act": "act",
+    "always show": "show",
+    "always ask": "act",
+    "adaptive": "act"
+   },
+   "wrong_if_all_noticed": {
+    "always act": 0.0,
+    "always show": 0.0,
+    "always ask": 0.0,
+    "adaptive": 0.0
+   }
+  },
+  {
+   "id": "c03",
+   "text": "React OR Vue developers in London",
+   "category": "clear",
+   "phrasing": "",
+   "intended": "React OR Vue · London",
+   "wanted": 11,
+   "lost": 0,
+   "unwanted": 0,
+   "high_impact": false,
+   "ignored": [],
+   "modes": {
+    "always act": "act",
+    "always show": "show",
+    "always ask": "act",
+    "adaptive": "act"
+   },
+   "wrong_if_all_noticed": {
+    "always act": 0.0,
+    "always show": 0.0,
+    "always ask": 0.0,
+    "adaptive": 0.0
+   }
+  },
+  {
+   "id": "c04",
+   "text": "Terraform engineers in Leeds",
+   "category": "clear",
+   "phrasing": "",
+   "intended": "Terraform · Leeds",
+   "wanted": 1,
+   "lost": 0,
+   "unwanted": 0,
+   "high_impact": false,
+   "ignored": [],
+   "modes": {
+    "always act": "act",
+    "always show": "show",
+    "always ask": "act",
+    "adaptive": "act"
+   },
+   "wrong_if_all_noticed": {
+    "always act": 0.0,
+    "always show": 0.0,
+    "always ask": 0.0,
+    "adaptive": 0.0
+   }
+  },
+  {
+   "id": "c05",
+   "text": "SQL developers with 8+ years",
+   "category": "clear",
+   "phrasing": "",
+   "intended": "SQL · 8+ years",
+   "wanted": 21,
+   "lost": 0,
+   "unwanted": 0,
+   "high_impact": false,
+   "ignored": [],
+   "modes": {
+    "always act": "act",
+    "always show": "show",
+    "always ask": "act",
+    "adaptive": "act"
+   },
+   "wrong_if_all_noticed": {
+    "always act": 0.0,
+    "always show": 0.0,
+    "always ask": 0.0,
+    "adaptive": 0.0
+   }
+  },
+  {
+   "id": "c06",
+   "text": "remote Python developers",
+   "category": "clear",
+   "phrasing": "",
+   "intended": "Python · remote",
+   "wanted": 19,
+   "lost": 0,
+   "unwanted": 0,
+   "high_impact": false,
+   "ignored": [],
+   "modes": {
+    "always act": "act",
+    "always show": "show",
+    "always ask": "act",
+    "adaptive": "act"
+   },
+   "wrong_if_all_noticed": {
+    "always act": 0.0,
+    "always show": 0.0,
+    "always ask": 0.0,
+    "adaptive": 0.0
+   }
+  },
+  {
+   "id": "c07",
+   "text": "open jobs in Manchester",
+   "category": "clear",
+   "phrasing": "",
+   "intended": "open jobs · Manchester",
+   "wanted": 1,
+   "lost": 0,
+   "unwanted": 0,
+   "high_impact": false,
+   "ignored": [],
+   "modes": {
+    "always act": "act",
+    "always show": "show",
+    "always ask": "act",
+    "adaptive": "act"
+   },
+   "wrong_if_all_noticed": {
+    "always act": 0.0,
+    "always show": 0.0,
+    "always ask": 0.0,
+    "adaptive": 0.0
+   }
+  },
+  {
+   "id": "c08",
+   "text": "Kotlin developers in London",
+   "category": "clear",
+   "phrasing": "",
+   "intended": "Kotlin · London",
+   "wanted": 7,
+   "lost": 0,
+   "unwanted": 0,
+   "high_impact": false,
+   "ignored": [],
+   "modes": {
+    "always act": "act",
+    "always show": "show",
+    "always ask": "act",
+    "adaptive": "act"
+   },
+   "wrong_if_all_noticed": {
+    "always act": 0.0,
+    "always show": 0.0,
+    "always ask": 0.0,
+    "adaptive": 0.0
+   }
+  },
+  {
+   "id": "c09",
+   "text": "AWS engineers in the UK",
+   "category": "clear",
+   "phrasing": "",
+   "intended": "AWS · UK",
+   "wanted": 54,
+   "lost": 0,
+   "unwanted": 0,
+   "high_impact": false,
+   "ignored": [],
+   "modes": {
+    "always act": "act",
+    "always show": "show",
+    "always ask": "act",
+    "adaptive": "act"
+   },
+   "wrong_if_all_noticed": {
+    "always act": 0.0,
+    "always show": 0.0,
+    "always ask": 0.0,
+    "adaptive": 0.0
+   }
+  },
+  {
+   "id": "c10",
+   "text": "JavaScript developers in Dublin with 3+ years",
+   "category": "clear",
+   "phrasing": "",
+   "intended": "JavaScript · Dublin · 3+ years",
+   "wanted": 3,
+   "lost": 0,
+   "unwanted": 0,
+   "high_impact": false,
+   "ignored": [],
+   "modes": {
+    "always act": "act",
+    "always show": "show",
+    "always ask": "act",
+    "adaptive": "act"
+   },
+   "wrong_if_all_noticed": {
+    "always act": 0.0,
+    "always show": 0.0,
+    "always ask": 0.0,
+    "adaptive": 0.0
+   }
+  },
+  {
+   "id": "c11",
+   "text": "hybrid Java developers in Leeds",
+   "category": "clear",
+   "phrasing": "",
+   "intended": "Java · Leeds · hybrid",
+   "wanted": 1,
+   "lost": 0,
+   "unwanted": 0,
+   "high_impact": false,
+   "ignored": [],
+   "modes": {
+    "always act": "act",
+    "always show": "show",
+    "always ask": "act",
+    "adaptive": "act"
+   },
+   "wrong_if_all_noticed": {
+    "always act": 0.0,
+    "always show": 0.0,
+    "always ask": 0.0,
+    "adaptive": 0.0
+   }
+  },
+  {
+   "id": "c12",
+   "text": "Python AND SQL AND AWS people in London",
+   "category": "clear",
+   "phrasing": "",
+   "intended": "Python AND SQL AND AWS · London",
+   "wanted": 1,
+   "lost": 0,
+   "unwanted": 0,
+   "high_impact": false,
+   "ignored": [],
+   "modes": {
+    "always act": "act",
+    "always show": "show",
+    "always ask": "act",
+    "adaptive": "act"
+   },
+   "wrong_if_all_noticed": {
+    "always act": 0.0,
+    "always show": 0.0,
+    "always ask": 0.0,
+    "adaptive": 0.0
+   }
+  },
+  {
+   "id": "k01.1",
+   "text": "Python and AWS engineers in London",
+   "category": "connective",
+   "phrasing": "spec",
+   "intended": "Python AND AWS · London",
+   "wanted": 11,
+   "lost": 0,
+   "unwanted": 0,
+   "high_impact": false,
+   "ignored": [],
+   "modes": {
+    "always act": "act",
+    "always show": "show",
+    "always ask": "ask",
+    "adaptive": "show"
+   },
+   "wrong_if_all_noticed": {
+    "always act": 0.0,
+    "always show": 0.0,
+    "always ask": 0.0,
+    "adaptive": 0.0
+   }
+  },
+  {
+   "id": "k01.2",
+   "text": "Python and AWS engineers in London",
+   "category": "connective",
+   "phrasing": "spec",
+   "intended": "Python OR AWS · London",
+   "wanted": 42,
+   "lost": 31,
+   "unwanted": 0,
+   "high_impact": true,
+   "ignored": [],
+   "modes": {
+    "always act": "act",
+    "always show": "show",
+    "always ask": "ask",
+    "adaptive": "show"
+   },
+   "wrong_if_all_noticed": {
+    "always act": 1.0,
+    "always show": 0.0,
+    "always ask": 0.0,
+    "adaptive": 0.0
+   }
+  },
+  {
+   "id": "k02.1",
+   "text": "Java and Kotlin developers",
+   "category": "connective",
+   "phrasing": "spec",
+   "intended": "Java AND Kotlin",
+   "wanted": 11,
+   "lost": 0,
+   "unwanted": 0,
+   "high_impact": false,
+   "ignored": [],
+   "modes": {
+    "always act": "act",
+    "always show": "show",
+    "always ask": "ask",
+    "adaptive": "show"
+   },
+   "wrong_if_all_noticed": {
+    "always act": 0.0,
+    "always show": 0.0,
+    "always ask": 0.0,
+    "adaptive": 0.0
+   }
+  },
+  {
+   "id": "k02.2",
+   "text": "Java and Kotlin developers",
+   "category": "connective",
+   "phrasing": "spec",
+   "intended": "Java OR Kotlin",
+   "wanted": 47,
+   "lost": 36,
+   "unwanted": 0,
+   "high_impact": true,
+   "ignored": [],
+   "modes": {
+    "always act": "act",
+    "always show": "show",
+    "always ask": "ask",
+    "adaptive": "show"
+   },
+   "wrong_if_all_noticed": {
+    "always act": 1.0,
+    "always show": 0.0,
+    "always ask": 0.0,
+    "adaptive": 0.0
+   }
+  },
+  {
+   "id": "k03.1",
+   "text": "React with TypeScript developers",
+   "category": "connective",
+   "phrasing": "spec",
+   "intended": "React AND TypeScript",
+   "wanted": 1,
+   "lost": 0,
+   "unwanted": 0,
+   "high_impact": false,
+   "ignored": [],
+   "modes": {
+    "always act": "act",
+    "always show": "show",
+    "always ask": "ask",
+    "adaptive": "show"
+   },
+   "wrong_if_all_noticed": {
+    "always act": 0.0,
+    "always show": 0.0,
+    "always ask": 0.0,
+    "adaptive": 0.0
+   }
+  },
+  {
+   "id": "k03.2",
+   "text": "React with TypeScript developers",
+   "category": "connective",
+   "phrasing": "spec",
+   "intended": "React OR TypeScript",
+   "wanted": 22,
+   "lost": 21,
+   "unwanted": 0,
+   "high_impact": true,
+   "ignored": [],
+   "modes": {
+    "always act": "act",
+    "always show": "show",
+    "always ask": "ask",
+    "adaptive": "show"
+   },
+   "wrong_if_all_noticed": {
+    "always act": 1.0,
+    "always show": 0.0,
+    "always ask": 0.0,
+    "adaptive": 0.0
+   }
+  },
+  {
+   "id": "k04.1",
+   "text": "Go or Python people in Manchester",
+   "category": "connective",
+   "phrasing": "spec",
+   "intended": "Go AND Python · Manchester",
+   "wanted": 0,
+   "lost": 0,
+   "unwanted": 10,
+   "high_impact": true,
+   "ignored": [],
+   "modes": {
+    "always act": "act",
+    "always show": "show",
+    "always ask": "ask",
+    "adaptive": "show"
+   },
+   "wrong_if_all_noticed": {
+    "always act": 1.0,
+    "always show": 0.0,
+    "always ask": 0.0,
+    "adaptive": 0.0
+   }
+  },
+  {
+   "id": "k04.2",
+   "text": "Go or Python people in Manchester",
+   "category": "connective",
+   "phrasing": "spec",
+   "intended": "Go OR Python · Manchester",
+   "wanted": 10,
+   "lost": 0,
+   "unwanted": 0,
+   "high_impact": false,
+   "ignored": [],
+   "modes": {
+    "always act": "act",
+    "always show": "show",
+    "always ask": "ask",
+    "adaptive": "show"
+   },
+   "wrong_if_all_noticed": {
+    "always act": 0.0,
+    "always show": 0.0,
+    "always ask": 0.0,
+    "adaptive": 0.0
+   }
+  },
+  {
+   "id": "k05.1",
+   "text": "Kubernetes Terraform engineers",
+   "category": "connective",
+   "phrasing": "spec",
+   "intended": "Kubernetes AND Terraform",
+   "wanted": 4,
+   "lost": 0,
+   "unwanted": 0,
+   "high_impact": false,
+   "ignored": [],
+   "modes": {
+    "always act": "act",
+    "always show": "show",
+    "always ask": "ask",
+    "adaptive": "ask"
+   },
+   "wrong_if_all_noticed": {
+    "always act": 0.0,
+    "always show": 0.0,
+    "always ask": 0.0,
+    "adaptive": 0.0
+   }
+  },
+  {
+   "id": "k05.2",
+   "text": "Kubernetes Terraform engineers",
+   "category": "connective",
+   "phrasing": "spec",
+   "intended": "Kubernetes OR Terraform",
+   "wanted": 30,
+   "lost": 26,
+   "unwanted": 0,
+   "high_impact": true,
+   "ignored": [],
+   "modes": {
+    "always act": "act",
+    "always show": "show",
+    "always ask": "ask",
+    "adaptive": "ask"
+   },
+   "wrong_if_all_noticed": {
+    "always act": 1.0,
+    "always show": 0.0,
+    "always ask": 0.0,
+    "adaptive": 0.0
+   }
+  },
+  {
+   "id": "k06.1",
+   "text": "Java/Python developers in Birmingham",
+   "category": "connective",
+   "phrasing": "paraphrase",
+   "intended": "Java AND Python · Birmingham",
+   "wanted": 1,
+   "lost": 0,
+   "unwanted": 0,
+   "high_impact": false,
+   "ignored": [],
+   "modes": {
+    "always act": "act",
+    "always show": "show",
+    "always ask": "ask",
+    "adaptive": "ask"
+   },
+   "wrong_if_all_noticed": {
+    "always act": 0.0,
+    "always show": 0.0,
+    "always ask": 0.0,
+    "adaptive": 0.0
+   }
+  },
+  {
+   "id": "k06.2",
+   "text": "Java/Python developers in Birmingham",
+   "category": "connective",
+   "phrasing": "paraphrase",
+   "intended": "Java OR Python · Birmingham",
+   "wanted": 6,
+   "lost": 5,
+   "unwanted": 0,
+   "high_impact": true,
+   "ignored": [],
+   "modes": {
+    "always act": "act",
+    "always show": "show",
+    "always ask": "ask",
+    "adaptive": "ask"
+   },
+   "wrong_if_all_noticed": {
+    "always act": 1.0,
+    "always show": 0.0,
+    "always ask": 0.0,
+    "adaptive": 0.0
+   }
+  },
+  {
+   "id": "k07.1",
+   "text": "SQL, Python developers in Leeds",
+   "category": "connective",
+   "phrasing": "paraphrase",
+   "intended": "SQL AND Python · Leeds",
+   "wanted": 0,
+   "lost": 0,
+   "unwanted": 0,
+   "high_impact": false,
+   "ignored": [],
+   "modes": {
+    "always act": "act",
+    "always show": "show",
+    "always ask": "ask",
+    "adaptive": "ask"
+   },
+   "wrong_if_all_noticed": {
+    "always act": 0.0,
+    "always show": 0.0,
+    "always ask": 0.0,
+    "adaptive": 0.0
+   }
+  },
+  {
+   "id": "k07.2",
+   "text": "SQL, Python developers in Leeds",
+   "category": "connective",
+   "phrasing": "paraphrase",
+   "intended": "SQL OR Python · Leeds",
+   "wanted": 4,
+   "lost": 4,
+   "unwanted": 0,
+   "high_impact": true,
+   "ignored": [],
+   "modes": {
+    "always act": "act",
+    "always show": "show",
+    "always ask": "ask",
+    "adaptive": "ask"
+   },
+   "wrong_if_all_noticed": {
+    "always act": 1.0,
+    "always show": 0.0,
+    "always ask": 0.0,
+    "adaptive": 0.0
+   }
+  },
+  {
+   "id": "k08.1",
+   "text": "developers who know JavaScript plus React in London",
+   "category": "connective",
+   "phrasing": "paraphrase",
+   "intended": "JavaScript AND React · London",
+   "wanted": 5,
+   "lost": 0,
+   "unwanted": 0,
+   "high_impact": false,
+   "ignored": [],
+   "modes": {
+    "always act": "act",
+    "always show": "show",
+    "always ask": "ask",
+    "adaptive": "show"
+   },
+   "wrong_if_all_noticed": {
+    "always act": 0.0,
+    "always show": 0.0,
+    "always ask": 0.0,
+    "adaptive": 0.0
+   }
+  },
+  {
+   "id": "k08.2",
+   "text": "developers who know JavaScript plus React in London",
+   "category": "connective",
+   "phrasing": "paraphrase",
+   "intended": "JavaScript OR React · London",
+   "wanted": 13,
+   "lost": 8,
+   "unwanted": 0,
+   "high_impact": true,
+   "ignored": [],
+   "modes": {
+    "always act": "act",
+    "always show": "show",
+    "always ask": "ask",
+    "adaptive": "show"
+   },
+   "wrong_if_all_noticed": {
+    "always act": 1.0,
+    "always show": 0.0,
+    "always ask": 0.0,
+    "adaptive": 0.0
+   }
+  },
+  {
+   "id": "s01.1",
+   "text": "senior Python developers in London",
+   "category": "seniority",
+   "phrasing": "spec",
+   "intended": "Python · London · 5+ years",
+   "wanted": 19,
+   "lost": 0,
+   "unwanted": 0,
+   "high_impact": false,
+   "ignored": [],
+   "modes": {
+    "always act": "act",
+    "always show": "show",
+    "always ask": "ask",
+    "adaptive": "ask"
+   },
+   "wrong_if_all_noticed": {
+    "always act": 0.0,
+    "always show": 0.0,
+    "always ask": 0.0,
+    "adaptive": 0.0
+   }
+  },
+  {
+   "id": "s01.2",
+   "text": "senior Python developers in London",
+   "category": "seniority",
+   "phrasing": "spec",
+   "intended": "Python · London · 'Senior' in title",
+   "wanted": 6,
+   "lost": 1,
+   "unwanted": 14,
+   "high_impact": true,
+   "ignored": [],
+   "modes": {
+    "always act": "act",
+    "always show": "show",
+    "always ask": "ask",
+    "adaptive": "ask"
+   },
+   "wrong_if_all_noticed": {
+    "always act": 1.0,
+    "always show": 0.0,
+    "always ask": 0.0,
+    "adaptive": 0.0
+   }
+  },
+  {
+   "id": "s02.1",
+   "text": "senior Java engineers in Manchester",
+   "category": "seniority",
+   "phrasing": "spec",
+   "intended": "Java · Manchester · 5+ years",
+   "wanted": 7,
+   "lost": 0,
+   "unwanted": 0,
+   "high_impact": false,
+   "ignored": [],
+   "modes": {
+    "always act": "act",
+    "always show": "show",
+    "always ask": "ask",
+    "adaptive": "ask"
+   },
+   "wrong_if_all_noticed": {
+    "always act": 0.0,
+    "always show": 0.0,
+    "always ask": 0.0,
+    "adaptive": 0.0
+   }
+  },
+  {
+   "id": "s02.2",
+   "text": "senior Java engineers in Manchester",
+   "category": "seniority",
+   "phrasing": "spec",
+   "intended": "Java · Manchester · 'Senior' in title",
+   "wanted": 2,
+   "lost": 0,
+   "unwanted": 5,
+   "high_impact": true,
+   "ignored": [],
+   "modes": {
+    "always act": "act",
+    "always show": "show",
+    "always ask": "ask",
+    "adaptive": "ask"
+   },
+   "wrong_if_all_noticed": {
+    "always act": 1.0,
+    "always show": 0.0,
+    "always ask": 0.0,
+    "adaptive": 0.0
+   }
+  },
+  {
+   "id": "s03.1",
+   "text": "lead AWS engineers",
+   "category": "seniority",
+   "phrasing": "spec",
+   "intended": "AWS · 5+ years",
+   "wanted": 43,
+   "lost": 0,
+   "unwanted": 0,
+   "high_impact": false,
+   "ignored": [],
+   "modes": {
+    "always act": "act",
+    "always show": "show",
+    "always ask": "ask",
+    "adaptive": "ask"
+   },
+   "wrong_if_all_noticed": {
+    "always act": 0.0,
+    "always show": 0.0,
+    "always ask": 0.0,
+    "adaptive": 0.0
+   }
+  },
+  {
+   "id": "s03.2",
+   "text": "lead AWS engineers",
+   "category": "seniority",
+   "phrasing": "spec",
+   "intended": "AWS · 'Lead' in title",
+   "wanted": 4,
+   "lost": 1,
+   "unwanted": 40,
+   "high_impact": true,
+   "ignored": [],
+   "modes": {
+    "always act": "act",
+    "always show": "show",
+    "always ask": "ask",
+    "adaptive": "ask"
+   },
+   "wrong_if_all_noticed": {
+    "always act": 1.0,
+    "always show": 0.0,
+    "always ask": 0.0,
+    "adaptive": 0.0
+   }
+  },
+  {
+   "id": "s04.1",
+   "text": "lead Python developers",
+   "category": "seniority",
+   "phrasing": "spec",
+   "intended": "Python · 5+ years",
+   "wanted": 50,
+   "lost": 0,
+   "unwanted": 0,
+   "high_impact": false,
+   "ignored": [],
+   "modes": {
+    "always act": "act",
+    "always show": "show",
+    "always ask": "ask",
+    "adaptive": "ask"
+   },
+   "wrong_if_all_noticed": {
+    "always act": 0.0,
+    "always show": 0.0,
+    "always ask": 0.0,
+    "adaptive": 0.0
+   }
+  },
+  {
+   "id": "s04.2",
+   "text": "lead Python developers",
+   "category": "seniority",
+   "phrasing": "spec",
+   "intended": "Python · 'Lead' in title",
+   "wanted": 1,
+   "lost": 0,
+   "unwanted": 49,
+   "high_impact": true,
+   "ignored": [],
+   "modes": {
+    "always act": "act",
+    "always show": "show",
+    "always ask": "ask",
+    "adaptive": "ask"
+   },
+   "wrong_if_all_noticed": {
+    "always act": 1.0,
+    "always show": 0.0,
+    "always ask": 0.0,
+    "adaptive": 0.0
+   }
+  },
+  {
+   "id": "s05.1",
+   "text": "experienced Go developers",
+   "category": "seniority",
+   "phrasing": "paraphrase",
+   "intended": "Go · 5+ years",
+   "wanted": 24,
+   "lost": 0,
+   "unwanted": 6,
+   "high_impact": false,
+   "ignored": [
+    "“experienced” (not something I can search by)"
+   ],
+   "modes": {
+    "always act": "act",
+    "always show": "show",
+    "always ask": "act",
+    "adaptive": "act"
+   },
+   "wrong_if_all_noticed": {
+    "always act": 1.0,
+    "always show": 1.0,
+    "always ask": 1.0,
+    "adaptive": 1.0
+   }
+  },
+  {
+   "id": "s05.2",
+   "text": "experienced Go developers",
+   "category": "seniority",
+   "phrasing": "paraphrase",
+   "intended": "Go · 'Senior' in title",
+   "wanted": 10,
+   "lost": 0,
+   "unwanted": 20,
+   "high_impact": true,
+   "ignored": [
+    "“experienced” (not something I can search by)"
+   ],
+   "modes": {
+    "always act": "act",
+    "always show": "show",
+    "always ask": "act",
+    "adaptive": "act"
+   },
+   "wrong_if_all_noticed": {
+    "always act": 1.0,
+    "always show": 1.0,
+    "always ask": 1.0,
+    "adaptive": 1.0
+   }
+  },
+  {
+   "id": "s06.1",
+   "text": "Java team leads in London",
+   "category": "seniority",
+   "phrasing": "paraphrase",
+   "intended": "Java · London · 5+ years",
+   "wanted": 15,
+   "lost": 0,
+   "unwanted": 0,
+   "high_impact": false,
+   "ignored": [],
+   "modes": {
+    "always act": "act",
+    "always show": "show",
+    "always ask": "ask",
+    "adaptive": "ask"
+   },
+   "wrong_if_all_noticed": {
+    "always act": 0.0,
+    "always show": 0.0,
+    "always ask": 0.0,
+    "adaptive": 0.0
+   }
+  },
+  {
+   "id": "s06.2",
+   "text": "Java team leads in London",
+   "category": "seniority",
+   "phrasing": "paraphrase",
+   "intended": "Java · London · 'Lead' in title",
+   "wanted": 2,
+   "lost": 1,
+   "unwanted": 14,
+   "high_impact": true,
+   "ignored": [],
+   "modes": {
+    "always act": "act",
+    "always show": "show",
+    "always ask": "ask",
+    "adaptive": "ask"
+   },
+   "wrong_if_all_noticed": {
+    "always act": 1.0,
+    "always show": 0.0,
+    "always ask": 0.0,
+    "adaptive": 0.0
+   }
+  },
+  {
+   "id": "l01.1",
+   "text": "Java developers near London",
+   "category": "location",
+   "phrasing": "spec",
+   "intended": "Java · London",
+   "wanted": 21,
+   "lost": 0,
+   "unwanted": 10,
+   "high_impact": false,
+   "ignored": [],
+   "modes": {
+    "always act": "act",
+    "always show": "show",
+    "always ask": "act",
+    "adaptive": "act"
+   },
+   "wrong_if_all_noticed": {
+    "always act": 1.0,
+    "always show": 1.0,
+    "always ask": 1.0,
+    "adaptive": 1.0
+   }
+  },
+  {
+   "id": "l01.2",
+   "text": "Java developers near London",
+   "category": "location",
+   "phrasing": "spec",
+   "intended": "Java · London and nearby",
+   "wanted": 31,
+   "lost": 0,
+   "unwanted": 0,
+   "high_impact": false,
+   "ignored": [],
+   "modes": {
+    "always act": "act",
+    "always show": "show",
+    "always ask": "act",
+    "adaptive": "act"
+   },
+   "wrong_if_all_noticed": {
+    "always act": 0.0,
+    "always show": 0.0,
+    "always ask": 0.0,
+    "adaptive": 0.0
+   }
+  },
+  {
+   "id": "l02.1",
+   "text": "React developers around London",
+   "category": "location",
+   "phrasing": "spec",
+   "intended": "React · London",
+   "wanted": 9,
+   "lost": 0,
+   "unwanted": 4,
+   "high_impact": false,
+   "ignored": [],
+   "modes": {
+    "always act": "act",
+    "always show": "show",
+    "always ask": "act",
+    "adaptive": "act"
+   },
+   "wrong_if_all_noticed": {
+    "always act": 1.0,
+    "always show": 1.0,
+    "always ask": 1.0,
+    "adaptive": 1.0
+   }
+  },
+  {
+   "id": "l02.2",
+   "text": "React developers around London",
+   "category": "location",
+   "phrasing": "spec",
+   "intended": "React · London and nearby",
+   "wanted": 13,
+   "lost": 0,
+   "unwanted": 0,
+   "high_impact": false,
+   "ignored": [],
+   "modes": {
+    "always act": "act",
+    "always show": "show",
+    "always ask": "act",
+    "adaptive": "act"
+   },
+   "wrong_if_all_noticed": {
+    "always act": 0.0,
+    "always show": 0.0,
+    "always ask": 0.0,
+    "adaptive": 0.0
+   }
+  },
+  {
+   "id": "l03.1",
+   "text": "SQL people in the London area",
+   "category": "location",
+   "phrasing": "paraphrase",
+   "intended": "SQL · London",
+   "wanted": 13,
+   "lost": 0,
+   "unwanted": 12,
+   "high_impact": false,
+   "ignored": [],
+   "modes": {
+    "always act": "act",
+    "always show": "show",
+    "always ask": "ask",
+    "adaptive": "show"
+   },
+   "wrong_if_all_noticed": {
+    "always act": 1.0,
+    "always show": 0.0,
+    "always ask": 0.0,
+    "adaptive": 0.0
+   }
+  },
+  {
+   "id": "l03.2",
+   "text": "SQL people in the London area",
+   "category": "location",
+   "phrasing": "paraphrase",
+   "intended": "SQL · London and nearby",
+   "wanted": 25,
+   "lost": 0,
+   "unwanted": 0,
+   "high_impact": false,
+   "ignored": [],
+   "modes": {
+    "always act": "act",
+    "always show": "show",
+    "always ask": "ask",
+    "adaptive": "show"
+   },
+   "wrong_if_all_noticed": {
+    "always act": 0.0,
+    "always show": 0.0,
+    "always ask": 0.0,
+    "adaptive": 0.0
+   }
+  },
+  {
+   "id": "l04.1",
+   "text": "AWS engineers who can commute to London",
+   "category": "location",
+   "phrasing": "paraphrase",
+   "intended": "AWS · London",
+   "wanted": 24,
+   "lost": 0,
+   "unwanted": 16,
+   "high_impact": false,
+   "ignored": [],
+   "modes": {
+    "always act": "act",
+    "always show": "show",
+    "always ask": "act",
+    "adaptive": "act"
+   },
+   "wrong_if_all_noticed": {
+    "always act": 1.0,
+    "always show": 1.0,
+    "always ask": 1.0,
+    "adaptive": 1.0
+   }
+  },
+  {
+   "id": "l04.2",
+   "text": "AWS engineers who can commute to London",
+   "category": "location",
+   "phrasing": "paraphrase",
+   "intended": "AWS · London and nearby",
+   "wanted": 40,
+   "lost": 0,
+   "unwanted": 0,
+   "high_impact": false,
+   "ignored": [],
+   "modes": {
+    "always act": "act",
+    "always show": "show",
+    "always ask": "act",
+    "adaptive": "act"
+   },
+   "wrong_if_all_noticed": {
+    "always act": 0.0,
+    "always show": 0.0,
+    "always ask": 0.0,
+    "adaptive": 0.0
+   }
+  },
+  {
+   "id": "a01.1",
+   "text": "Java developers in London available immediately",
+   "category": "availability",
+   "phrasing": "spec",
+   "intended": "Java · London · can start now",
+   "wanted": 2,
+   "lost": 0,
+   "unwanted": 0,
+   "high_impact": false,
+   "ignored": [],
+   "modes": {
+    "always act": "act",
+    "always show": "show",
+    "always ask": "act",
+    "adaptive": "act"
+   },
+   "wrong_if_all_noticed": {
+    "always act": 0.0,
+    "always show": 0.0,
+    "always ask": 0.0,
+    "adaptive": 0.0
+   }
+  },
+  {
+   "id": "a01.2",
+   "text": "Java developers in London available immediately",
+   "category": "availability",
+   "phrasing": "spec",
+   "intended": "Java · London · notice ≤ 2 weeks",
+   "wanted": 12,
+   "lost": 10,
+   "unwanted": 0,
+   "high_impact": true,
+   "ignored": [],
+   "modes": {
+    "always act": "act",
+    "always show": "show",
+    "always ask": "act",
+    "adaptive": "act"
+   },
+   "wrong_if_all_noticed": {
+    "always act": 1.0,
+    "always show": 1.0,
+    "always ask": 1.0,
+    "adaptive": 1.0
+   }
+  },
+  {
+   "id": "a02.1",
+   "text": "Python people who can start asap",
+   "category": "availability",
+   "phrasing": "spec",
+   "intended": "Python · can start now",
+   "wanted": 14,
+   "lost": 0,
+   "unwanted": 0,
+   "high_impact": false,
+   "ignored": [],
+   "modes": {
+    "always act": "act",
+    "always show": "show",
+    "always ask": "ask",
+    "adaptive": "show"
+   },
+   "wrong_if_all_noticed": {
+    "always act": 0.0,
+    "always show": 0.0,
+    "always ask": 0.0,
+    "adaptive": 0.0
+   }
+  },
+  {
+   "id": "a02.2",
+   "text": "Python people who can start asap",
+   "category": "availability",
+   "phrasing": "spec",
+   "intended": "Python · notice ≤ 2 weeks",
+   "wanted": 35,
+   "lost": 21,
+   "unwanted": 0,
+   "high_impact": true,
+   "ignored": [],
+   "modes": {
+    "always act": "act",
+    "always show": "show",
+    "always ask": "ask",
+    "adaptive": "show"
+   },
+   "wrong_if_all_noticed": {
+    "always act": 1.0,
+    "always show": 0.0,
+    "always ask": 0.0,
+    "adaptive": 0.0
+   }
+  },
+  {
+   "id": "a03.1",
+   "text": "available AWS engineers in Manchester",
+   "category": "availability",
+   "phrasing": "spec",
+   "intended": "AWS · Manchester · can start now",
+   "wanted": 2,
+   "lost": 0,
+   "unwanted": 0,
+   "high_impact": false,
+   "ignored": [],
+   "modes": {
+    "always act": "act",
+    "always show": "show",
+    "always ask": "act",
+    "adaptive": "act"
+   },
+   "wrong_if_all_noticed": {
+    "always act": 0.0,
+    "always show": 0.0,
+    "always ask": 0.0,
+    "adaptive": 0.0
+   }
+  },
+  {
+   "id": "a03.2",
+   "text": "available AWS engineers in Manchester",
+   "category": "availability",
+   "phrasing": "spec",
+   "intended": "AWS · Manchester · notice ≤ 2 weeks",
+   "wanted": 3,
+   "lost": 1,
+   "unwanted": 0,
+   "high_impact": false,
+   "ignored": [],
+   "modes": {
+    "always act": "act",
+    "always show": "show",
+    "always ask": "act",
+    "adaptive": "act"
+   },
+   "wrong_if_all_noticed": {
+    "always act": 1.0,
+    "always show": 1.0,
+    "always ask": 1.0,
+    "adaptive": 1.0
+   }
+  },
+  {
+   "id": "a04.1",
+   "text": "SQL developers free to start straight away",
+   "category": "availability",
+   "phrasing": "paraphrase",
+   "intended": "SQL · can start now",
+   "wanted": 6,
+   "lost": 0,
+   "unwanted": 0,
+   "high_impact": false,
+   "ignored": [],
+   "modes": {
+    "always act": "act",
+    "always show": "show",
+    "always ask": "act",
+    "adaptive": "act"
+   },
+   "wrong_if_all_noticed": {
+    "always act": 0.0,
+    "always show": 0.0,
+    "always ask": 0.0,
+    "adaptive": 0.0
+   }
+  },
+  {
+   "id": "a04.2",
+   "text": "SQL developers free to start straight away",
+   "category": "availability",
+   "phrasing": "paraphrase",
+   "intended": "SQL · notice ≤ 2 weeks",
+   "wanted": 20,
+   "lost": 14,
+   "unwanted": 0,
+   "high_impact": true,
+   "ignored": [],
+   "modes": {
+    "always act": "act",
+    "always show": "show",
+    "always ask": "act",
+    "adaptive": "act"
+   },
+   "wrong_if_all_noticed": {
+    "always act": 1.0,
+    "always show": 1.0,
+    "always ask": 1.0,
+    "adaptive": 1.0
+   }
+  },
+  {
+   "id": "a05.1",
+   "text": "Go developers who can start soon",
+   "category": "availability",
+   "phrasing": "paraphrase",
+   "intended": "Go · notice ≤ 2 weeks",
+   "wanted": 15,
+   "lost": 0,
+   "unwanted": 15,
+   "high_impact": true,
+   "ignored": [],
+   "modes": {
+    "always act": "act",
+    "always show": "show",
+    "always ask": "act",
+    "adaptive": "act"
+   },
+   "wrong_if_all_noticed": {
+    "always act": 1.0,
+    "always show": 1.0,
+    "always ask": 1.0,
+    "adaptive": 1.0
+   }
+  },
+  {
+   "id": "a05.2",
+   "text": "Go developers who can start soon",
+   "category": "availability",
+   "phrasing": "paraphrase",
+   "intended": "Go · notice ≤ 1 month",
+   "wanted": 26,
+   "lost": 0,
+   "unwanted": 4,
+   "high_impact": false,
+   "ignored": [],
+   "modes": {
+    "always act": "act",
+    "always show": "show",
+    "always ask": "act",
+    "adaptive": "act"
+   },
+   "wrong_if_all_noticed": {
+    "always act": 1.0,
+    "always show": 1.0,
+    "always ask": 1.0,
+    "adaptive": 1.0
+   }
+  },
+  {
+   "id": "t01.1",
+   "text": "Python at Northwind",
+   "category": "target",
+   "phrasing": "spec",
+   "intended": "Python · works at Northwind Labs",
+   "wanted": 3,
+   "lost": 0,
+   "unwanted": 0,
+   "high_impact": false,
+   "ignored": [],
+   "modes": {
+    "always act": "act",
+    "always show": "show",
+    "always ask": "ask",
+    "adaptive": "ask"
+   },
+   "wrong_if_all_noticed": {
+    "always act": 0.0,
+    "always show": 0.0,
+    "always ask": 0.0,
+    "adaptive": 0.0
+   }
+  },
+  {
+   "id": "t01.2",
+   "text": "Python at Northwind",
+   "category": "target",
+   "phrasing": "spec",
+   "intended": "jobs · Python · at Northwind Labs",
+   "wanted": 0,
+   "lost": 0,
+   "unwanted": 3,
+   "high_impact": true,
+   "ignored": [],
+   "modes": {
+    "always act": "act",
+    "always show": "show",
+    "always ask": "ask",
+    "adaptive": "ask"
+   },
+   "wrong_if_all_noticed": {
+    "always act": 1.0,
+    "always show": 0.0,
+    "always ask": 0.0,
+    "adaptive": 0.0
+   }
+  },
+  {
+   "id": "t02.1",
+   "text": "Java developers at Moorgate Payments",
+   "category": "target",
+   "phrasing": "spec",
+   "intended": "Java · works at Moorgate Payments",
+   "wanted": 7,
+   "lost": 0,
+   "unwanted": 0,
+   "high_impact": false,
+   "ignored": [],
+   "modes": {
+    "always act": "act",
+    "always show": "show",
+    "always ask": "ask",
+    "adaptive": "show"
+   },
+   "wrong_if_all_noticed": {
+    "always act": 0.0,
+    "always show": 0.0,
+    "always ask": 0.0,
+    "adaptive": 0.0
+   }
+  },
+  {
+   "id": "t02.2",
+   "text": "Java developers at Moorgate Payments",
+   "category": "target",
+   "phrasing": "spec",
+   "intended": "jobs · Java · at Moorgate Payments",
+   "wanted": 0,
+   "lost": 0,
+   "unwanted": 7,
+   "high_impact": true,
+   "ignored": [],
+   "modes": {
+    "always act": "act",
+    "always show": "show",
+    "always ask": "ask",
+    "adaptive": "show"
+   },
+   "wrong_if_all_noticed": {
+    "always act": 1.0,
+    "always show": 0.0,
+    "always ask": 0.0,
+    "adaptive": 0.0
+   }
+  },
+  {
+   "id": "t03.1",
+   "text": "Ironbridge Bank SQL engineers",
+   "category": "target",
+   "phrasing": "paraphrase",
+   "intended": "SQL · works at Ironbridge Bank",
+   "wanted": 1,
+   "lost": 0,
+   "unwanted": 0,
+   "high_impact": false,
+   "ignored": [],
+   "modes": {
+    "always act": "act",
+    "always show": "show",
+    "always ask": "ask",
+    "adaptive": "ask"
+   },
+   "wrong_if_all_noticed": {
+    "always act": 0.0,
+    "always show": 0.0,
+    "always ask": 0.0,
+    "adaptive": 0.0
+   }
+  },
+  {
+   "id": "t03.2",
+   "text": "Ironbridge Bank SQL engineers",
+   "category": "target",
+   "phrasing": "paraphrase",
+   "intended": "jobs · SQL · at Ironbridge Bank",
+   "wanted": 0,
+   "lost": 0,
+   "unwanted": 1,
+   "high_impact": true,
+   "ignored": [],
+   "modes": {
+    "always act": "act",
+    "always show": "show",
+    "always ask": "ask",
+    "adaptive": "ask"
+   },
+   "wrong_if_all_noticed": {
+    "always act": 1.0,
+    "always show": 0.0,
+    "always ask": 0.0,
+    "adaptive": 0.0
+   }
+  },
+  {
+   "id": "m01.1",
+   "text": "senior Java Python developers",
+   "category": "mixed",
+   "phrasing": "spec",
+   "intended": "Java AND Python · 5+ years",
+   "wanted": 11,
+   "lost": 0,
+   "unwanted": 0,
+   "high_impact": false,
+   "ignored": [],
+   "modes": {
+    "always act": "act",
+    "always show": "show",
+    "always ask": "ask",
+    "adaptive": "ask"
+   },
+   "wrong_if_all_noticed": {
+    "always act": 0.0,
+    "always show": 0.0,
+    "always ask": 0.0,
+    "adaptive": 0.0
+   }
+  },
+  {
+   "id": "m01.2",
+   "text": "senior Java Python developers",
+   "category": "mixed",
+   "phrasing": "spec",
+   "intended": "Java OR Python · 5+ years",
+   "wanted": 74,
+   "lost": 63,
+   "unwanted": 0,
+   "high_impact": true,
+   "ignored": [],
+   "modes": {
+    "always act": "act",
+    "always show": "show",
+    "always ask": "ask",
+    "adaptive": "ask"
+   },
+   "wrong_if_all_noticed": {
+    "always act": 1.0,
+    "always show": 0.0,
+    "always ask": 0.0,
+    "adaptive": 0.0
+   }
+  },
+  {
+   "id": "m01.3",
+   "text": "senior Java Python developers",
+   "category": "mixed",
+   "phrasing": "spec",
+   "intended": "Java AND Python · 'Senior' in title",
+   "wanted": 3,
+   "lost": 1,
+   "unwanted": 9,
+   "high_impact": true,
+   "ignored": [],
+   "modes": {
+    "always act": "act",
+    "always show": "show",
+    "always ask": "ask",
+    "adaptive": "ask"
+   },
+   "wrong_if_all_noticed": {
+    "always act": 1.0,
+    "always show": 0.0,
+    "always ask": 0.0,
+    "adaptive": 0.0
+   }
+  },
+  {
+   "id": "m01.4",
+   "text": "senior Java Python developers",
+   "category": "mixed",
+   "phrasing": "spec",
+   "intended": "Java OR Python · 'Senior' in title",
+   "wanted": 22,
+   "lost": 20,
+   "unwanted": 9,
+   "high_impact": true,
+   "ignored": [],
+   "modes": {
+    "always act": "act",
+    "always show": "show",
+    "always ask": "ask",
+    "adaptive": "ask"
+   },
+   "wrong_if_all_noticed": {
+    "always act": 1.0,
+    "always show": 0.0,
+    "always ask": 0.0,
+    "adaptive": 0.0
+   }
+  },
+  {
+   "id": "m02.1",
+   "text": "Python or Go engineers available now",
+   "category": "mixed",
+   "phrasing": "spec",
+   "intended": "Python AND Go · can start now",
+   "wanted": 3,
+   "lost": 0,
+   "unwanted": 14,
+   "high_impact": true,
+   "ignored": [],
+   "modes": {
+    "always act": "act",
+    "always show": "show",
+    "always ask": "act",
+    "adaptive": "act"
+   },
+   "wrong_if_all_noticed": {
+    "always act": 1.0,
+    "always show": 0.0,
+    "always ask": 1.0,
+    "adaptive": 1.0
+   }
+  },
+  {
+   "id": "m02.2",
+   "text": "Python or Go engineers available now",
+   "category": "mixed",
+   "phrasing": "spec",
+   "intended": "Python OR Go · can start now",
+   "wanted": 17,
+   "lost": 0,
+   "unwanted": 0,
+   "high_impact": false,
+   "ignored": [],
+   "modes": {
+    "always act": "act",
+    "always show": "show",
+    "always ask": "act",
+    "adaptive": "act"
+   },
+   "wrong_if_all_noticed": {
+    "always act": 0.0,
+    "always show": 0.0,
+    "always ask": 0.0,
+    "adaptive": 0.0
+   }
+  },
+  {
+   "id": "m02.3",
+   "text": "Python or Go engineers available now",
+   "category": "mixed",
+   "phrasing": "spec",
+   "intended": "Python AND Go · notice ≤ 2 weeks",
+   "wanted": 5,
+   "lost": 2,
+   "unwanted": 14,
+   "high_impact": true,
+   "ignored": [],
+   "modes": {
+    "always act": "act",
+    "always show": "show",
+    "always ask": "act",
+    "adaptive": "act"
+   },
+   "wrong_if_all_noticed": {
+    "always act": 1.0,
+    "always show": 1.0,
+    "always ask": 1.0,
+    "adaptive": 1.0
+   }
+  },
+  {
+   "id": "m02.4",
+   "text": "Python or Go engineers available now",
+   "category": "mixed",
+   "phrasing": "spec",
+   "intended": "Python OR Go · notice ≤ 2 weeks",
+   "wanted": 45,
+   "lost": 28,
+   "unwanted": 0,
+   "high_impact": true,
+   "ignored": [],
+   "modes": {
+    "always act": "act",
+    "always show": "show",
+    "always ask": "act",
+    "adaptive": "act"
+   },
+   "wrong_if_all_noticed": {
+    "always act": 1.0,
+    "always show": 1.0,
+    "always ask": 1.0,
+    "adaptive": 1.0
+   }
+  },
+  {
+   "id": "m03.1",
+   "text": "lead Kubernetes engineers near London",
+   "category": "mixed",
+   "phrasing": "spec",
+   "intended": "Kubernetes · London · 5+ years",
+   "wanted": 8,
+   "lost": 0,
+   "unwanted": 7,
+   "high_impact": false,
+   "ignored": [],
+   "modes": {
+    "always act": "act",
+    "always show": "show",
+    "always ask": "ask",
+    "adaptive": "ask"
+   },
+   "wrong_if_all_noticed": {
+    "always act": 1.0,
+    "always show": 1.0,
+    "always ask": 1.0,
+    "adaptive": 1.0
+   }
+  },
+  {
+   "id": "m03.2",
+   "text": "lead Kubernetes engineers near London",
+   "category": "mixed",
+   "phrasing": "spec",
+   "intended": "Kubernetes · London · 'Lead' in title",
+   "wanted": 1,
+   "lost": 0,
+   "unwanted": 14,
+   "high_impact": true,
+   "ignored": [],
+   "modes": {
+    "always act": "act",
+    "always show": "show",
+    "always ask": "ask",
+    "adaptive": "ask"
+   },
+   "wrong_if_all_noticed": {
+    "always act": 1.0,
+    "always show": 1.0,
+    "always ask": 1.0,
+    "adaptive": 1.0
+   }
+  },
+  {
+   "id": "m03.3",
+   "text": "lead Kubernetes engineers near London",
+   "category": "mixed",
+   "phrasing": "spec",
+   "intended": "Kubernetes · London and nearby · 5+ years",
+   "wanted": 15,
+   "lost": 0,
+   "unwanted": 0,
+   "high_impact": false,
+   "ignored": [],
+   "modes": {
+    "always act": "act",
+    "always show": "show",
+    "always ask": "ask",
+    "adaptive": "ask"
+   },
+   "wrong_if_all_noticed": {
+    "always act": 0.0,
+    "always show": 0.0,
+    "always ask": 0.0,
+    "adaptive": 0.0
+   }
+  },
+  {
+   "id": "m03.4",
+   "text": "lead Kubernetes engineers near London",
+   "category": "mixed",
+   "phrasing": "spec",
+   "intended": "Kubernetes · London and nearby · 'Lead' in title",
+   "wanted": 2,
+   "lost": 0,
+   "unwanted": 13,
+   "high_impact": true,
+   "ignored": [],
+   "modes": {
+    "always act": "act",
+    "always show": "show",
+    "always ask": "ask",
+    "adaptive": "ask"
+   },
+   "wrong_if_all_noticed": {
+    "always act": 1.0,
+    "always show": 0.0,
+    "always ask": 0.0,
+    "adaptive": 0.0
+   }
+  },
+  {
+   "id": "m04.1",
+   "text": "experienced AWS engineers who can start soon",
+   "category": "mixed",
+   "phrasing": "paraphrase",
+   "intended": "AWS · 5+ years · notice ≤ 2 weeks",
+   "wanted": 19,
+   "lost": 0,
+   "unwanted": 38,
+   "high_impact": true,
+   "ignored": [],
+   "modes": {
+    "always act": "act",
+    "always show": "show",
+    "always ask": "act",
+    "adaptive": "act"
+   },
+   "wrong_if_all_noticed": {
+    "always act": 1.0,
+    "always show": 1.0,
+    "always ask": 1.0,
+    "adaptive": 1.0
+   }
+  },
+  {
+   "id": "m04.2",
+   "text": "experienced AWS engineers who can start soon",
+   "category": "mixed",
+   "phrasing": "paraphrase",
+   "intended": "AWS · 'Senior' in title · notice ≤ 2 weeks",
+   "wanted": 7,
+   "lost": 0,
+   "unwanted": 50,
+   "high_impact": true,
+   "ignored": [],
+   "modes": {
+    "always act": "act",
+    "always show": "show",
+    "always ask": "act",
+    "adaptive": "act"
+   },
+   "wrong_if_all_noticed": {
+    "always act": 1.0,
+    "always show": 1.0,
+    "always ask": 1.0,
+    "adaptive": 1.0
+   }
+  },
+  {
+   "id": "m04.3",
+   "text": "experienced AWS engineers who can start soon",
+   "category": "mixed",
+   "phrasing": "paraphrase",
+   "intended": "AWS · 5+ years · notice ≤ 1 month",
+   "wanted": 35,
+   "lost": 0,
+   "unwanted": 22,
+   "high_impact": false,
+   "ignored": [],
+   "modes": {
+    "always act": "act",
+    "always show": "show",
+    "always ask": "act",
+    "adaptive": "act"
+   },
+   "wrong_if_all_noticed": {
+    "always act": 1.0,
+    "always show": 1.0,
+    "always ask": 1.0,
+    "adaptive": 1.0
+   }
+  },
+  {
+   "id": "m04.4",
+   "text": "experienced AWS engineers who can start soon",
+   "category": "mixed",
+   "phrasing": "paraphrase",
+   "intended": "AWS · 'Senior' in title · notice ≤ 1 month",
+   "wanted": 14,
+   "lost": 0,
+   "unwanted": 43,
+   "high_impact": true,
+   "ignored": [],
+   "modes": {
+    "always act": "act",
+    "always show": "show",
+    "always ask": "act",
+    "adaptive": "act"
+   },
+   "wrong_if_all_noticed": {
+    "always act": 1.0,
+    "always show": 1.0,
+    "always ask": 1.0,
+    "adaptive": 1.0
+   }
+  }
+ ],
+ "readings": {
+  "Go developers in Manchester": {
+   "target": "candidates",
+   "company": null,
+   "status": null,
+   "skills": [
+    "Go"
+   ],
+   "skills_op": "AND",
+   "location": {
+    "value": "Manchester",
+    "scope": "city"
+   },
+   "seniority": null,
+   "work_mode": null,
+   "availability": null,
+   "dropped": [],
+   "unsupported": [],
+   "source": "Claude on Amazon Bedrock (eu.anthropic.claude-opus-5-5)"
+  },
+  "Go AND Kubernetes engineers": {
+   "target": "candidates",
+   "company": null,
+   "status": null,
+   "skills": [
+    "Go",
+    "Kubernetes"
+   ],
+   "skills_op": "AND",
+   "location": null,
+   "seniority": null,
+   "work_mode": null,
+   "availability": null,
+   "dropped": [],
+   "unsupported": [],
+   "source": "Claude on Amazon Bedrock (eu.anthropic.claude-opus-5-5)"
+  },
+  "React OR Vue developers in London": {
+   "target": "candidates",
+   "company": null,
+   "status": null,
+   "skills": [
+    "React",
+    "Vue"
+   ],
+   "skills_op": "OR",
+   "location": {
+    "value": "London",
+    "scope": "city"
+   },
+   "seniority": null,
+   "work_mode": null,
+   "availability": null,
+   "dropped": [],
+   "unsupported": [],
+   "source": "Claude on Amazon Bedrock (eu.anthropic.claude-opus-5-5)"
+  },
+  "Terraform engineers in Leeds": {
+   "target": "candidates",
+   "company": null,
+   "status": null,
+   "skills": [
+    "Terraform"
+   ],
+   "skills_op": "AND",
+   "location": {
+    "value": "Leeds",
+    "scope": "city"
+   },
+   "seniority": null,
+   "work_mode": null,
+   "availability": null,
+   "dropped": [],
+   "unsupported": [],
+   "source": "Claude on Amazon Bedrock (eu.anthropic.claude-opus-5-5)"
+  },
+  "SQL developers with 8+ years": {
+   "target": "candidates",
+   "company": null,
+   "status": null,
+   "skills": [
+    "SQL"
+   ],
+   "skills_op": "AND",
+   "location": null,
+   "seniority": {
+    "kind": "years",
+    "min": 8
+   },
+   "work_mode": null,
+   "availability": null,
+   "dropped": [],
+   "unsupported": [],
+   "source": "Claude on Amazon Bedrock (eu.anthropic.claude-opus-5-5)"
+  },
+  "remote Python developers": {
+   "target": "candidates",
+   "company": null,
+   "status": null,
+   "skills": [
+    "Python"
+   ],
+   "skills_op": "AND",
+   "location": null,
+   "seniority": null,
+   "work_mode": "remote",
+   "availability": null,
+   "dropped": [],
+   "unsupported": [],
+   "source": "Claude on Amazon Bedrock (eu.anthropic.claude-opus-5-5)"
+  },
+  "open jobs in Manchester": {
+   "target": "jobs",
+   "company": null,
+   "status": "open",
+   "skills": [],
+   "skills_op": "AND",
+   "location": {
+    "value": "Manchester",
+    "scope": "city"
+   },
+   "seniority": null,
+   "work_mode": null,
+   "availability": null,
+   "dropped": [],
+   "unsupported": [],
+   "source": "Claude on Amazon Bedrock (eu.anthropic.claude-opus-5-5)"
+  },
+  "Kotlin developers in London": {
+   "target": "candidates",
+   "company": null,
+   "status": null,
+   "skills": [
+    "Kotlin"
+   ],
+   "skills_op": "AND",
+   "location": {
+    "value": "London",
+    "scope": "city"
+   },
+   "seniority": null,
+   "work_mode": null,
+   "availability": null,
+   "dropped": [],
+   "unsupported": [],
+   "source": "Claude on Amazon Bedrock (eu.anthropic.claude-opus-5-5)"
+  },
+  "AWS engineers in the UK": {
+   "target": "candidates",
+   "company": null,
+   "status": null,
+   "skills": [
+    "AWS"
+   ],
+   "skills_op": "AND",
+   "location": {
+    "value": "UK",
+    "scope": "country"
+   },
+   "seniority": null,
+   "work_mode": null,
+   "availability": null,
+   "dropped": [],
+   "unsupported": [],
+   "source": "Claude on Amazon Bedrock (eu.anthropic.claude-opus-5-5)"
+  },
+  "JavaScript developers in Dublin with 3+ years": {
+   "target": "candidates",
+   "company": null,
+   "status": null,
+   "skills": [
+    "JavaScript"
+   ],
+   "skills_op": "AND",
+   "location": {
+    "value": "Dublin",
+    "scope": "city"
+   },
+   "seniority": {
+    "kind": "years",
+    "min": 3
+   },
+   "work_mode": null,
+   "availability": null,
+   "dropped": [],
+   "unsupported": [],
+   "source": "Claude on Amazon Bedrock (eu.anthropic.claude-opus-5-5)"
+  },
+  "hybrid Java developers in Leeds": {
+   "target": "candidates",
+   "company": null,
+   "status": null,
+   "skills": [
+    "Java"
+   ],
+   "skills_op": "AND",
+   "location": {
+    "value": "Leeds",
+    "scope": "city"
+   },
+   "seniority": null,
+   "work_mode": "hybrid",
+   "availability": null,
+   "dropped": [],
+   "unsupported": [],
+   "source": "Claude on Amazon Bedrock (eu.anthropic.claude-opus-5-5)"
+  },
+  "Python AND SQL AND AWS people in London": {
+   "target": "candidates",
+   "company": null,
+   "status": null,
+   "skills": [
+    "Python",
+    "SQL",
+    "AWS"
+   ],
+   "skills_op": "AND",
+   "location": {
+    "value": "London",
+    "scope": "city"
+   },
+   "seniority": null,
+   "work_mode": null,
+   "availability": null,
+   "dropped": [],
+   "unsupported": [],
+   "source": "Claude on Amazon Bedrock (eu.anthropic.claude-opus-5-5)"
+  },
+  "Python and AWS engineers in London": {
+   "target": "candidates",
+   "company": null,
+   "status": null,
+   "skills": [
+    "Python",
+    "AWS"
+   ],
+   "skills_op": "AND",
+   "location": {
+    "value": "London",
+    "scope": "city"
+   },
+   "seniority": null,
+   "work_mode": null,
+   "availability": null,
+   "dropped": [],
+   "unsupported": [],
+   "source": "Claude on Amazon Bedrock (eu.anthropic.claude-opus-5-5)"
+  },
+  "Java and Kotlin developers": {
+   "target": "candidates",
+   "company": null,
+   "status": null,
+   "skills": [
+    "Java",
+    "Kotlin"
+   ],
+   "skills_op": "AND",
+   "location": null,
+   "seniority": null,
+   "work_mode": null,
+   "availability": null,
+   "dropped": [],
+   "unsupported": [],
+   "source": "Claude on Amazon Bedrock (eu.anthropic.claude-opus-5-5)"
+  },
+  "React with TypeScript developers": {
+   "target": "candidates",
+   "company": null,
+   "status": null,
+   "skills": [
+    "React",
+    "TypeScript"
+   ],
+   "skills_op": "AND",
+   "location": null,
+   "seniority": null,
+   "work_mode": null,
+   "availability": null,
+   "dropped": [],
+   "unsupported": [],
+   "source": "Claude on Amazon Bedrock (eu.anthropic.claude-opus-5-5)"
+  },
+  "Go or Python people in Manchester": {
+   "target": "candidates",
+   "company": null,
+   "status": null,
+   "skills": [
+    "Go",
+    "Python"
+   ],
+   "skills_op": "OR",
+   "location": {
+    "value": "Manchester",
+    "scope": "city"
+   },
+   "seniority": null,
+   "work_mode": null,
+   "availability": null,
+   "dropped": [],
+   "unsupported": [],
+   "source": "Claude on Amazon Bedrock (eu.anthropic.claude-opus-5-5)"
+  },
+  "Kubernetes Terraform engineers": {
+   "target": "candidates",
+   "company": null,
+   "status": null,
+   "skills": [
+    "Kubernetes",
+    "Terraform"
+   ],
+   "skills_op": "AND",
+   "location": null,
+   "seniority": null,
+   "work_mode": null,
+   "availability": null,
+   "dropped": [],
+   "unsupported": [],
+   "source": "Claude on Amazon Bedrock (eu.anthropic.claude-opus-5-5)"
+  },
+  "Java/Python developers in Birmingham": {
+   "target": "candidates",
+   "company": null,
+   "status": null,
+   "skills": [
+    "Java",
+    "Python"
+   ],
+   "skills_op": "AND",
+   "location": {
+    "value": "Birmingham",
+    "scope": "city"
+   },
+   "seniority": null,
+   "work_mode": null,
+   "availability": null,
+   "dropped": [],
+   "unsupported": [],
+   "source": "Claude on Amazon Bedrock (eu.anthropic.claude-opus-5-5)"
+  },
+  "SQL, Python developers in Leeds": {
+   "target": "candidates",
+   "company": null,
+   "status": null,
+   "skills": [
+    "SQL",
+    "Python"
+   ],
+   "skills_op": "AND",
+   "location": {
+    "value": "Leeds",
+    "scope": "city"
+   },
+   "seniority": null,
+   "work_mode": null,
+   "availability": null,
+   "dropped": [],
+   "unsupported": [],
+   "source": "Claude on Amazon Bedrock (eu.anthropic.claude-opus-5-5)"
+  },
+  "developers who know JavaScript plus React in London": {
+   "target": "candidates",
+   "company": null,
+   "status": null,
+   "skills": [
+    "JavaScript",
+    "React"
+   ],
+   "skills_op": "AND",
+   "location": {
+    "value": "London",
+    "scope": "city"
+   },
+   "seniority": null,
+   "work_mode": null,
+   "availability": null,
+   "dropped": [],
+   "unsupported": [],
+   "source": "Claude on Amazon Bedrock (eu.anthropic.claude-opus-5-5)"
+  },
+  "senior Python developers in London": {
+   "target": "candidates",
+   "company": null,
+   "status": null,
+   "skills": [
+    "Python"
+   ],
+   "skills_op": "AND",
+   "location": {
+    "value": "London",
+    "scope": "city"
+   },
+   "seniority": {
+    "kind": "years",
+    "min": 5,
+    "contains": "Senior"
+   },
+   "work_mode": null,
+   "availability": null,
+   "dropped": [],
+   "unsupported": [],
+   "source": "Claude on Amazon Bedrock (eu.anthropic.claude-opus-5-5)"
+  },
+  "senior Java engineers in Manchester": {
+   "target": "candidates",
+   "company": null,
+   "status": null,
+   "skills": [
+    "Java"
+   ],
+   "skills_op": "AND",
+   "location": {
+    "value": "Manchester",
+    "scope": "city"
+   },
+   "seniority": {
+    "kind": "years",
+    "min": 5,
+    "contains": "Senior"
+   },
+   "work_mode": null,
+   "availability": null,
+   "dropped": [],
+   "unsupported": [],
+   "source": "Claude on Amazon Bedrock (eu.anthropic.claude-opus-5-5)"
+  },
+  "lead AWS engineers": {
+   "target": "candidates",
+   "company": null,
+   "status": null,
+   "skills": [
+    "AWS"
+   ],
+   "skills_op": "AND",
+   "location": null,
+   "seniority": {
+    "kind": "years",
+    "min": 5,
+    "contains": "Lead"
+   },
+   "work_mode": null,
+   "availability": null,
+   "dropped": [],
+   "unsupported": [],
+   "source": "Claude on Amazon Bedrock (eu.anthropic.claude-opus-5-5)"
+  },
+  "lead Python developers": {
+   "target": "candidates",
+   "company": null,
+   "status": null,
+   "skills": [
+    "Python"
+   ],
+   "skills_op": "AND",
+   "location": null,
+   "seniority": {
+    "kind": "years",
+    "min": 5,
+    "contains": "Lead"
+   },
+   "work_mode": null,
+   "availability": null,
+   "dropped": [],
+   "unsupported": [],
+   "source": "Claude on Amazon Bedrock (eu.anthropic.claude-opus-5-5)"
+  },
+  "experienced Go developers": {
+   "target": "candidates",
+   "company": null,
+   "status": null,
+   "skills": [
+    "Go"
+   ],
+   "skills_op": "AND",
+   "location": null,
+   "seniority": null,
+   "work_mode": null,
+   "availability": null,
+   "dropped": [],
+   "unsupported": [
+    {
+     "text": "experienced",
+     "kind": "other"
+    }
+   ],
+   "source": "Claude on Amazon Bedrock (eu.anthropic.claude-opus-5-5)"
+  },
+  "Java team leads in London": {
+   "target": "candidates",
+   "company": null,
+   "status": null,
+   "skills": [
+    "Java"
+   ],
+   "skills_op": "AND",
+   "location": {
+    "value": "London",
+    "scope": "city"
+   },
+   "seniority": {
+    "kind": "years",
+    "min": 5,
+    "contains": "Lead"
+   },
+   "work_mode": null,
+   "availability": null,
+   "dropped": [],
+   "unsupported": [],
+   "source": "Claude on Amazon Bedrock (eu.anthropic.claude-opus-5-5)"
+  },
+  "Java developers near London": {
+   "target": "candidates",
+   "company": null,
+   "status": null,
+   "skills": [
+    "Java"
+   ],
+   "skills_op": "AND",
+   "location": {
+    "value": "London",
+    "scope": "nearby"
+   },
+   "seniority": null,
+   "work_mode": null,
+   "availability": null,
+   "dropped": [],
+   "unsupported": [],
+   "source": "Claude on Amazon Bedrock (eu.anthropic.claude-opus-5-5)"
+  },
+  "React developers around London": {
+   "target": "candidates",
+   "company": null,
+   "status": null,
+   "skills": [
+    "React"
+   ],
+   "skills_op": "AND",
+   "location": {
+    "value": "London",
+    "scope": "nearby"
+   },
+   "seniority": null,
+   "work_mode": null,
+   "availability": null,
+   "dropped": [],
+   "unsupported": [],
+   "source": "Claude on Amazon Bedrock (eu.anthropic.claude-opus-5-5)"
+  },
+  "SQL people in the London area": {
+   "target": "candidates",
+   "company": null,
+   "status": null,
+   "skills": [
+    "SQL"
+   ],
+   "skills_op": "AND",
+   "location": {
+    "value": "London",
+    "scope": "nearby"
+   },
+   "seniority": null,
+   "work_mode": null,
+   "availability": null,
+   "dropped": [],
+   "unsupported": [],
+   "source": "Claude on Amazon Bedrock (eu.anthropic.claude-opus-5-5)"
+  },
+  "AWS engineers who can commute to London": {
+   "target": "candidates",
+   "company": null,
+   "status": null,
+   "skills": [
+    "AWS"
+   ],
+   "skills_op": "AND",
+   "location": {
+    "value": "London",
+    "scope": "nearby"
+   },
+   "seniority": null,
+   "work_mode": null,
+   "availability": null,
+   "dropped": [],
+   "unsupported": [],
+   "source": "Claude on Amazon Bedrock (eu.anthropic.claude-opus-5-5)"
+  },
+  "Java developers in London available immediately": {
+   "target": "candidates",
+   "company": null,
+   "status": null,
+   "skills": [
+    "Java"
+   ],
+   "skills_op": "AND",
+   "location": {
+    "value": "London",
+    "scope": "city"
+   },
+   "seniority": null,
+   "work_mode": null,
+   "availability": {
+    "max_notice": "immediate"
+   },
+   "dropped": [],
+   "unsupported": [],
+   "source": "Claude on Amazon Bedrock (eu.anthropic.claude-opus-5-5)"
+  },
+  "Python people who can start asap": {
+   "target": "candidates",
+   "company": null,
+   "status": null,
+   "skills": [
+    "Python"
+   ],
+   "skills_op": "AND",
+   "location": null,
+   "seniority": null,
+   "work_mode": null,
+   "availability": {
+    "max_notice": "immediate"
+   },
+   "dropped": [],
+   "unsupported": [],
+   "source": "Claude on Amazon Bedrock (eu.anthropic.claude-opus-5-5)"
+  },
+  "available AWS engineers in Manchester": {
+   "target": "candidates",
+   "company": null,
+   "status": null,
+   "skills": [
+    "AWS"
+   ],
+   "skills_op": "AND",
+   "location": {
+    "value": "Manchester",
+    "scope": "city"
+   },
+   "seniority": null,
+   "work_mode": null,
+   "availability": {
+    "max_notice": "immediate"
+   },
+   "dropped": [],
+   "unsupported": [],
+   "source": "Claude on Amazon Bedrock (eu.anthropic.claude-opus-5-5)"
+  },
+  "SQL developers free to start straight away": {
+   "target": "candidates",
+   "company": null,
+   "status": null,
+   "skills": [
+    "SQL"
+   ],
+   "skills_op": "AND",
+   "location": null,
+   "seniority": null,
+   "work_mode": null,
+   "availability": {
+    "max_notice": "immediate"
+   },
+   "dropped": [],
+   "unsupported": [],
+   "source": "Claude on Amazon Bedrock (eu.anthropic.claude-opus-5-5)"
+  },
+  "Go developers who can start soon": {
+   "target": "candidates",
+   "company": null,
+   "status": null,
+   "skills": [
+    "Go"
+   ],
+   "skills_op": "AND",
+   "location": null,
+   "seniority": null,
+   "work_mode": null,
+   "availability": null,
+   "dropped": [],
+   "unsupported": [],
+   "source": "Claude on Amazon Bedrock (eu.anthropic.claude-opus-5-5)"
+  },
+  "Python at Northwind": {
+   "target": "candidates",
+   "company": "Northwind Labs",
+   "status": null,
+   "skills": [
+    "Python"
+   ],
+   "skills_op": "AND",
+   "location": null,
+   "seniority": null,
+   "work_mode": null,
+   "availability": null,
+   "dropped": [],
+   "unsupported": [],
+   "source": "Claude on Amazon Bedrock (eu.anthropic.claude-opus-5-5)"
+  },
+  "Java developers at Moorgate Payments": {
+   "target": "candidates",
+   "company": "Moorgate Payments",
+   "status": null,
+   "skills": [
+    "Java"
+   ],
+   "skills_op": "AND",
+   "location": null,
+   "seniority": null,
+   "work_mode": null,
+   "availability": null,
+   "dropped": [],
+   "unsupported": [],
+   "source": "Claude on Amazon Bedrock (eu.anthropic.claude-opus-5-5)"
+  },
+  "Ironbridge Bank SQL engineers": {
+   "target": "candidates",
+   "company": "Ironbridge Bank",
+   "status": null,
+   "skills": [
+    "SQL"
+   ],
+   "skills_op": "AND",
+   "location": null,
+   "seniority": null,
+   "work_mode": null,
+   "availability": null,
+   "dropped": [],
+   "unsupported": [],
+   "source": "Claude on Amazon Bedrock (eu.anthropic.claude-opus-5-5)"
+  },
+  "senior Java Python developers": {
+   "target": "candidates",
+   "company": null,
+   "status": null,
+   "skills": [
+    "Java",
+    "Python"
+   ],
+   "skills_op": "AND",
+   "location": null,
+   "seniority": {
+    "kind": "years",
+    "min": 5,
+    "contains": "Senior"
+   },
+   "work_mode": null,
+   "availability": null,
+   "dropped": [],
+   "unsupported": [],
+   "source": "Claude on Amazon Bedrock (eu.anthropic.claude-opus-5-5)"
+  },
+  "Python or Go engineers available now": {
+   "target": "candidates",
+   "company": null,
+   "status": null,
+   "skills": [
+    "Python",
+    "Go"
+   ],
+   "skills_op": "OR",
+   "location": null,
+   "seniority": null,
+   "work_mode": null,
+   "availability": {
+    "max_notice": "immediate"
+   },
+   "dropped": [],
+   "unsupported": [],
+   "source": "Claude on Amazon Bedrock (eu.anthropic.claude-opus-5-5)"
+  },
+  "lead Kubernetes engineers near London": {
+   "target": "candidates",
+   "company": null,
+   "status": null,
+   "skills": [
+    "Kubernetes"
+   ],
+   "skills_op": "AND",
+   "location": {
+    "value": "London",
+    "scope": "nearby"
+   },
+   "seniority": {
+    "kind": "years",
+    "min": 5,
+    "contains": "Lead"
+   },
+   "work_mode": null,
+   "availability": null,
+   "dropped": [],
+   "unsupported": [],
+   "source": "Claude on Amazon Bedrock (eu.anthropic.claude-opus-5-5)"
+  },
+  "experienced AWS engineers who can start soon": {
+   "target": "candidates",
+   "company": null,
+   "status": null,
+   "skills": [
+    "AWS"
+   ],
+   "skills_op": "AND",
+   "location": null,
+   "seniority": null,
+   "work_mode": null,
+   "availability": null,
+   "dropped": [],
+   "unsupported": [],
+   "source": "Claude on Amazon Bedrock (eu.anthropic.claude-opus-5-5)"
+  }
+ }
+}

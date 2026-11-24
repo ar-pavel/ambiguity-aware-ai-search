@@ -151,12 +151,14 @@ noticing rate is an assumption, not a measurement. Figures are averages, in requ
 - 9 wrong lists survive every strategy. Three come from skills the stand-in does not know (Vue,
   Kotlin); six from ambiguity it never flagged. It flagged 18 of 19 requests in the wording its rules
   were written for, and 4 of 11 rewordings. No strategy fixed what was never flagged.
-- One run with Claude Opus 5.5 on Amazon Bedrock reading the requests
-  ([tables](evaluation/results/bedrock.md)) cut the 9 to about 6, mostly by knowing more skills. It
-  missed other ambiguity instead ("near London", "available immediately").
+- Five separate runs with Claude Opus 5.5 on Amazon Bedrock reading the requests
+  ([all five](evaluation/results/bedrock_runs/README.md)) cut the 9 to between 5.5 and 7.25, mostly by
+  knowing more skills. The model flagged about as many unclear requests as the stand-in (20 to 23 of
+  30, against 22) but a different set: it missed other ambiguity instead ("near London", "available
+  immediately").
 
-**Limits.** The noticing rate was assumed, the data is synthetic, I wrote the requests myself, and
-the live model was run once. The planned next step is a small study with recruiters that measures
+**Limits.** The noticing rate was assumed, the data is synthetic, and I wrote both the stand-in's
+rules and the requests, so 18 of 19 flatters it. The planned next step is a small study with recruiters that measures
 how often they notice a wrong reading.
 
 ## Development record
@@ -195,6 +197,9 @@ checked. "Review" means a Claude Code pass with the `review-change` checklist
    - The requests were committed before the results. A check in the harness reports whether the frozen files have changed since `v1.2-a2`. An early version of the scripted recruiter answered and/or questions with the default option; a test now covers it and the results were re-run.
    - Bedrock is a fourth adapter with the same prompt, schema and checks, signed with the standard library. A live model made every chip edit and answer wait for a second reading, which could also differ from the first, so each request is now read once. New replies ease in on the page; no delay is added.
 
+10. **Repeating the live-model run** ([#75](https://github.com/ar-pavel/ambiguity-aware-ai-search/issues/75))
+   - One run could not show how stable a live model's result is. Four more runs, each a separate process because the app now keeps a reading while it runs, gave the same picture; all five are reported.
+
 ## AI assistance
 
 - **Tool:** Claude Code (Claude Opus 5.5), for drafting code, tests and documents (this README, the
@@ -216,7 +221,7 @@ checked. "Review" means a Claude Code pass with the `review-change` checklist
 | [`docs/system.png`](docs/system.png) (source [`system.dot`](docs/system.dot)) | the system diagram |
 | [`docs/storyboards/`](docs/storyboards) | three storyboards: [show](docs/storyboards/storyboard-show.png), [ask](docs/storyboards/storyboard-ask.png), [a confirmed change](docs/storyboards/storyboard-write.png); five frames each from real screenshots, stacked in one column so they read on a portrait page; [`make_storyboards.py`](docs/storyboards/make_storyboards.py) rebuilds them |
 | [`docs/compare-qwen3-14b.md`](docs/compare-qwen3-14b.md) | the stand-in and `qwen3:14b` on the 15 scripted requests |
-| [`evaluation/requests.json`](evaluation/requests.json) · [`evaluation/results/`](evaluation/results) | the 42 evaluation requests · results for the stand-in and for one live-model run |
+| [`evaluation/requests.json`](evaluation/requests.json) · [`evaluation/results/`](evaluation/results) | the 42 evaluation requests · results for the stand-in and for five live-model runs |
 | [`AGENTS.md`](AGENTS.md) · [`skills/`](skills) | working rules for coding agents and people · two task procedures |
 | [`.env.example`](.env.example) | live-interpreter and logging settings |
 | [`.github/workflows/tests.yml`](.github/workflows/tests.yml), [`pyproject.toml`](pyproject.toml) | CI and ruff's rules |
