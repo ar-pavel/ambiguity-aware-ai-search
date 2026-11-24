@@ -311,5 +311,100 @@ class TestRouting(unittest.TestCase):
         self.assertEqual(interpret.interpret("Java developers")["source"], "rules")
 
 
+
+class TestSameRequestReadOnce(unittest.TestCase):
+    """A flipped chip or an answered question searches again; it must reuse the reading already shown."""
+
+    def setUp(self):
+        self.calls = []
+        self.saved = (model._ask, os.environ.get("A2_MODEL"))
+        model._READINGS.clear()
+        os.environ["A2_MODEL"] = "bedrock"
+
+    def tearDown(self):
+        model._ask = self.saved[0]
+        model._READINGS.clear()
+        if self.saved[1] is None:
+            os.environ.pop("A2_MODEL", None)
+        else:
+            os.environ["A2_MODEL"] = self.saved[1]
+
+    def answer(self, reply):
+        def ask(text, post):
+            self.calls.append(text)
+            return reply
+        model._ask = ask
+
+    def test_same_text_asks_the_model_once(self):
+        self.answer({"skills": ["Java"]})
+        first = model.judge("senior Java developers")
+        first["skills"].append("changed by the caller")
+        self.assertEqual(model.judge("senior Java developers"), {"skills": ["Java"]})
+        self.assertEqual(self.calls, ["senior Java developers"])
+
+    def test_a_failure_is_not_kept(self):
+        self.answer(None)
+        self.assertIsNone(model.judge("x"))
+        self.answer({"skills": []})
+        self.assertEqual(model.judge("x"), {"skills": []})
+
+
+class TestBedrock(unittest.TestCase):
+    """Claude through Amazon Bedrock: the same request as the direct API, signed with AWS credentials."""
+
+    KEYS = ("A2_MODEL", "A2_BEDROCK_MODEL", "AWS_REGION", "AWS_DEFAULT_REGION", "AWS_ACCESS_KEY_ID",
+            "AWS_SECRET_ACCESS_KEY", "AWS_SESSION_TOKEN")
+
+    def setUp(self):
+        self.saved = {k: os.environ.get(k) for k in self.KEYS}
+        for k in self.KEYS:
+            os.environ.pop(k, None)
+        os.environ.update({"A2_MODEL": "bedrock", "AWS_ACCESS_KEY_ID": "AKIDEXAMPLE",
+                           "AWS_SECRET_ACCESS_KEY": "not-a-real-secret"})
+
+    def tearDown(self):
+        for k, v in self.saved.items():
+            if v is None:
+                os.environ.pop(k, None)
+            else:
+                os.environ[k] = v
+
+    def test_it_is_a_live_provider_with_its_own_label(self):
+        self.assertEqual(model.provider(), "bedrock")
+        self.assertIn(model.BEDROCK_DEFAULT_MODEL, model.label())
+
+    def test_the_request_asks_for_the_schema_and_names_no_model(self):
+        post = FakePost(SENIOR)
+        self.assertEqual(model.judge("senior Java developers in London", post), SENIOR)
+        self.assertEqual(post.sent["anthropic_version"], model.BEDROCK_VERSION)
+        self.assertEqual(post.sent["output_config"]["format"]["schema"], model.SCHEMA)
+        self.assertNotIn("model", post.sent)       # Bedrock takes the model from the address
+        self.assertNotIn("fallbacks", post.sent)
+
+    def test_a_refusal_or_missing_credentials_falls_back(self):
+        self.assertIsNone(model.judge("x", FakePost(SENIOR, stop="refusal")))
+        del os.environ["AWS_SECRET_ACCESS_KEY"]
+        self.assertIsNone(model.judge("x"))        # no network call is made: signing fails first
+
+    def test_the_signature_names_the_region_the_service_and_every_signed_header(self):
+        import datetime
+        when = datetime.datetime(2026, 11, 24, 12, 0, 0, tzinfo=datetime.timezone.utc)
+        os.environ["AWS_SESSION_TOKEN"] = "token"
+        args = ("bedrock-runtime.eu-west-2.amazonaws.com", "/model/x/invoke")
+        h = model.sign_aws(*args, b"{}", "eu-west-2", when)
+        self.assertEqual(h["x-amz-date"], "20261124T120000Z")
+        self.assertIn("Credential=AKIDEXAMPLE/20261124/eu-west-2/bedrock/aws4_request", h["authorization"])
+        self.assertIn("SignedHeaders=content-type;host;x-amz-date;x-amz-security-token", h["authorization"])
+        self.assertRegex(h["authorization"], r"Signature=[0-9a-f]{64}$")
+        self.assertNotIn("not-a-real-secret", json.dumps(h))
+        self.assertEqual(h, model.sign_aws(*args, b"{}", "eu-west-2", when))   # same request, same time, same signature
+        self.assertNotEqual(h["authorization"], model.sign_aws(*args, b"{ }", "eu-west-2", when)["authorization"])
+
+    def test_the_region_and_model_can_be_set(self):
+        os.environ.update({"AWS_REGION": "us-east-1", "A2_BEDROCK_MODEL": "us.anthropic.claude-opus-5-5"})
+        self.assertEqual(model.bedrock_region(), "us-east-1")
+        self.assertEqual(model.bedrock_model(), "us.anthropic.claude-opus-5-5")
+
+
 if __name__ == "__main__":
     unittest.main()

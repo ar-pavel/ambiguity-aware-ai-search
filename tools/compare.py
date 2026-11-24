@@ -5,8 +5,9 @@
     python3 tools/compare.py --with rules,claude --out logs/compare.md
 
 Interpreters: "rules" (the stand-in), "ollama:<model>" (needs Ollama running and the model pulled),
-"claude" or "openai" (need their key in .env). Each request goes through the whole pipeline, as from
-the page: interpreter -> code checks -> the act / show / ask rule -> the reply. For each it records
+"claude" or "openai" (need their key in .env), "bedrock" (needs AWS credentials in the shell). Each
+request goes through the whole pipeline, as from the page: interpreter -> code checks -> the
+act / show / ask rule -> the reply. For each it records
 the outcome, whether it matches the expected one, what the code checks dropped or flagged, whether
 the model failed and the stand-in was used instead, and the time taken. Nothing is written to the
 recruiter's state or event log.
@@ -88,7 +89,7 @@ def main(argv=None):
     """Parse the arguments, run each interpreter, print (and optionally save) the tables."""
     parser = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     parser.add_argument("--with", dest="interpreters", default="rules",
-                        help="comma-separated: rules, ollama:<model>, claude, openai")
+                        help="comma-separated: rules, ollama:<model>, claude, openai, bedrock")
     parser.add_argument("--out", help="also write the tables to this file")
     args = parser.parse_args(argv)
     results = {name: run(name) for name in args.interpreters.split(",") if name.strip()}

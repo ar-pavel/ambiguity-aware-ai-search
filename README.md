@@ -17,7 +17,7 @@ unclear and chooses one of three responses, always with its reason:
 Changes to records (shortlisting candidates, closing jobs) are never guessed: each is listed and
 confirmed first, and can be undone. Built as an MSc project at the University of Birmingham.
 
-*README prose: about 1,090 words (code, commands, tables and headings not counted).*
+*README prose: about 1,530 words (code, commands, tables and headings not counted). It was about 1,090 at the A2 submission (`v1.2-a2`); the Evaluation section was added for A3.*
 
 ```bash
 python3 app.py    # Python 3.8+, nothing to install; open http://127.0.0.1:8770
@@ -53,7 +53,9 @@ Status words: **implemented** (works in the code), **simulated** (stands in for 
 | Event log for evaluation (`logs/events.jsonl`) | implemented |
 | Interpreter, default: a rule-based *stand-in* for a language model | **simulated** |
 | Interpreter, local model through Ollama (`qwen3:14b`), checked by code | implemented |
-| Interpreter, Claude or OpenAI, same prompt, schema and checks (not yet run with a key) | implemented |
+| Interpreter, Claude (direct, or through Amazon Bedrock) or OpenAI, same prompt, schema and checks. The Bedrock path ran the evaluation and the demo; the direct Claude and OpenAI paths are not yet run with a key | implemented |
+| Scripted evaluation: four strategies on 42 held-out requests with a scripted recruiter ([`tools/evaluate.py`](tools/evaluate.py)) | implemented |
+| A study with recruiters, measuring how often they notice a wrong reading they are shown | planned |
 | Free-text "Other…" answers; a view of each job's shortlist; learning when to ask from corrections; semantic skill matching | planned |
 
 ## Technology stack
@@ -64,7 +66,7 @@ Status words: **implemented** (works in the code), **simulated** (stands in for 
 | Page | one HTML page, plain JavaScript and CSS | nothing to build |
 | Data | synthetic candidates, jobs and companies (`data/`), fixed seed | no real personal data; repeatable |
 | Interpreter | rule-based stand-in (default) | works with no key or network |
-| Live models (optional) | Ollama (`qwen3:14b`, local); Claude (`claude-opus-5-5`); OpenAI (`gpt-5-mini`), all through `urllib` and one JSON schema | if one fails, the stand-in answers and the page says so |
+| Live models (optional) | Ollama (`qwen3:14b`, local); Claude (`claude-opus-5-5`, direct or through Amazon Bedrock); OpenAI (`gpt-5-mini`), all through `urllib` and one JSON schema | if one fails, the stand-in answers and the page says so |
 | Quality | `unittest`; `ruff`; GitHub Actions on Python 3.8 and 3.13 | ruff runs in CI only |
 
 **Undecided:** which live model, if any, the Phase 3 study uses. The stand-in gives every participant
@@ -73,9 +75,10 @@ the same readings; a live model is closer to a real product.
 ## Running or inspecting the work
 
 ```bash
-python3 run_tests.py                                     # 175 tests; no key, network or install
+python3 run_tests.py                                     # 192 tests; no key, network or install
 python3 app.py                                           # http://127.0.0.1:8770 (--port 8771 if busy)
 python3 -m assistant.strategy "senior Java developers"   # the rule's decision as JSON, no server
+python3 tools/evaluate.py                                # the scripted evaluation (stand-in; add --with bedrock)
 ```
 
 ### Requests to try
@@ -96,12 +99,13 @@ With the stand-in interpreter, θ = 0.5 and no changes made yet:
 ### Live interpreter (optional)
 
 ```bash
-cp .env.example .env    # set A2_MODEL=ollama (after `ollama pull qwen3:14b`), or claude / openai plus your own key
+cp .env.example .env    # set A2_MODEL=ollama (after `ollama pull qwen3:14b`), claude / openai plus your own key, or bedrock (AWS credentials in the shell)
 python3 tools/compare.py --with rules,ollama:qwen3:14b   # every scripted request through each interpreter
 ```
 
 Keys go only in `.env`, which git ignores. A live model receives only the typed request and a fixed
-instruction, never candidate data.
+instruction, never candidate data. Each request is read once: a chip edit or an answer reuses the
+reading the recruiter was shown.
 
 ### Code map
 
@@ -111,13 +115,49 @@ instruction, never candidate data.
 |---|---|
 | [`server.py`](assistant/server.py) | HTTP server and request handlers |
 | [`interpret.py`](assistant/interpret.py) | the stand-in; the checks on a live model's reply |
-| [`model.py`](assistant/model.py) | the call to Ollama, Claude or OpenAI |
+| [`model.py`](assistant/model.py) | the call to Ollama, Claude (direct or Amazon Bedrock) or OpenAI |
 | [`strategy.py`](assistant/strategy.py) | the act / show / ask rule (`THETA`) |
 | [`search.py`](assistant/search.py) | filters and the "Read as" line |
 | [`replies.py`](assistant/replies.py) | what the page shows: results, chips, question, Why? |
 | [`commands.py`](assistant/commands.py) · [`actions.py`](assistant/actions.py) · [`store.py`](assistant/store.py) | typed follow-ups · plan, apply, undo · the only module that writes |
 | [`log.py`](assistant/log.py) | event log |
 | [`web/`](web) · [`data/`](data) · [`tests/`](tests) · [`tools/compare.py`](tools/compare.py) | the page · synthetic data · tests · interpreter comparison |
+| [`tools/evaluate.py`](tools/evaluate.py) · [`evaluation/`](evaluation) | the scripted evaluation · its 42 requests and results |
+
+## Evaluation
+
+**Question:** what does each strategy cost in questions asked, and how many wrong lists does it leave?
+
+**Method.** The rule, the stand-in, the search and the data were frozen at `v1.2-a2`. I then wrote
+[42 new requests](evaluation/requests.json): 12 clear ones and 30 with one or two unclear parts. Each
+plausible meaning is taken as the intended one in turn. Every request runs through the same code as
+the page under four strategies, with a scripted recruiter who answers questions as they meant and
+notices a wrong reading they are shown with a fixed probability. There were no participants, and the
+noticing rate is an assumption, not a measurement. Figures are averages, in requests out of 42.
+
+| Strategy | Questions asked (needless) | Wrong lists if everything shown is noticed | If half is noticed |
+|---|---|---|---|
+| Always act | 0 | 20.75 | 20.75 |
+| Always show | 0 | 9.0 | 15.06 |
+| Always ask (whenever something unclear is detected) | 22 (10.25) | 9.0 | 9.75 |
+| The rule (θ = 0.5) | 16 (7.25) | 9.0 | 11.25 |
+
+**What it shows** ([full tables](evaluation/results/rules.md)):
+
+- Acting on the first reading gives a wrong list for about half the requests.
+- With a recruiter who notices everything, showing matches asking and the rule with no questions. The
+  rule only earns its questions if people overlook what they are shown. At half noticing it sits
+  between: 6 fewer questions than always asking, 1.5 more wrong lists.
+- 9 wrong lists survive every strategy. Three come from skills the stand-in does not know (Vue,
+  Kotlin); six from ambiguity it never flagged. It flagged 18 of 19 requests in the wording its rules
+  were written for, and 4 of 11 rewordings. No strategy fixed what was never flagged.
+- One run with Claude Opus 5.5 on Amazon Bedrock reading the requests
+  ([tables](evaluation/results/bedrock.md)) cut the 9 to about 6, mostly by knowing more skills. It
+  missed other ambiguity instead ("near London", "available immediately").
+
+**Limits.** The noticing rate was assumed, the data is synthetic, I wrote the requests myself, and
+the live model was run once. The planned next step is a small study with recruiters that measures
+how often they notice a wrong reading.
 
 ## Development record
 
@@ -151,6 +191,10 @@ checked. "Review" means a Claude Code pass with the `review-change` checklist
    - The code checks did not cover the operator, so a live model could still turn "and" into OR. Code now keeps AND when the user wrote *and*, *with* or *&*; tested for each word, including "Python or Rust", a case review of the fix itself found. Replies with nothing to search ("hello") are now in the evaluation log. The comparison was re-run with the same result.
    - A review of the report ([#69](https://github.com/ar-pavel/ambiguity-aware-ai-search/issues/69)) found the diagram had no arrow for a typed follow-up that changes records, and that figure text was too small in print. The arrow is added, and the storyboards are re-laid out from the same screenshots. A second pass ([#71](https://github.com/ar-pavel/ambiguity-aware-ai-search/issues/71)) added the path the first two storyboards show: a chip edit or an answer goes back to the reading and re-runs the rule. A test now checks that any θ from 0.3 to 0.9 changes at most one of the ten scripted outcomes.
 
+9. **Scripted evaluation and a live model through Amazon Bedrock** ([#73](https://github.com/ar-pavel/ambiguity-aware-ai-search/issues/73))
+   - The requests were committed before the results. A check in the harness reports whether the frozen files have changed since `v1.2-a2`. An early version of the scripted recruiter answered and/or questions with the default option; a test now covers it and the results were re-run.
+   - Bedrock is a fourth adapter with the same prompt, schema and checks, signed with the standard library. A live model made every chip edit and answer wait for a second reading, which could also differ from the first, so each request is now read once. New replies ease in on the page; no delay is added.
+
 ## AI assistance
 
 - **Tool:** Claude Code (Claude Opus 5.5), for drafting code, tests and documents (this README, the
@@ -172,6 +216,7 @@ checked. "Review" means a Claude Code pass with the `review-change` checklist
 | [`docs/system.png`](docs/system.png) (source [`system.dot`](docs/system.dot)) | the system diagram |
 | [`docs/storyboards/`](docs/storyboards) | three storyboards: [show](docs/storyboards/storyboard-show.png), [ask](docs/storyboards/storyboard-ask.png), [a confirmed change](docs/storyboards/storyboard-write.png); five frames each from real screenshots, stacked in one column so they read on a portrait page; [`make_storyboards.py`](docs/storyboards/make_storyboards.py) rebuilds them |
 | [`docs/compare-qwen3-14b.md`](docs/compare-qwen3-14b.md) | the stand-in and `qwen3:14b` on the 15 scripted requests |
+| [`evaluation/requests.json`](evaluation/requests.json) · [`evaluation/results/`](evaluation/results) | the 42 evaluation requests · results for the stand-in and for one live-model run |
 | [`AGENTS.md`](AGENTS.md) · [`skills/`](skills) | working rules for coding agents and people · two task procedures |
 | [`.env.example`](.env.example) | live-interpreter and logging settings |
 | [`.github/workflows/tests.yml`](.github/workflows/tests.yml), [`pyproject.toml`](pyproject.toml) | CI and ruff's rules |
