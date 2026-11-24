@@ -5,7 +5,8 @@ A small web prototype in Python 3.8+, standard library only. A recruiter types a
 candidates or jobs in a chat. An interpreter turns it into one structured reading plus its ambiguities,
 and a visible rule chooses to **act**, **show** the reading as editable chips, or **ask** one question.
 Search is structured filtering over synthetic data; there is no vector store and no embeddings. Live
-mode calls Claude or OpenAI over HTTPS, or a local model through Ollama, with `urllib`; otherwise a
+mode calls Claude (directly or through Amazon Bedrock) or OpenAI over HTTPS, or a local model through
+Ollama, with `urllib`; otherwise a
 rule-based stand-in reads the request (labelled *simulated*), and it is also the fallback whenever a
 live model cannot be used.
 
@@ -14,7 +15,8 @@ live model cannot be used.
 python3 run_tests.py      # CI runs this on Python 3.8 and 3.13 for every push and pull request
 ruff check .              # CI runs ruff 0.17.4 (rules in pyproject.toml); the app itself needs nothing installed
 python3 app.py            # then open http://127.0.0.1:8770 (--port to change it, Ctrl+C to stop)
-cp .env.example .env      # live mode: A2_MODEL=claude or openai (+ key), or ollama (a local model, no key)
+cp .env.example .env      # live mode: A2_MODEL=claude or openai (+ key), bedrock (AWS credentials), or ollama (local)
+python3 tools/evaluate.py --out evaluation/results   # the scripted evaluation on evaluation/requests.json
 python3 tools/compare.py --with rules,ollama:qwen3:14b   # the scripted requests through each interpreter
 ```
 
@@ -27,7 +29,7 @@ python3 tools/compare.py --with rules,ollama:qwen3:14b   # the scripted requests
 | `assistant/server.py` | HTTP server and the request handlers (`/api/search`, `plan`, `apply`, `undo`, `command`) |
 | `assistant/replies.py` | what the page shows: table, chips, the one question, the sentence after an edit, Why? |
 | `assistant/interpret.py` | rule-based stand-in, the checks on a live model's reply, and what cannot be searched |
-| `assistant/model.py` | the live call: Claude, OpenAI, or a local model through Ollama |
+| `assistant/model.py` | the live call: Claude (direct or Amazon Bedrock), OpenAI, or a local model through Ollama; each request is read once |
 | `assistant/strategy.py` | the act / show / ask rule and its reason (`python3 -m assistant.strategy "<request>"`) |
 | `assistant/search.py` | filters, and the "Read as" line built from them |
 | `assistant/commands.py` | typed follow-ups ("shortlist them for the Java role") |
@@ -38,12 +40,15 @@ python3 tools/compare.py --with rules,ollama:qwen3:14b   # the scripted requests
 | `data/generate.py` | builds the synthetic data from a fixed seed |
 | `tests/` | one test file per module, run by `run_tests.py` |
 | `tools/compare.py` | runs the scripted requests through each interpreter and tabulates the outcomes |
+| `tools/evaluate.py` | the scripted evaluation: four strategies on `evaluation/requests.json`, results in `evaluation/results/` |
 
 ## Conventions
 - One interpretation object drives the chips, the question, the "Read as" line and the search.
 - Every message on screen is built from what ran, never from model text. Why? never credits a setting
   for something the recruiter did.
 - Status words are exactly: implemented, simulated, planned.
+- `evaluation/requests.json` was run as written: never edit it. The rule, stand-in, search, replies, server and
+  data are frozen at `v1.2-a2` for the evaluation, and `tools/evaluate.py` reports if they have changed.
 - Tuning numbers (such as the threshold θ) live in one named constant with a one-line reason.
 - Reads follow act / show / ask. Every write (shortlist, close) goes plan -> confirm -> apply, can be
   undone, and is logged. Only `store.py` writes; `data/` is never changed.
