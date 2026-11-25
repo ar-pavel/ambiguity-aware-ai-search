@@ -2,8 +2,8 @@
 
 **Question:** what does each strategy cost in questions asked, and how many wrong lists does it leave?
 
-**Method.** The rule, the stand-in, the search and the data were frozen at `v1.2-a2`. I then wrote
-[42 new requests](requests.json): 12 clear ones and 30 with one or two unclear parts. Each
+**Method.** The rule, the stand-in, the search and the data were frozen at `v1.2-a2`. The assistant
+then drafted [42 new requests](requests.json) to my design: 12 clear ones and 30 with one or two unclear parts. Each
 plausible meaning is taken as the intended one in turn. Every request runs through the same code as
 the page under four strategies, with a scripted recruiter who answers questions as they meant and
 notices a wrong reading they are shown with a fixed probability. There were no participants, and the
@@ -31,8 +31,8 @@ noticing rate is an assumption, not a measurement. Figures are averages, in requ
   30, against 22) but a different set: it missed other ambiguity instead ("near London", "available
   immediately").
 
-**Limits.** The noticing rate was assumed, the data is synthetic, and I wrote both the stand-in's
-rules and the requests, so 18 of 19 flatters it. The planned next step is a small study with recruiters that measures
+**Limits.** The noticing rate was assumed, the data is synthetic, and the same assistant drafted both the
+stand-in's rules and the requests, so 18 of 19 flatters it. The planned next step is a small study with recruiters that measures
 how often they notice a wrong reading.
 
 Run it again with `python3 tools/evaluate.py` (add `--with bedrock` for a live model). The harness is [`tools/evaluate.py`](../tools/evaluate.py).

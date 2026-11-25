@@ -12,7 +12,8 @@ each as a separate process because the app keeps a reading while it runs:
 | Claude Opus 5.5 on Amazon Bedrock | show in 6 of 10 runs; act in 4 of 10 (it reported nothing unclear) |
 | `qwen3:14b` through Ollama ([table](compare-qwen3-14b.md)) | ask |
 
-In all three cases the search used AND. Code keeps AND whenever the user wrote *and*, *with* or *&*,
+None of the three widened the request to OR: the stand-in and Claude searched with AND, and `qwen3:14b` asked
+before searching. Code keeps AND whenever the user wrote *and*, *with* or *&*,
 even if the model returns OR or flags nothing (`interpret.from_model`), so a missed flag here costs
 the recruiter the chip that offers OR, not a silently wider list.
 
