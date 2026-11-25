@@ -26,7 +26,7 @@ noticing rate is an assumption, not a measurement. Figures are averages, in requ
   Kotlin); six from ambiguity it never flagged. It flagged 18 of 19 requests in the wording its rules
   were written for, and 4 of 11 rewordings. No strategy fixed what was never flagged.
 - Five separate runs with Claude Opus 5.5 on Amazon Bedrock reading the requests
-  ([all five](results/bedrock_runs/README.md)) cut the 9 to between 5.5 and 7.25, mostly by
+  ([all five](results/bedrock_runs/README.md)) cut the 9 to between 5.5 and 7.25 (the rule alone: 5.75 to 7.25), mostly by
   knowing more skills. The model flagged about as many unclear requests as the stand-in (20 to 23 of
   30, against 22) but a different set: it missed other ambiguity instead ("near London", "available
   immediately").
