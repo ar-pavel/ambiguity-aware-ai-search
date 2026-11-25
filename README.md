@@ -183,6 +183,7 @@ checked. "Review" means a Claude Code pass with the `review-change` checklist
 | [`docs/system.png`](docs/system.png) (source [`system.dot`](docs/system.dot)) | the system diagram |
 | [`docs/storyboards/`](docs/storyboards) | three storyboards: [show](docs/storyboards/storyboard-show.png), [ask, with a live model](docs/storyboards/storyboard-ask.png), [act, then a confirmed change](docs/storyboards/storyboard-write.png); five frames each from real screenshots, stacked in one column so they read on a portrait page; [`make_storyboards.py`](docs/storyboards/make_storyboards.py) rebuilds them |
 | [`docs/compare-qwen3-14b.md`](docs/compare-qwen3-14b.md) | the stand-in and `qwen3:14b` on the 15 scripted requests |
+| [`docs/figure1-request-live-model.md`](docs/figure1-request-live-model.md) | the report's Figure 1 request under the stand-in, Claude (ten runs) and `qwen3:14b` |
 | [`evaluation/`](evaluation) | the evaluation: [write-up](evaluation/README.md), the [42 requests](evaluation/requests.json), and [results](evaluation/results) for the stand-in and five live-model runs |
 | [`AGENTS.md`](AGENTS.md) · [`skills/`](skills) | working rules for coding agents and people · two task procedures |
 | [`.env.example`](.env.example) | live-interpreter and logging settings |
