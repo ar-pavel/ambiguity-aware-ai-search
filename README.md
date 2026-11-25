@@ -17,7 +17,7 @@ unclear and chooses one of three responses, always with its reason:
 Changes to records (shortlisting candidates, closing jobs) are never guessed: each is listed and
 confirmed first, and can be undone. Built as an MSc project at the University of Birmingham.
 
-*README prose: about 1,530 words (code, commands, tables and headings not counted). It was about 1,090 at the A2 submission (`v1.2-a2`); the Evaluation section was added for A3.*
+*README prose: about 800 words, plus about 730 in the development-record table (code, commands, the other tables and headings not counted).*
 
 ```bash
 python3 app.py    # Python 3.8+, nothing to install; open http://127.0.0.1:8770
@@ -126,40 +126,17 @@ reading the recruiter was shown.
 
 ## Evaluation
 
-**Question:** what does each strategy cost in questions asked, and how many wrong lists does it leave?
+42 held-out requests, written after the rule, stand-in, search and data were frozen at `v1.2-a2`, run
+under four strategies with a scripted recruiter (no participants; how often a recruiter notices a wrong
+reading is assumed). Method, tables and limits are in [`evaluation/README.md`](evaluation/README.md).
 
-**Method.** The rule, the stand-in, the search and the data were frozen at `v1.2-a2`. I then wrote
-[42 new requests](evaluation/requests.json): 12 clear ones and 30 with one or two unclear parts. Each
-plausible meaning is taken as the intended one in turn. Every request runs through the same code as
-the page under four strategies, with a scripted recruiter who answers questions as they meant and
-notices a wrong reading they are shown with a fixed probability. There were no participants, and the
-noticing rate is an assumption, not a measurement. Figures are averages, in requests out of 42.
-
-| Strategy | Questions asked (needless) | Wrong lists if everything shown is noticed | If half is noticed |
-|---|---|---|---|
-| Always act | 0 | 20.75 | 20.75 |
-| Always show | 0 | 9.0 | 15.06 |
-| Always ask (whenever something unclear is detected) | 22 (10.25) | 9.0 | 9.75 |
-| The rule (θ = 0.5) | 16 (7.25) | 9.0 | 11.25 |
-
-**What it shows** ([full tables](evaluation/results/rules.md)):
-
-- Acting on the first reading gives a wrong list for about half the requests.
-- With a recruiter who notices everything, showing matches asking and the rule with no questions. The
-  rule only earns its questions if people overlook what they are shown. At half noticing it sits
-  between: 6 fewer questions than always asking, 1.5 more wrong lists.
-- 9 wrong lists survive every strategy. Three come from skills the stand-in does not know (Vue,
-  Kotlin); six from ambiguity it never flagged. It flagged 18 of 19 requests in the wording its rules
-  were written for, and 4 of 11 rewordings. No strategy fixed what was never flagged.
-- Five separate runs with Claude Opus 5.5 on Amazon Bedrock reading the requests
-  ([all five](evaluation/results/bedrock_runs/README.md)) cut the 9 to between 5.5 and 7.25, mostly by
-  knowing more skills. The model flagged about as many unclear requests as the stand-in (20 to 23 of
-  30, against 22) but a different set: it missed other ambiguity instead ("near London", "available
-  immediately").
-
-**Limits.** The noticing rate was assumed, the data is synthetic, and I wrote both the stand-in's
-rules and the requests, so 18 of 19 flatters it. The planned next step is a small study with recruiters that measures
-how often they notice a wrong reading.
+- Acting on the first reading gives a wrong list for about half the requests (20.75 of 42).
+- If everything shown is noticed, showing, asking and the rule all leave 9; the rule asks 16 questions,
+  always asking 22. If half is noticed: showing 15.06, the rule 11.25, asking 9.75.
+- Moving θ from 0.1 to 0.9 moves the rule from 6 to 19 questions, so 0.5 is a middle setting, not a tuned one.
+- The 9 that remain were never flagged, or had skills the stand-in does not know. It flagged 18 of 19
+  requests in the wording its rules were written for and 4 of 11 rewordings. With Claude Opus 5.5 on
+  Amazon Bedrock, five runs left 5.5 to 7.25.
 
 ## Development record
 
@@ -168,47 +145,32 @@ claimed a notes search it never ran. Each pull request records what changed, why
 checked. "Review" means a Claude Code pass with the `review-change` checklist
 ([#12](https://github.com/ar-pavel/ambiguity-aware-ai-search/pull/12)), followed by my own check in the browser.
 
-1. **Search, reading and rule** ([#9](https://github.com/ar-pavel/ambiguity-aware-ai-search/pull/9), [#10](https://github.com/ar-pavel/ambiguity-aware-ai-search/pull/10), [#11](https://github.com/ar-pavel/ambiguity-aware-ai-search/pull/11))
-   - Explicit filters rather than embeddings, so every result can be explained. The data is built so that "senior" is truly ambiguous.
-   - A hand-set threshold rather than a learned policy, because which strategy works better is the open question.
-2. **The page and the three modes** ([#13](https://github.com/ar-pavel/ambiguity-aware-ai-search/pull/13), [#14](https://github.com/ar-pavel/ambiguity-aware-ai-search/pull/14), [#19](https://github.com/ar-pavel/ambiguity-aware-ai-search/pull/19), [#20](https://github.com/ar-pavel/ambiguity-aware-ai-search/pull/20), [#21](https://github.com/ar-pavel/ambiguity-aware-ai-search/pull/21))
-   - A security review found another web page could send requests to the server; it now answers only its own page.
-   - A strategy switch and θ slider for the study conditions; one log line per turn.
-3. **Live interpreters** ([#16](https://github.com/ar-pavel/ambiguity-aware-ai-search/pull/16), [#18](https://github.com/ar-pavel/ambiguity-aware-ai-search/pull/18))
-   - Plain HTTPS instead of the SDK, which needs Python 3.10+ and an install.
-   - Review found three ways a reply could mislead the page (a skill matched inside another word, an unknown place matching nobody, a malformed reply crashing the page). Each got a test, then a fix. Faked replies test that every failure falls back to the stand-in.
-4. **Jobs, companies and confirmed changes** ([#29](https://github.com/ar-pavel/ambiguity-aware-ai-search/pull/29), [#30](https://github.com/ar-pavel/ambiguity-aware-ai-search/pull/30), [#32](https://github.com/ar-pavel/ambiguity-aware-ai-search/pull/32), [#33](https://github.com/ar-pavel/ambiguity-aware-ai-search/pull/33))
-   - I widened the scope from reading to acting. Two reviews found nine issues, each fixed with a test.
-   - The server's own search decides which records change, and a confirmation for a search that has since changed is refused. Tests: no write without the confirmed plan; undo restores the exact state. CI runs the tests on Python 3.8 and 3.13.
-5. **Why? and the chat page** ([#34](https://github.com/ar-pavel/ambiguity-aware-ai-search/pull/34)–[#36](https://github.com/ar-pavel/ambiguity-aware-ai-search/pull/36), [#39](https://github.com/ar-pavel/ambiguity-aware-ai-search/pull/39), [#40](https://github.com/ar-pavel/ambiguity-aware-ai-search/pull/40), [#43](https://github.com/ar-pavel/ambiguity-aware-ai-search/pull/43), [#47](https://github.com/ar-pavel/ambiguity-aware-ai-search/pull/47), [#50](https://github.com/ar-pavel/ambiguity-aware-ai-search/pull/50))
-   - Why? takes every number from the rule; a test checks 49.7% is never shown as 50%. Eight UX fixes, each tied to a course concept.
-   - I chose a chat layout but kept the reading editable in the latest reply. Review found Why? crediting a setting for the recruiter's own edit; fixed and checked at 1440 and 390 px. At my request (#50), a change's reply states only its result.
-6. **Follow-ups and what cannot be searched** ([#46](https://github.com/ar-pavel/ambiguity-aware-ai-search/pull/46), [#48](https://github.com/ar-pavel/ambiguity-aware-ai-search/pull/48), [#52](https://github.com/ar-pavel/ambiguity-aware-ai-search/pull/52))
-   - A typed follow-up is itself vague (which job?), so the same rule applies. Shortlisting people without the job's skills warns but never blocks.
-   - "hello" returned all 200 candidates. My first fix, a word list, was rejected in review; the interpreter now reports what it cannot use.
-7. **Structure and a local model** ([#54](https://github.com/ar-pavel/ambiguity-aware-ai-search/pull/54), [#56](https://github.com/ar-pavel/ambiguity-aware-ai-search/pull/56), [#58](https://github.com/ar-pavel/ambiguity-aware-ai-search/pull/58))
-   - The code moved into the `assistant/` package with no behaviour change; `ruff` added to CI.
-   - With Ollama, `qwen3:14b` gave the expected mode for 10 of 15 scripted requests, never fell back, about 4–5 s each ([table](docs/compare-qwen3-14b.md)). Four of the five misses acted where show or ask was expected: the model under-reports what is unclear, which is why code, not the model, decides. The run also exposed a bug (a correct "Bluefin" dropped by the company check), fixed with a test.
-8. **Pre-submission review** ([#61](https://github.com/ar-pavel/ambiguity-aware-ai-search/issues/61), [#62](https://github.com/ar-pavel/ambiguity-aware-ai-search/pull/62))
-   - The code checks did not cover the operator, so a live model could still turn "and" into OR. Code now keeps AND when the user wrote *and*, *with* or *&*; tested for each word, including "Python or Rust", a case review of the fix itself found. Replies with nothing to search ("hello") are now in the evaluation log. The comparison was re-run with the same result.
-   - A review of the report ([#69](https://github.com/ar-pavel/ambiguity-aware-ai-search/issues/69)) found the diagram had no arrow for a typed follow-up that changes records, and that figure text was too small in print. The arrow is added, and the storyboards are re-laid out from the same screenshots. A second pass ([#71](https://github.com/ar-pavel/ambiguity-aware-ai-search/issues/71)) added the path the first two storyboards show: a chip edit or an answer goes back to the reading and re-runs the rule. A test now checks that any θ from 0.3 to 0.9 changes at most one of the ten scripted outcomes.
-
-9. **Scripted evaluation and a live model through Amazon Bedrock** ([#73](https://github.com/ar-pavel/ambiguity-aware-ai-search/issues/73))
-   - The requests were committed before the results. A check in the harness reports whether the frozen files have changed since `v1.2-a2`. An early version of the scripted recruiter answered and/or questions with the default option; a test now covers it and the results were re-run.
-   - Bedrock is a fourth adapter with the same prompt, schema and checks, signed with the standard library. A live model made every chip edit and answer wait for a second reading, which could also differ from the first, so each request is now read once. New replies ease in on the page; no delay is added.
-
-10. **Repeating the live-model run** ([#75](https://github.com/ar-pavel/ambiguity-aware-ai-search/issues/75))
-   - One run could not show how stable a live model's result is. Four more runs, each a separate process because the app now keeps a reading while it runs, gave the same picture; all five are reported.
+| Stage | What changed, and why | What was checked |
+|---|---|---|
+| **1. Search, reading and rule** [#9](https://github.com/ar-pavel/ambiguity-aware-ai-search/pull/9), [#10](https://github.com/ar-pavel/ambiguity-aware-ai-search/pull/10), [#11](https://github.com/ar-pavel/ambiguity-aware-ai-search/pull/11) | Explicit filters, not embeddings, so every result can be explained. A hand-set threshold, not a learned policy, because which strategy works better is the open question. | Tests for the search and the rule. The data is generated so that "senior" really is ambiguous. |
+| **2. The page and the three modes** [#13](https://github.com/ar-pavel/ambiguity-aware-ai-search/pull/13), [#14](https://github.com/ar-pavel/ambiguity-aware-ai-search/pull/14), [#19](https://github.com/ar-pavel/ambiguity-aware-ai-search/pull/19), [#20](https://github.com/ar-pavel/ambiguity-aware-ai-search/pull/20), [#21](https://github.com/ar-pavel/ambiguity-aware-ai-search/pull/21) | Act, show (editable chips) and ask (one question). A strategy switch and a θ slider give the study its conditions; every turn is logged. | A security review found that another web page could send requests to the server. It now answers only its own page. |
+| **3. Live interpreters** [#16](https://github.com/ar-pavel/ambiguity-aware-ai-search/pull/16), [#18](https://github.com/ar-pavel/ambiguity-aware-ai-search/pull/18) | The first draft used the Claude SDK. I replaced it with plain HTTPS, because the SDK needs Python 3.10+ and an install. | Review found three ways a reply could mislead the page: a skill matched inside another word, an unknown place matching nobody, a malformed reply crashing the page. Each got a test, then a fix. Faked replies test that every failure falls back to the stand-in. |
+| **4. Jobs, companies and confirmed changes** [#29](https://github.com/ar-pavel/ambiguity-aware-ai-search/pull/29), [#30](https://github.com/ar-pavel/ambiguity-aware-ai-search/pull/30), [#32](https://github.com/ar-pavel/ambiguity-aware-ai-search/pull/32), [#33](https://github.com/ar-pavel/ambiguity-aware-ai-search/pull/33) | I widened the scope from reading to changing records, because a wrong guess costs more there. The server's own search decides which records change, and a confirmation for a search that has since changed is refused. | Two reviews found nine issues, each fixed with a test. Tests: no write without the confirmed plan; undo restores the exact state. CI runs on Python 3.8 and 3.13. |
+| **5. Why? and the chat page** [#34](https://github.com/ar-pavel/ambiguity-aware-ai-search/pull/34), [#35](https://github.com/ar-pavel/ambiguity-aware-ai-search/pull/35), [#36](https://github.com/ar-pavel/ambiguity-aware-ai-search/pull/36), [#39](https://github.com/ar-pavel/ambiguity-aware-ai-search/pull/39), [#40](https://github.com/ar-pavel/ambiguity-aware-ai-search/pull/40), [#43](https://github.com/ar-pavel/ambiguity-aware-ai-search/pull/43), [#47](https://github.com/ar-pavel/ambiguity-aware-ai-search/pull/47), [#50](https://github.com/ar-pavel/ambiguity-aware-ai-search/pull/50) | A UX review advised against a chat transcript. I chose chat but kept the reading editable in the latest reply. Using the page, I asked why a confirmed change printed the search again; its reply now states only the result. | Why? takes every number from the rule; a test checks that 49.7% is never shown as 50%. Review found Why? crediting a setting for the recruiter's own edit. Fixed, and the page checked at 1440 and 390 px. |
+| **6. Follow-ups and what cannot be searched** [#46](https://github.com/ar-pavel/ambiguity-aware-ai-search/pull/46), [#48](https://github.com/ar-pavel/ambiguity-aware-ai-search/pull/48), [#52](https://github.com/ar-pavel/ambiguity-aware-ai-search/pull/52) | A typed follow-up is itself vague (which job?), so the same rule applies. "hello" returned all 200 candidates; my first fix, a word list, was rejected in review as brittle, so the interpreter now reports what it cannot use. | Tests for greetings, names, unknown places and requests for everyone. |
+| **7. Structure and a local model** [#54](https://github.com/ar-pavel/ambiguity-aware-ai-search/pull/54), [#56](https://github.com/ar-pavel/ambiguity-aware-ai-search/pull/56), [#58](https://github.com/ar-pavel/ambiguity-aware-ai-search/pull/58) | The code moved into the `assistant/` package. The assistant argued for a flat layout; I asked for a package. `ruff` runs in CI. | `qwen3:14b` gave the expected mode for 10 of 15 scripted requests ([table](docs/compare-qwen3-14b.md)). Four of its five misses acted where show or ask was expected: the model under-reports what is unclear. The run exposed a bug (a correct "Bluefin" dropped), fixed with a test. |
+| **8. Pre-submission review** [#61](https://github.com/ar-pavel/ambiguity-aware-ai-search/issues/61), [#62](https://github.com/ar-pavel/ambiguity-aware-ai-search/pull/62), [#69](https://github.com/ar-pavel/ambiguity-aware-ai-search/issues/69), [#71](https://github.com/ar-pavel/ambiguity-aware-ai-search/issues/71) | The code checks did not cover the operator, so a live model could still turn "and" into OR. Code now keeps AND when the user wrote *and*, *with* or *&*. A review of the report added the typed follow-up and the edit loop to the diagram and re-laid out the storyboards for print. | Tested for each word, including "Python or Rust", a case found by a review of the fix itself. |
+| **9. Scripted evaluation and Amazon Bedrock** [#73](https://github.com/ar-pavel/ambiguity-aware-ai-search/issues/73), [#74](https://github.com/ar-pavel/ambiguity-aware-ai-search/pull/74), [#75](https://github.com/ar-pavel/ambiguity-aware-ai-search/issues/75), [#76](https://github.com/ar-pavel/ambiguity-aware-ai-search/pull/76) | 42 requests, written after the rule was frozen and committed before any result. Bedrock is a fourth adapter with the same prompt, schema and checks. With a live model every chip edit waited for a second reading that could differ from the first, so each request is now read once. | The harness checks the frozen files against `v1.2-a2`. An early scripted recruiter answered and/or questions with the default option: a test now covers it and the results were re-run. Five separate live-model runs, all reported. |
+| **10. Figures and README for the revised report** [#77](https://github.com/ar-pavel/ambiguity-aware-ai-search/issues/77) | A review against the rubric found no storyboard showing an *act* reply, none using a live model, and no opened Why?. Act now opens the third storyboard and the second runs on Claude through Amazon Bedrock. The diagram separates the model path that has been run from those that have not. | The frames are new, unedited screenshots of the running prototype. Tests and ruff pass. |
 
 ## AI assistance
 
-- **Tool:** Claude Code (Claude Opus 5.5), for drafting code, tests and documents (this README, the
-  project report, the system diagram and the storyboard layout), and for reviews.
+- **Tool:** Claude Code (Claude Opus 5.5).
+- **What I asked it to do:** draft the code, tests and documents for each change I had decided on (this
+  README, the project report, the system diagram and the storyboard layout included); turn each review
+  finding into a failing test before fixing it; and review every pull request against the
+  [`review-change`](skills) checklist.
 - **My part:** the research question, the design decisions and scope, and accepting, changing or
   rejecting each change. Every change went through a pull request, the review above, the tests and a
   check in the browser. The report's claims were checked against the code, the cited papers and the
   lecture slides; the storyboard frames are unedited screenshots of the running prototype.
-- **Examples:**
+- **Examples of changing or rejecting its output:**
+  - Using the page, I asked why a confirmed shortlist printed the search results again. The reply now states only the result ([#50](https://github.com/ar-pavel/ambiguity-aware-ai-search/pull/50)).
   - The first live interpreter used the Claude SDK; I replaced it with plain HTTPS so the project still needs nothing installed ([#16](https://github.com/ar-pavel/ambiguity-aware-ai-search/pull/16)).
   - The UX review and the assistant advised against a chat transcript ([#35](https://github.com/ar-pavel/ambiguity-aware-ai-search/pull/35)); I chose chat, keeping the reading editable ([#43](https://github.com/ar-pavel/ambiguity-aware-ai-search/pull/43)).
   - The assistant argued for a flat file layout ([#54](https://github.com/ar-pavel/ambiguity-aware-ai-search/pull/54)); I asked for a package ([#56](https://github.com/ar-pavel/ambiguity-aware-ai-search/pull/56)).
@@ -219,9 +181,9 @@ checked. "Review" means a Claude Code pass with the `review-change` checklist
 | Path | What it is |
 |---|---|
 | [`docs/system.png`](docs/system.png) (source [`system.dot`](docs/system.dot)) | the system diagram |
-| [`docs/storyboards/`](docs/storyboards) | three storyboards: [show](docs/storyboards/storyboard-show.png), [ask](docs/storyboards/storyboard-ask.png), [a confirmed change](docs/storyboards/storyboard-write.png); five frames each from real screenshots, stacked in one column so they read on a portrait page; [`make_storyboards.py`](docs/storyboards/make_storyboards.py) rebuilds them |
+| [`docs/storyboards/`](docs/storyboards) | three storyboards: [show](docs/storyboards/storyboard-show.png), [ask, with a live model](docs/storyboards/storyboard-ask.png), [act, then a confirmed change](docs/storyboards/storyboard-write.png); five frames each from real screenshots, stacked in one column so they read on a portrait page; [`make_storyboards.py`](docs/storyboards/make_storyboards.py) rebuilds them |
 | [`docs/compare-qwen3-14b.md`](docs/compare-qwen3-14b.md) | the stand-in and `qwen3:14b` on the 15 scripted requests |
-| [`evaluation/requests.json`](evaluation/requests.json) · [`evaluation/results/`](evaluation/results) | the 42 evaluation requests · results for the stand-in and for five live-model runs |
+| [`evaluation/`](evaluation) | the evaluation: [write-up](evaluation/README.md), the [42 requests](evaluation/requests.json), and [results](evaluation/results) for the stand-in and five live-model runs |
 | [`AGENTS.md`](AGENTS.md) · [`skills/`](skills) | working rules for coding agents and people · two task procedures |
 | [`.env.example`](.env.example) | live-interpreter and logging settings |
 | [`.github/workflows/tests.yml`](.github/workflows/tests.yml), [`pyproject.toml`](pyproject.toml) | CI and ruff's rules |

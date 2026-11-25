@@ -1,7 +1,7 @@
 // System diagram. Render: dot -Tpng -Gdpi=200 docs/system.dot -o docs/system.png && dot -Tsvg docs/system.dot -o docs/system.svg
 // Left column: reading a request (top to bottom). Right column: changing records.
 // Border marks status: solid = implemented, orange dashed = simulated, grey dashed = planned,
-// blue = a live language model (implemented). Blue fill = on the chat page (web/); white = server (assistant/);
+// blue = a live language model (implemented): solid if it has been run, dotted if not yet run with a key. Blue fill = on the chat page (web/); white = server (assistant/);
 // cylinders = files on disk.
 digraph system {
   rankdir=TB; nodesep=0.3; ranksep=0.32; newrank=true;
@@ -18,7 +18,8 @@ digraph system {
     label="Interpreter: the AI step"; labelloc=t; fontname="Helvetica-Bold"; fontsize=14;
     color="#c4ccd8"; style="rounded,dashed";
     ollama [label="Local model\nOllama · qwen3:14b", fillcolor="#f3f6fc", color="#2f6bdb", penwidth=1.6];
-    cloud [label="Claude or OpenAI\n(not yet run with a key)", fillcolor="#f3f6fc", color="#2f6bdb", penwidth=1.6];
+    bedrock [label="Claude on\nAmazon Bedrock", fillcolor="#f3f6fc", color="#2f6bdb", penwidth=1.6];
+    cloud [label="Claude direct, OpenAI\n(not yet run with a key)", style="rounded,filled,dotted", fillcolor="#f3f6fc", color="#2f6bdb", penwidth=1.8];
     rules [label="Rule-based stand-in\n[simulated]", style="rounded,filled,dashed", fillcolor="#fdf1e6", color="#d9771f", penwidth=1.6];
     checks [label="Code checks\nskills, operator, places,\ncompanies the user wrote"];
   }
@@ -28,7 +29,7 @@ digraph system {
   search [label="Search  search.py"];
   reply [label="Latest reply (live)\nact / show / ask + reason\nchips · one question · Why?\nresults · Ignored", fillcolor="#e8effb"];
 
-  plan [label="Plan  actions.py\nwhich records change"];
+  plan [label="Plan  actions.py\nsearch run again on the server:\nwhich records change"];
   confirm [label="Confirmation\nevery change listed\nfit warning", fillcolor="#e8effb"];
   apply [label="Apply · Undo\nfingerprint must match"];
   store [label="store.py\nthe only writer"];
@@ -37,12 +38,15 @@ digraph system {
   data [label="Synthetic data\n200 candidates · 30 jobs\n18 companies", shape=cylinder, fillcolor="#edf1f6"];
   state [label="state/\nshortlists · closed jobs", shape=cylinder, fillcolor="#edf1f6"];
   log [label="Event log  logs/", shape=cylinder, fillcolor="#edf1f6"];
+  evaluate [label="Scripted evaluation  evaluate.py\n42 requests · 4 strategies"];
+  evalres [label="evaluation/results/", shape=cylinder, fillcolor="#edf1f6"];
 
   learn [label="Learn θ from\ncorrections [planned]", style="rounded,dashed", color="#9aa5b8", fontcolor="#7b8597"];
   semantic [label="Semantic skill\nmatching [planned]", style="rounded,dashed", color="#9aa5b8", fontcolor="#7b8597"];
 
   {rank=same; reading; settings}
-  {rank=same; ollama; cloud; rules}
+  {rank=same; bedrock; ollama; cloud; rules}
+  {rank=same; cmd; evaluate}
   {rank=same; search; data}
   {rank=same; reply; plan}
   {rank=same; store; state}
@@ -52,9 +56,11 @@ digraph system {
   request -> cmd;
   cmd -> route [label=" a search"];
   route -> ollama [label="ollama"];
+  route -> bedrock [label="bedrock"];
   route -> cloud [label="claude / openai"];
   route -> rules [label="no (default)"];
   ollama -> checks [label=" JSON"];
+  bedrock -> checks [label=" JSON"];
   cloud -> checks [label=" JSON"];
   checks:e -> rules:sw [label=" no usable\n reply", style=dashed, constraint=false];
   checks -> reading [label=" ok"];
@@ -78,6 +84,8 @@ digraph system {
   apply -> result;
 
   // evaluation
+  evaluate -> route [style=dotted, label=" each request,\n the same code"];
+  evaluate -> evalres [style=dotted];
   rule -> log [style=dotted, label=" every turn"];
   apply -> log [style=dotted, label=" every change"];
   log -> learn [style=dashed, color="#9aa5b8"];
@@ -88,8 +96,9 @@ digraph system {
         <td border="1" style="rounded" color="#172033">implemented</td>
         <td border="1" style="rounded" color="#d9771f" bgcolor="#fdf1e6">simulated</td>
         <td border="1" style="rounded" color="#9aa5b8"><font color="#7b8597">planned</font></td>
-        <td border="1" style="rounded" color="#2f6bdb" bgcolor="#f3f6fc">live language model (implemented)</td>
+        <td border="1" style="rounded" color="#2f6bdb" bgcolor="#f3f6fc">live model, run (implemented)</td>
+        <td border="1" style="rounded,dotted" color="#2f6bdb" bgcolor="#f3f6fc">live model, not yet run (implemented)</td>
         <td border="1" style="rounded" bgcolor="#e8effb">on the chat page</td></tr>
-    <tr><td></td><td colspan="5" align="left"><font color="#7b8597">Also planned: free-text 'Other…' answers · a view of each job's shortlist</font></td></tr>
+    <tr><td></td><td colspan="6" align="left"><font color="#7b8597">Also planned: free-text 'Other…' answers · a view of each job's shortlist</font></td></tr>
   </table>>;
 }
