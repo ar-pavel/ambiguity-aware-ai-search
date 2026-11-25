@@ -4,9 +4,11 @@
 
 Each storyboard has five frames (W2 L06): the goal, the person's action, the system's inference and
 action, the result, and recovery. Each frame is labelled with who acts (P = person, S = system), the
-gulf involved, and the signifier on screen. The frames are unedited screenshots of the running
-prototype (θ = 0.5, fresh state), taken at twice the pixel density. Two storyboards use the default
-rule-based stand-in; the ask storyboard uses a live model (Claude through Amazon Bedrock), and its
+gulf involved, and what is on screen: a signifier (what is possible) where the gulf is execution,
+feedback (what happened) where it is evaluation. The frames are screenshots of the running prototype
+(θ = 0.5, fresh state), cropped to the step and not otherwise edited, at twice the pixel density.
+Two storyboards use the default rule-based stand-in; the ask storyboard uses a live model (Claude
+through Amazon Bedrock), and its
 result frame shows the interpreter line the page prints. The frames are stacked in one column so the
 text stays readable on a portrait A4 page. Open each HTML file and save it as PNG at twice the pixel
 density; the PNGs in this folder were captured that way.
@@ -23,34 +25,39 @@ STORYBOARDS = {
     "show": ("Show: the request that started the project", "Python and AWS people with Senior in the title",
              STAND_IN, "", [
         ("Goal", "Find people with Python and AWS whose job title says Senior. "
-                 "(An assistant once widened this 'and' to OR without saying so.)", "P", "—", "—"),
-        ("Action", "frames/show-2-action.png", "P", "execution", "text box · Send ↵"),
+                 "(An assistant once widened this 'and' to OR without saying so.)", "P", "—", ""),
+        ("Action", "frames/show-2-action.png", "P", "execution", "Signifier: text box · Send ↵"),
         ("Inference + action", "frames/show-3-system.png", "S", "evaluation",
-         "Show tag · reason with both counts · AND ⇄ OR chip"),
-        ("Result", "frames/show-4-result.png", "S", "evaluation", "7 candidates · what was not searched"),
-        ("Recovery", "frames/show-5-recovery.png", "P", "execution", "AND ⇄ OR chip · '(was 7)'"),
+         "Feedback: Show tag · the reason with both counts. Signifier: AND ⇄ OR chip"),
+        ("Result", "frames/show-4-result.png", "S", "evaluation",
+         "Feedback: 7 candidates (first 4 rows shown) · what was not searched"),
+        ("Recovery", "frames/show-5-recovery.png", "P", "execution",
+         "Signifier: AND ⇄ OR chip. Feedback: '(was 7)'"),
     ]),
     "ask": ("Ask: two readings that differ a lot", "senior Java developers", LIVE,
             " <b>Planned, not built:</b> a free-text 'Other…' answer.", [
         ("Goal", "Find senior Java developers. 'Senior' could mean years of experience or the job title.",
-         "P", "—", "—"),
-        ("Action", "frames/ask-2-action.png", "P", "execution", "text box · Send ↵"),
-        ("Inference + action", "frames/ask-3-system.png", "S", "evaluation (the reason), then execution (the options)",
-         "one question · a count on each option · keys 1–3"),
+         "P", "—", ""),
+        ("Action", "frames/ask-2-action.png", "P", "execution", "Signifier: text box · Send ↵"),
+        ("Inference + action", "frames/ask-3-system.png", "S", "evaluation, then execution",
+         "Feedback: the reason with both counts. Signifier: one question · a count on each option · keys 1–3"),
         ("Result", "frames/ask-4-result.png", "both", "evaluation",
-         "'Ask · answered' · Why? opened: the rule's numbers · the interpreter named"),
-        ("Recovery", "frames/ask-5-recovery.png", "P", "execution", "chip ▾ changed to 'either' · '(was 12)'"),
+         "Feedback: 'Ask · answered' · Why? opened: the rule's numbers · the interpreter named"),
+        ("Recovery", "frames/ask-5-recovery.png", "P", "execution",
+         "Signifier: chip ▾, changed to 'either'. Feedback: '(was 12)'"),
     ]),
     "write": ("Act, then a change to records: confirmed, then undone",
               "Java developers in London → shortlist them for the Senior Backend Engineer role", STAND_IN, "", [
         ("Goal", "Put the Java developers in London on one job's shortlist, and change nothing else.",
-         "P", "—", "—"),
+         "P", "—", ""),
         ("Action", "frames/write-2-action.png", "S, then P", "evaluation, then execution",
-         "Act tag and its reason · 21 candidates · text box (a follow-up, not a new search)"),
-        ("Inference + action", "frames/write-3-system.png", "S", "evaluation",
-         "job chosen · every change listed · Cancel focused"),
-        ("Result", "frames/write-4-result.png", "S", "evaluation", "what was confirmed · the result only · Undo"),
-        ("Recovery", "frames/write-5-recovery.png", "P", "execution", "Undo"),
+         "Feedback: Act tag and its reason · 21 candidates. Signifier: text box (a follow-up)"),
+        ("Inference + action", "frames/write-3-system.png", "S", "evaluation, then execution",
+         "Feedback: job chosen · every change listed. Signifier: Cancel (focused) · Shortlist 21 candidates"),
+        ("Result", "frames/write-4-result.png", "S", "evaluation",
+         "Feedback: what was confirmed · the result only. Signifier: Undo"),
+        ("Recovery", "frames/write-5-recovery.png", "P", "execution",
+         "Signifier: Undo (used). Feedback: what was undone"),
     ]),
 }
 
@@ -73,7 +80,7 @@ interpreter: {interpreter}</p>
 <div class="grid">{frames}</div>
 <p class="key"><b>Key.</b> <b>P</b> = the person acts, <b>S</b> = the system acts. <b>Gulf of execution</b>: can I say
 what I want? <b>Gulf of evaluation</b>: can I tell what it did? <b>Signifier</b>: what on screen shows what is
-possible.{note}</p></body></html>"""
+possible. <b>Feedback</b>: what on screen shows what happened.{note}</p></body></html>"""
 
 
 def shown_width(path):
@@ -82,16 +89,24 @@ def shown_width(path):
         return struct.unpack(">I", f.read(24)[16:20])[0] // 2
 
 
-def frame(i, step, content, who, gulf, signifier):
-    """One labelled cell: a screenshot (or the goal in words) with who acts, the gulf and the signifier."""
+def cues(text):
+    """'Signifier: a. Feedback: b' with the two labels in bold."""
+    out = html.escape(text)
+    for label in ("Signifier:", "Feedback:"):
+        out = out.replace(label, "<b>%s</b>" % label)
+    return out
+
+
+def frame(i, step, content, who, gulf, cue):
+    """One labelled cell: a screenshot (or the goal in words) with who acts, the gulf, and what is on screen."""
     if content.endswith(".png"):
         body = ('<div class="shot"><img src="%s" width="%d" alt="%s"></div>'
                 % (content, shown_width(content), html.escape(step)))
     else:
         body = '<div class="goal">%s</div>' % html.escape(content)
+    tail = " · " + cues(cue) if cue else ""
     return ('<div class="frame"><div class="head"><b>%d · %s</b><span class="tags"><b>Who:</b> %s · '
-            '<b>Gulf:</b> %s · <b>Signifier:</b> %s</span></div>%s</div>'
-            % (i, html.escape(step), who, gulf, html.escape(signifier), body))
+            '<b>Gulf:</b> %s%s</span></div>%s</div>' % (i, html.escape(step), who, gulf, tail, body))
 
 
 if __name__ == "__main__":
